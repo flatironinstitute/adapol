@@ -67,9 +67,35 @@ if __name__ == "__main__":
 
     Z = Z[Zid]
 
-    mmax = 6
-    for i in range(Delta.shape[1]):
+
+    #for i in range(Delta.shape[1]):
+    for i in range(1):
         Delta0 = Delta[Zid,i,:,:]
-        pol, weight = hybridization_fitting(Delta0, Z, mmax = 6, maxiter = 100)
+        pol, weight = hybridization_fitting(Delta0, Z, mmax = 6, maxiter = 20)
         polelist, veclist, matlist = obtain_orbitals(pol,weight,eps=1e-7)
         # This is the result that we want: polelist, veclist
+
+    # #plotting to see the result
+    # Delta0_fit = eval_with_pole(polelist, 1j*Z, matlist) 
+
+    # totalnum = 0
+    # for i1 in range(8):
+    #     for j1 in range(8):
+    #         if np.linalg.norm(Delta0[:,i1,j1])>1e-2:
+    #             totalnum = totalnum +1
+    # tn = 0
+    # ns = 5
+    # fig, axs = plt.subplots(int(totalnum/ns)+3, ns, figsize=(20,20))
+    # for i1 in range(8):
+    #     for j1 in range(8):
+    #         if np.linalg.norm(Delta0[:,i1,j1])>1e-3:
+    #             p1 = tn//ns
+    #             p2 = tn%ns
+    #             axs[p1, p2].plot(Delta0[:, i1,j1].real)
+    #             axs[p1, p2].plot(Delta0_fit[:, i1,j1].real,"--")
+    #             axs[p1, p2].plot(Delta0[:, i1,j1].imag)
+    #             axs[p1, p2].plot(Delta0_fit[:, i1,j1].imag,"--")
+    #             axs[p1, p2].set_title("i = "+str(i1)+", j = "+str(j1))
+    #             tn = tn+1
+    # plt.show()
+    # np.max(np.abs(Delta0-Delta0_fit))
