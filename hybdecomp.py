@@ -27,9 +27,12 @@ def obtain_orbitals(pol,weight,eps=1e-7):
     print((veclist.shape))
     return polelist, veclist, matlist
 
-def hybridization_fitting(Delta, Z, mmax = 6, maxiter = 50):
+def hybridization_fitting(Delta, Z, mmax = 6, maxiter = 50,disp=True):
     #pole estimation
-    r0 = aaa_matrix_real(Delta, 1j*Z,mmax=mmax)
+    if len(Delta.shape)==1: 
+        r0 = aaa_real(Delta, 1j*Z,mmax=mmax)
+    else:
+        r0 = aaa_matrix_real(Delta, 1j*Z,mmax=mmax)
     pol = np.real(r0.pol())
     weight, _, residue = get_weight(pol, 1.0j*Z, Delta,cleanflag=True)
     pol, weight = aaa_reduce(pol, weight, 1e-5)
@@ -37,7 +40,7 @@ def hybridization_fitting(Delta, Z, mmax = 6, maxiter = 50):
     fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=True)
     res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" : False,"maxiter":4000, "gtol":1e-15,"ftol":1e-15})
     fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=False)
-    res = scipy.optimize.minimize(fhere,res.x, method='L-BFGS-B', jac=True,options= {"disp" : True,"maxiter":maxiter, "gtol":1e-20,"ftol":1e-20})
+    res = scipy.optimize.minimize(fhere,res.x, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-20,"ftol":1e-20})
     weight, _, residue = get_weight(res.x, 1j*Z, Delta,cleanflag=False)
     err = np.max(np.abs(residue))
 
