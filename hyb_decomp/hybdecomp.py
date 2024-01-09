@@ -7,15 +7,6 @@ from ac_pes import *
 import matplotlib.pyplot as plt
 import scipy
 
-def eval_with_pole(pol, Z, weight):
-    pol_t = np.reshape(pol,[pol.size,1])
-    M = 1/(Z-pol_t)
-    M = M.transpose()
-    if len(weight.shape)==1:
-        return M@weight
-    else:
-        G = M@np.reshape(weight, (weight.shape[0], weight.shape[1]*weight.shape[2]))
-        return np.reshape(G, (G.shape[0],  weight.shape[1], weight.shape[2]))
 
 def obtain_orbitals(pol,weight,eps=1e-7):
     eiglist = np.array([])
@@ -62,7 +53,7 @@ if __name__ == "__main__":
 
     import h5py
     with h5py.File("hyb_data/Delta.0.h5", "r") as f:
-        print(list(f.keys()))
+        # print(list(f.keys()))
         Delta = f[list(f.keys())[-1]]['Hyb'][:]
 
     Z = Z[Zid]
