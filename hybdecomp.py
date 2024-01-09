@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, "../")
+# sys.path.insert(0, "../")
 import numpy as np
 from aaa import *
 from ac_pes import *
@@ -46,13 +46,13 @@ def hybridization_fitting(Delta, Z, mmax = 6, maxiter = 50):
 
 
 if __name__ == "__main__":
-    file = open('hyb_data/omega_20231129.txt', "r")
+    file = open('Examples/hyb_data/omega_20231129.txt', "r")
     Z = np.loadtxt(file,dtype=np.complex128)
     file.close()
     Zid = abs(Z)<200
 
     import h5py
-    with h5py.File("hyb_data/Delta.0.h5", "r") as f:
+    with h5py.File("Examples/hyb_data/Delta.0.h5", "r") as f:
         # print(list(f.keys()))
         Delta = f[list(f.keys())[-1]]['Hyb'][:]
 
