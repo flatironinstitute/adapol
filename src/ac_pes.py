@@ -7,7 +7,7 @@ import scipy
 import scipy.optimize
 import cvxpy as cp
 import matplotlib.pyplot as plt
-import mosek
+# import mosek
 def eval_with_pole(pol, Z, weight):
     pol_t = np.reshape(pol,[pol.size,1])
     M = 1/(Z-pol_t)
@@ -75,6 +75,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
                 else:
                     prob = cp.Problem(cp.Minimize(Gfit))
                 result = prob.solve(solver = "SCS",verbose = False, eps = eps)
+                # todo: add options for mosek
                 # mosek_params_dict = {"MSK_DPAR_INTPNT_CO_TOL_PFEAS": 1.e-8,\
                 #                     "MSK_DPAR_INTPNT_CO_TOL_DFEAS": 1.e-8,
                 #                     "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": 1.e-8, 
