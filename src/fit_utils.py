@@ -7,6 +7,7 @@ import scipy
 import scipy.optimize
 import cvxpy as cp
 import matplotlib.pyplot as plt
+from aaa import *
 # import mosek
 def eval_with_pole(pol, Z, weight):
     pol_t = np.reshape(pol,[pol.size,1])
@@ -137,3 +138,70 @@ def erroreval(pol,  Z, G, cleanflag=True, maxiter=1000,fast = False, complex = T
     
     grad = -grad/y
     return y, grad
+
+def pole_fitting(Delta, Z, tol = None,Np = None, mmin=None,mmax = 50, maxiter = 50,cleanflag=False,fast=False, disp=False, complex = True):
+    #pole estimation
+    #tol needs to be fixed
+    if Np == None and tol == None:
+        raise Exception("One needs to specify either the number of poles or the fitting error tolerance.")
+    if Np != None and tol != None: 
+        raise Exception("One can not specify both the number of poles and the fitting error tolerance. Only specify one of them.")
+    if Np == None:
+        if mmin ==None or mmin <4:
+            mmin = 4
+        if mmin %2 == 1:
+            mmin = mmin+1
+        if mmax > 2*(Z.shape[0]//2):
+            mmax = 2*(Z.shape[0]//2) 
+    else:
+        if Np % 2 ==1:
+            Np = Np + 1
+        mmin, mmax = Np, Np
+    if len(Delta.shape)==1: 
+        Delta = Delta.reshape(Delta.shape[0],1,1)
+        
+    for m in range(mmin, mmax+1, 2):
+        
+        pol,_,_,_ = aaa_matrix_real(Delta, 1j*Z,mmax=m)
+        pol = np.real(pol)
+        weight, _, residue = get_weight(pol, 1.0j*Z, Delta,cleanflag=cleanflag,complex=complex,fast = fast)
+        # print(np.max(np.abs(residue)))
+        if tol!=None:
+            if np.max(np.abs(residue))>tol*10:
+                continue
+        if Np==None: 
+            pol, weight = aaa_reduce(pol, weight, 1e-5)
+        # print("Number of poles is ", len(pol))
+        if cleanflag == True:
+            if maxiter>0:
+                fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=cleanflag,complex=complex)
+                res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-10,"ftol":1e-10})
+        else: 
+            fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=True,complex=complex)
+            res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" : False, "gtol":1e-10,"ftol":1e-10})
+            if maxiter>0:
+                fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=False,complex= complex,fast = fast)
+                res = scipy.optimize.minimize(fhere,res.x, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-10,"ftol":1e-10})
+        
+        weight, _, residuenew = get_weight(res.x, 1j*Z, Delta,cleanflag=cleanflag,fast=fast,complex=complex)
+        if check_weight_psd(weight)==False:
+            weight, _, residuenew = get_weight(res.x, 1j*Z, Delta,cleanflag=False,complex=complex)
+        err = np.linalg.norm(residuenew)
+        if tol != None:
+            if np.max(np.abs(residuenew))<tol:
+                return res.x, weight, np.max(np.abs(residuenew))
+        else:
+            return res.x, weight, np.max(np.abs(residuenew))
+
+        
+
+    if tol != None:
+        print("Fail to reach desired fitting error!") 
+    return res.x, weight, np.max(np.abs(residuenew))
+
+def check_weight_psd(weight,atol=1e-6):
+    check_psd = True
+    for i in range(weight.shape[0]):
+        val, _ = np.linalg.eig(weight[i])
+        check_psd = check_psd and np.min(val.real)>-atol
+    return check_psd
