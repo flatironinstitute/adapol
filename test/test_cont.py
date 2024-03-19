@@ -1,11 +1,9 @@
 import numpy as np
 import sys
 sys.path.insert(0, "../src")
-from aaa import *
-from ac_pes import *
 import matplotlib.pyplot as plt
 import scipy
-from hybdecomp import *
+from matsubara import *
 def Kw(w,v):
     return 1/(1j*v-w)
 
@@ -37,8 +35,9 @@ if __name__ == "__main__":
     tol = 1e-8
     for Np in [4,6,8,10,12]:
         # pol, weight, err = pole_fitting(Delta, Z, Np = Np , maxiter = 500,disp=False,cleanflag=True)
-        bath_cont = bath(Delta = Delta,Z = Z)
-        bath_cont.hyb_fit(Np = Np, maxiter = 500, disp = False, cleanflag = True)
+        bath_cont = Matsubara(Delta = Delta,Z = Z)
+        bath_cont.fit_num_poles(Np = Np, maxiter = 500, disp = False, cleanflag = True)
+        print("When number of poles is ", len(bath_cont.pol))
         print("Fitting error is ",bath_cont.final_error)
         print("Weight PSD is ", check_weight_psd(bath_cont.weight))
 

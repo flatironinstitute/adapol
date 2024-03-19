@@ -1,11 +1,9 @@
 import numpy as np
 import sys
 sys.path.insert(0, "../src")
-from aaa import *
-from ac_pes import *
 import matplotlib.pyplot as plt
 import scipy
-from hybdecomp import *
+from matsubara import *
 
 def make_G_with_random_discrete_pole(Np,Z):
     pol = np.random.randn(Np)
@@ -33,9 +31,9 @@ if __name__ == "__main__":
     tol = 1e-6
     for Np in range(2,10):
         pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np,Z)
-        
-        bath_disc = bath(Delta = Delta,Z = Z)
-        bath_disc.hyb_fit(tol = tol, maxiter = 50, disp = False, cleanflag = True)
+
+        bath_disc = Matsubara(Delta = Delta, Z = Z)
+        bath_disc.fit_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
         print("Fitting error is ",bath_disc.final_error)
         print("Weight PSD is ", check_weight_psd(bath_disc.weight))
         
