@@ -32,10 +32,10 @@ if __name__ == "__main__":
     for Np in range(2,10):
         pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np,Z)
 
-        bath_disc = Matsubara(Delta = Delta, Z = Z)
-        bath_disc.fit_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
-        print("Fitting error is ",bath_disc.final_error)
-        print("Weight PSD is ", check_weight_psd(bath_disc.weight))
+        ImFreq_obj = Matsubara(Delta = Delta, Z = Z)
+        bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
+        print("Fitting error is ",ImFreq_obj.final_error)
+        print("Weight PSD is ", check_weight_psd(ImFreq_obj.weight))
         
 
 
