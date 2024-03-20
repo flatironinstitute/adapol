@@ -19,11 +19,16 @@ Imfreq_obj = Matsubara(Delta, Z)
 ```
 
 ## Hybridization Fitting
-There are two choices for doing hybridization fitting. One can either fit with desired accuracy 'eps':
+There are two choices for doing hybridization fitting. One can either fit with desired accuracy `eps`:
 ```python
 bath_energy, bath_hyb = Imfreq_obj.bath_fitting_tol(tol = 1e-6)
 ```
-Or fit with specified number of interpolation points 'Np':
+Or fit with specified number of interpolation points `Np`:
 ```python
-bath_energy, bath_hyb = Imfreq_obj.bath_fitting_tol(Np = 4)
+bath_energy, bath_hyb = Imfreq_obj.bath_fitting_num_poles(Np = 4)
 ```
+Here `bath_energy` and `bath_hyb` are desired quantities of hybridization orbitals. 
+
+In more sophisticated applications, one might need to specify other flags, such as `maxiter`, `cleanflag` and `disp`. See comments in `matsubara.py` for details.
+
+## Analytic continuation
