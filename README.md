@@ -1,8 +1,10 @@
-This is a python package for Matsubara functions in the imaginary frequency domain. Current applications include
+This is a python package for Matsubara functions in the imaginary frequency domain. 
 
-(1) hybridization fitting,
+Current applications include
 
-(2) Analytic continuation.
+- hybridization fitting,
+
+- Analytic continuation.
 
 Let us illustrate how to use the code with the following toy example:
 ## Setup
