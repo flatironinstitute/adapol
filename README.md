@@ -6,16 +6,15 @@ This is a python package for Matsubara functions in the imaginary frequency doma
 
 Let us illustrate how to use the code with the following toy example:
 
+* Setup
 ```python
 import numpy as np
 beta = 20
 Z = np.linspace(-25.,25.,26)*np.pi/beta  #Matsubara frequencies
-Delta = 1.0/(1j*Z-0.5) + 2.0/(1j*Z+0.2) + 0.5/(1j*Z+0.7)
+Delta = 1.0/(1j*Z-0.5) + 2.0/(1j*Z+0.2) + 0.5/(1j*Z+0.7) # Matsubara functions on these frequencies
 ```
 
-<h3>Hybridization Fitting</h3>
-
-In hybridization fitting, 
+With Delta and Z, one first initialize the Matsubara object:
 ```python
-bath = Matsubara(Delta, Z)
+Imfreq_obj = Matsubara(Delta, Z)
 ```
