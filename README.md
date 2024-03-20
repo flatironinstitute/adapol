@@ -54,5 +54,5 @@ G_w = greens_function(wgrid)
 and then one can plot the spectral function:
 ```python
 import matplotlib.pyplot as plt
-plt.plot(wgrid.real, -np.squeeze(Gw).imag/np.pi)
+plt.plot(wgrid.real, -np.squeeze(G_w).imag/np.pi)
 ```
