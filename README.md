@@ -4,7 +4,7 @@ Current applications include
 
 - hybridization fitting,
 
-- Analytic continuation.
+- analytic continuation.
 
 Let us illustrate how to use the code with the following toy example:
 ## Setup
