@@ -3,3 +3,10 @@ This is a python package for Matsubara functions in the imaginary frequency doma
 (1) hybridization fitting,
 
 (2) Analytic continuation.
+
+<h3>Hybridization Fitting</h3>
+
+In hybridization fitting, 
+'''python
+bath = Matsubara(Delta, Z)
+'''
