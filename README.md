@@ -7,6 +7,6 @@ This is a python package for Matsubara functions in the imaginary frequency doma
 <h3>Hybridization Fitting</h3>
 
 In hybridization fitting, 
-'''python
+```python
 bath = Matsubara(Delta, Z)
-'''
+```
