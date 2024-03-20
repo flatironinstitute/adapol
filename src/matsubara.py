@@ -6,12 +6,27 @@ from fit_utils import *
 
 import matplotlib.pyplot as plt
 import scipy
-## TODO add AC support
+
 class Matsubara(object):
     def __init__(self, Delta, Z):
+        """ Initialization of a Matsubara object
+        Parameters:
+        --------
+        Delta: Matsubara functions in the imaginary frequency domain, np array
+            size: Nw * Norb * Norb
+            if Delta is a 1d-array, it will be reshaped into Np * 1 * 1
+        
+        Z: Matsubara frequencies, 1d array
+            size: Nw*1
+            Note: Z = k*pi/beta not 1j*k*pi/beta
+
+        """
+        if len(Delta.shape)==1:
+            Delta = Delta.reshape(Delta.shape[0],1,1)
         self.Delta = Delta
         self.Z = Z
-    def fit_tol(self, tol=1e-3, maxiter = 500, mmin = 4, mmax = 50, eps = 1e-7, cleanflag=False, disp = False):
+
+    def bathfitting_tol(self, tol=1e-3, maxiter = 500, mmin = 4, mmax = 50, eps = 1e-7, cleanflag=False, disp = False):
         """Conduct bath fitting, with fixed error tolerance tol.
 
         The number of poles is increased until reaching desired accuracy.
@@ -46,12 +61,21 @@ class Matsubara(object):
             whether to display optimization details
             default: False
 
+
+        Output:
+        -------
+        bathenergy: energy of bath orbitals, 1d array of shape (Nb)
+        bathhyb: coefficient of bath orbitals, 2d array of shape (Nb, Norb)
+
+
         """
         self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
                                                                     maxiter = maxiter, cleanflag=cleanflag, disp=disp)
         self.obtain_orbitals(eps=eps) 
         self.final_error = np.max(np.abs(self.Delta - eval_with_pole(self.bathenergy, 1j*self.Z, self.bath_mat )))
-    def fit_num_poles(self, Np = 4, maxiter = 500, eps = 1e-7, cleanflag = False, disp = False):
+
+        return self.bathenergy, self.bathhyb
+    def bathfitting_num_poles(self, Np = 4, maxiter = 500, eps = 1e-7, cleanflag = False, disp = False):
         """Conduct bath fitting, with fixed number of poles.
         Examples:
         --------
@@ -80,17 +104,56 @@ class Matsubara(object):
             whether to display optimization details
             default: False
 
+        
+        Output:
+        -------
+        bathenergy: energy of bath orbitals, 1d array of shape (Nb)
+        bathhyb: coefficient of bath orbitals, 2d array of shape (Nb, Norb)
+
         """
 
         self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
                                                                     maxiter = maxiter, cleanflag=cleanflag, disp=disp)
         self.obtain_orbitals(eps=eps) 
         self.final_error = np.max(np.abs(self.Delta - eval_with_pole(self.bathenergy, 1j*self.Z, self.bath_mat )))
+
+        return self.bathenergy, self.bathhyb
     
 
-   
+    def analytic_cont_tol(self, tol=1e-3, maxiter = 500, mmin = 4, mmax = 50, cleanflag=False, disp = False):
+        '''
+        Analytic continuation for fixed error tolerance tol
+
+        Input: same as bath_fitting_tol
+
+        Output: Green's function evaluator
+        '''
+        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
+                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
+        self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
+        return self.func
+    
+    def analytic_cont_num_poles(self, Np = 4, maxiter = 500, cleanflag = False, disp = False):
+
+        '''
+        Analytic continuation for fixed number of poles
+
+        Input: same as bath_fitting_num_poles
+
+        Output: Green's function evaluator
+        ''' 
+        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
+                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
+        self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
+
+        return self.func
+
+
 
     def obtain_orbitals(self,eps=1e-7):
+        '''
+        obtaining bath orbitals through svd
+        '''
         polelist = []
         veclist = []
         matlist = []
@@ -104,6 +167,8 @@ class Matsubara(object):
 
                     
         self.bathenergy, self.bathhyb, self.bath_mat = np.array(polelist), np.array(veclist), np.array(matlist)
+
+    
 
 
 
