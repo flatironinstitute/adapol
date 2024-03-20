@@ -26,7 +26,7 @@ class Matsubara(object):
         self.Delta = Delta
         self.Z = Z
 
-    def bathfitting_tol(self, tol=1e-3, maxiter = 500, mmin = 4, mmax = 50, eps = 1e-7, cleanflag=False, disp = False):
+    def bathfitting_tol(self, tol=1e-3, maxiter = 50, mmin = 4, mmax = 50, eps = 1e-7, cleanflag=False, disp = False):
         """Conduct bath fitting, with fixed error tolerance tol.
 
         The number of poles is increased until reaching desired accuracy.
@@ -75,7 +75,7 @@ class Matsubara(object):
         self.final_error = np.max(np.abs(self.Delta - eval_with_pole(self.bathenergy, 1j*self.Z, self.bath_mat )))
 
         return self.bathenergy, self.bathhyb
-    def bathfitting_num_poles(self, Np = 4, maxiter = 500, eps = 1e-7, cleanflag = False, disp = False):
+    def bathfitting_num_poles(self, Np = 4, maxiter = 50, eps = 1e-7, cleanflag = False, disp = False):
         """Conduct bath fitting, with fixed number of poles.
         Examples:
         --------
