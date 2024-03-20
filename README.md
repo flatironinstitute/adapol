@@ -32,3 +32,27 @@ Here `bath_energy` and `bath_hyb` are desired quantities of hybridization orbita
 In more sophisticated applications, one might need to specify other flags, such as `maxiter`, `cleanflag` and `disp`. See comments in `matsubara.py` for details.
 
 ## Analytic continuation
+
+Similarly, there are two choices for analytic continuation:
+
+```python
+greens_function = Imfreq_obj.analytic_cont_tol(tol = 1e-6)
+```
+
+or
+
+```python
+greens_function = Imfreq_obj.analytic_cont_num_poles(Np = 4)
+```
+
+The output now is a function evaluator for the Green's functions. For example, if one wish to evaluate the Green's function on `wgrid`, one can do:
+
+```python
+wgrid = np.linspace(-1,1,100)+1j*0.01
+G_w = greens_function(wgrid)
+```
+and then one can plot the spectral function:
+```python
+import matplotlib.pyplot as plt
+plt.plot(wgrid.real, -np.squeeze(Gw).imag/np.pi)
+```
