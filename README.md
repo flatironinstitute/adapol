@@ -5,8 +5,7 @@ This is a python package for Matsubara functions in the imaginary frequency doma
 (2) Analytic continuation.
 
 Let us illustrate how to use the code with the following toy example:
-
-* Setup
+## Setup
 ```python
 import numpy as np
 beta = 20
