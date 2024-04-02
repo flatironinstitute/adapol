@@ -33,7 +33,8 @@ if __name__ == "__main__":
         pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np,Z)
 
         ImFreq_obj = Matsubara(Delta = Delta, Z = Z)
-        bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
+        # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
+        bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 50, cleanflag = True, flag="hybfit")
         print("Fitting error is ",ImFreq_obj.final_error)
         print("Weight PSD is ", check_weight_psd(ImFreq_obj.weight))
         

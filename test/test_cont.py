@@ -36,9 +36,8 @@ if __name__ == "__main__":
     for Np in [4,6,8,10,12]:
         # pol, weight, err = pole_fitting(Delta, Z, Np = Np , maxiter = 500,disp=False,cleanflag=True)
         ImFreq_obj = Matsubara(Delta = Delta,Z = Z)
-        bath_energy, bath_hyb = ImFreq_obj.bathfitting_num_poles(Np = Np, maxiter = 500, disp = False, cleanflag = True)
+        bath_energy, bath_hyb = ImFreq_obj.fitting(Np = Np, maxiter = 500, disp = False, cleanflag = True, flag = "hybfit")
+        # bath_energy, bath_hyb = ImFreq_obj.bathfitting_num_poles(Np = Np, maxiter = 500, disp = False, cleanflag = True)
         print("When number of poles is ", len(ImFreq_obj.pol))
         print("Fitting error is ",ImFreq_obj.final_error)
         print("Weight PSD is ", check_weight_psd(ImFreq_obj.weight))
-
-        
