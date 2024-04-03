@@ -26,103 +26,10 @@ class Matsubara(object):
         self.Delta = Delta
         self.Z = Z
     
-    
 
-    def bathfitting_tol(self, tol=1e-3, maxiter = 50, mmin = 4, mmax = 50, eps = 1e-7, cleanflag=False, disp = False):
-        """Conduct bath fitting, with fixed error tolerance tol.
-
-        The number of poles is increased until reaching desired accuracy.
-
-        Examples:
-        --------
-            bath.hyb_fit(tol = tol, maxiter = 50) # fix until tol accuracy
-            bath.hyb_fit(tol = tol, maxiter = 50, cleanflag = False) # fit until tol accuracy, with improved accuracy (and bigger computational cost)
-        
-        Parameters:
-        --------
-        tol: Fitting error tolreance, float
-            default: 1e-3
-
-        mmin, mmax: number of minimum or maximum poles, integer
-            default: mmin = 4, mmax = 50
-            
-        
-        maxiter: int
-            maximum number of iterations
-            default: 50
-
-        eps: float, optional
-            Truncation threshold for bath orbitals while doing SVD of weight matrices
-            default:1e-7
-        
-        cleanflag: bool
-            whether to use least square to replace semidefinite programming (SDP) to fasten calculation
-            default: False
-
-        disp: bool
-            whether to display optimization details
-            default: False
-
-
-        Output:
-        -------
-        bathenergy: energy of bath orbitals, 1d array of shape (Nb)
-        bathhyb: coefficient of bath orbitals, 2d array of shape (Nb, Norb)
-
-
-        """
-        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
-                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        self.obtain_orbitals(eps=eps) 
-        self.final_error = np.max(np.abs(self.Delta - eval_with_pole(self.bathenergy, 1j*self.Z, self.bath_mat )))
-
-        return self.bathenergy, self.bathhyb
-    def bathfitting_num_poles(self, Np = 4, maxiter = 50, eps = 1e-7, cleanflag = False, disp = False):
-        """Conduct bath fitting, with fixed number of poles.
-        Examples:
-        --------
-            bath.hyb_fit(Np = Np, maxiter = 500) # fix with Np poles
-            bath.hyb_fit(Np = Np, maxiter = 500, cleanflag = False) # fit with Np poles, with improved accuracy (and bigger computational cost)
-        
-        Parameters:
-        --------
-        Np: number of Matsubara points used for fitting, integer
-            default: 4
-            Np needs to be an even integer, and number of poles is Np - 1.
-        
-        maxiter: int
-            maximum number of iterations
-            default: 50
-
-        eps: float, optional
-            Truncation threshold for bath orbitals while doing SVD of weight matrices
-            default:1e-7
-        
-        cleanflag: bool
-            whether to use least square to replace semidefinite programming (SDP) to fasten calculation
-            default: False
-
-        disp: bool
-            whether to display optimization details
-            default: False
-
-        
-        Output:
-        -------
-        bathenergy: energy of bath orbitals, 1d array of shape (Nb)
-        bathhyb: coefficient of bath orbitals, 2d array of shape (Nb, Norb)
-
-        """
-
-        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
-                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        self.obtain_orbitals(eps=eps) 
-        self.final_error = np.max(np.abs(self.Delta - eval_with_pole(self.bathenergy, 1j*self.Z, self.bath_mat )))
-
-        return self.bathenergy, self.bathhyb
-    
+     
     def fitting(self, tol=None, Np = None, flag = "hybfit",eps = 1e-7, cleanflag=False, maxiter = 500, mmin = 4, mmax = 50, disp = False):
-         '''
+        '''
             The main fitting function for both hybridization fitting and analytic continuation.
             Examples:
             --------
@@ -175,20 +82,20 @@ class Matsubara(object):
                 default: False
             
         '''
-         if tol is None and Np is None:
+        if tol is None and Np is None:
             raise ValueError("Please specify either tol or Np")
-         if tol is not None and Np is not None:
+        if tol is not None and Np is not None:
             raise ValueError("Please specify either tol or Np. One can not specify both of them.")
-         if Np is not None:
+        if Np is not None:
             self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
                                                                             maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-         elif tol is not None:
+        elif tol is not None:
             self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
                                                                             maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-         if flag == "anacont":
+        if flag == "anacont":
             self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
             return self.func 
-         elif flag == "hybfit":
+        elif flag == "hybfit":
             self.obtain_orbitals(eps=eps) 
             self.func = lambda Z: eval_with_pole(self.bathenergy, Z, self.bath_mat)
             self.final_error = np.max(np.abs(self.Delta - self.func(1j*self.Z)))
@@ -196,36 +103,6 @@ class Matsubara(object):
     
 
             
-
-    def analytic_cont_tol(self, tol=1e-3, maxiter = 500, mmin = 4, mmax = 50, cleanflag=False, disp = False):
-        '''
-        Analytic continuation for fixed error tolerance tol
-
-        Input: same as bath_fitting_tol
-
-        Output: Green's function evaluator
-        '''
-        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
-                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
-        return self.func
-    
-    def analytic_cont_num_poles(self, Np = 4, maxiter = 500, cleanflag = False, disp = False):
-
-        '''
-        Analytic continuation for fixed number of poles
-
-        Input: same as bath_fitting_num_poles
-
-        Output: Green's function evaluator
-        ''' 
-        self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
-                                                                    maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
-
-        return self.func
-
-
 
     def obtain_orbitals(self,eps=1e-7):
         '''
