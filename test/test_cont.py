@@ -31,7 +31,6 @@ Z = (np.linspace(-N,N,N+1))*np.pi/beta
 
 dim = 3
 H, Delta = make_G_with_cont_spec(dim,Z, semicircular)
-tol = 1e-8
 def fit_cont(tol):
     ImFreq_obj = Matsubara(Delta = Delta,Z = Z)
     bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 500, disp = False, cleanflag = True, flag = "hybfit")
