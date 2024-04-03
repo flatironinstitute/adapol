@@ -33,13 +33,13 @@ class Matsubara(object):
             The main fitting function for both hybridization fitting and analytic continuation.
             Examples:
             --------
-            Bath fitting:
-                Matsubara.fitting(mode = "pole", Np = Np, flag = "hybfit") # hybridization fitting with Np poles
-                Matsubara.fitting(mode = "tol", tol = tol, flag = "hybfit") # hybridization fitting with fixed error tolerance tol
+            Bath fitting: return bath energies (1d array) and bath hybridizations (2d array)
+                Energy, Orbitals = Matsubara.fitting(mode = "pole", Np = Np, flag = "hybfit") # hybridization fitting with Np poles
+                Energy, Orbitals = Matsubara.fitting(mode = "tol", tol = tol, flag = "hybfit") # hybridization fitting with fixed error tolerance tol
 
-            Analytic continuation:
-                Matsubara.fitting(mode = "pole", Np = Np, flag = "anacont") # analytic continuation with Np poles
-                Matsubara.fitting(mode = "tol", tol = tol, flag = "anacont") # analytic continuation with fixed error tolerance tol
+            Analytic continuation: return function evaluator
+                func = Matsubara.fitting(mode = "pole", Np = Np, flag = "anacont") # analytic continuation with Np poles
+                func = Matsubara.fitting(mode = "tol", tol = tol, flag = "anacont") # analytic continuation with fixed error tolerance tol
             
             Bath fitting / Analytic continuation with improved accuracy:
                 Matsubara.fitting(mode = mode, tol = tol, flag = flag, cleanflag = False) 
@@ -80,7 +80,53 @@ class Matsubara(object):
             disp: bool
                 whether to display optimization details
                 default: False
+
+
+
             
+            Returns:
+            --------
+            If flag == "anacont":
+
+                func: function
+                    Analytic continuation function
+                    func(w) = sum_n weight[n]/(w-pol[n]) 
+
+            If flag == "hybfit":
+
+                bathenergy: np.array (Nb)
+                    Bath energy
+
+                bathhyb: np.array (Nb, Norb)
+                    Bath hybridization
+            
+                    
+            Available attributes:
+            --------
+            The following things that can be accessed after fitting:
+
+            self.pol: np.array
+                poles obtained from fitting
+
+            self.weight: np.array
+                weights obtained from fitting
+
+            self.fitting_error: float
+                fitting error
+
+            if flag == "hybfit":
+            
+                self.func: function
+                    Hybridization function evaluator
+                    func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
+
+                self.Delta_reconstruct: np.array (Nw, Norb, Norb)
+                    Reconstructed Delta from bath orbitals,calculated from func(1j*Z)
+
+                self.final_error: float
+                    final fitting error
+
+
         '''
         if tol is None and Np is None:
             raise ValueError("Please specify either tol or Np")
@@ -98,11 +144,10 @@ class Matsubara(object):
         elif flag == "hybfit":
             self.obtain_orbitals(eps=eps) 
             self.func = lambda Z: eval_with_pole(self.bathenergy, Z, self.bath_mat)
-            self.final_error = np.max(np.abs(self.Delta - self.func(1j*self.Z)))
+            self.Delta_reconstruct = self.func(1j*self.Z)
+            self.final_error = np.max(np.abs(self.Delta - self.Delta_reconstruct))
             return self.bathenergy, self.bathhyb
     
-
-            
 
     def obtain_orbitals(self,eps=1e-7):
         '''
