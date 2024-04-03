@@ -1,12 +1,5 @@
-import sys
-# sys.path.insert(0, "../")
 import numpy as np
-from .aaa import *
-from .fit_utils import *
-
-import matplotlib.pyplot as plt
-import scipy
-
+from .fit_utils import pole_fitting, eval_with_pole, check_psd
 class Matsubara(object):
     def __init__(self, Delta, Z):
         """ Initialization of a Matsubara object
@@ -167,7 +160,12 @@ class Matsubara(object):
                     
         self.bathenergy, self.bathhyb, self.bath_mat = np.array(polelist), np.array(veclist), np.array(matlist)
 
-    
+    def check_weight_psd(self, atol = 1e-6):
+        '''
+        check whether the weight matrices are positive semidefinite
+        '''
+        
+        return check_psd(self.weight, atol = atol)
 
 
 

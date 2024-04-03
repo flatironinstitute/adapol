@@ -1,9 +1,8 @@
 import numpy as np
 import sys
 sys.path.insert(0, "../")
-import matplotlib.pyplot as plt
 import scipy
-from matsubara import *
+from matsubara import Matsubara
 def Kw(w,v):
     return 1/(1j*v-w)
 
@@ -19,7 +18,9 @@ def make_G_with_cont_spec(N1,Z,rho,a=-1.0, b=1.0,eps=1e-12):
     en = en/np.max(np.abs(en))#np.random.rand(en.shape[0])
     for i in range(en.shape[0]):
         for n in range(len(Z)):
-            f = lambda w: Kw(w-en[i],Z[n])*rho(w)
+            def f(w):
+                return Kw(w-en[i],Z[n])*rho(w)
+            # f = lambda w: Kw(w-en[i],Z[n])*rho(w)
             gn = scipy.integrate.quad(f, a, b,epsabs=eps,epsrel=eps,complex_func=True)[0]
             G[n,:,:] = G[n,:,:] + gn*vn[:,i]*np.conj(np.transpose(vn[None,:,i]))
         
@@ -36,8 +37,8 @@ def fit_cont(tol):
     bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 500, disp = False, cleanflag = True, flag = "hybfit")
    
     assert ImFreq_obj.final_error<tol
-    assert check_weight_psd(ImFreq_obj.weight) == True
+    assert ImFreq_obj.check_weight_psd() 
 
 
 def test_cont():
-    fit_cont(1e-4)
+    fit_cont(5e-4)

@@ -1,13 +1,11 @@
 # This is a python implementation for analytic continuation of Fermionic Green's functions/self energy
 # using PES (ES) method
-# Reference: PhysRevB.107.075151
-import h5py    
+# Reference: PhysRevB.107.075151   
 import numpy as np 
 import scipy
 import scipy.optimize
 import cvxpy as cp
-import matplotlib.pyplot as plt
-from .aaa import *
+from .aaa import aaa_matrix_real
 # import mosek
 def eval_with_pole(pol, Z, weight):
     pol_t = np.reshape(pol,[pol.size,1])
@@ -26,7 +24,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
     MM = np.concatenate([M.real,M.imag])
     if len(G.shape)==1: 
         GG = np.concatenate([G.real,G.imag])
-        if cleanflag == True:
+        if cleanflag:
             R = np.linalg.lstsq(MM, GG,rcond=0)[0]
         else:
             [R,rnorm] = scipy.optimize.nnls(MM, GG,maxiter=maxiter)
@@ -35,7 +33,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
         Np = len(pol)
         Norb = G.shape[1]
         R = np.zeros((Np, Norb, Norb), dtype = np.complex128)
-        if cleanflag == True:
+        if cleanflag:
             for i in range(Norb):
                 GG = np.concatenate([G[:,i,i].real,G[:,i,i].imag])
                 R[:,i,i] = np.linalg.lstsq(MM, GG,rcond=0)[0]
@@ -49,7 +47,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
                     R[:,i,j] = R1 + 1j*R2
                     R[:,j,i] = R1 - 1j*R2
         else:
-            if fast==False:
+            if not fast:
                 Nw = len(Z)
                 diff_param_real = [ cp.Parameter((Np)) for _ in range(Nw)]
                 diff_param_imag = [ cp.Parameter((Np)) for _ in range(Nw)]
@@ -59,7 +57,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
                     diff.value = val.imag
 
 
-                if complex == True:
+                if complex:
                     X = [cp.Variable((Norb, Norb), hermitian=True) for i in range(Np) ]
                     constraints = [X[i] >> 0 for i in range(Np)]
                 else:
@@ -71,11 +69,11 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
                     Gfit += cp.sum_squares(sum([ diff_param_real[w][i]*X[i] for i in range(Np)])+sum([ 1j*diff_param_imag[w][i]*X[i] for i in range(Np)]) - G[w,:,:])
                 
                 
-                if complex == True: 
+                if complex: 
                     prob = cp.Problem(cp.Minimize(Gfit), constraints)
                 else:
                     prob = cp.Problem(cp.Minimize(Gfit))
-                result = prob.solve(solver = "SCS",verbose = False, eps = eps)
+                prob.solve(solver = "SCS",verbose = False, eps = eps)
                 # todo: add options for mosek
                 # mosek_params_dict = {"MSK_DPAR_INTPNT_CO_TOL_PFEAS": 1.e-8,\
                 #                     "MSK_DPAR_INTPNT_CO_TOL_DFEAS": 1.e-8,
@@ -100,7 +98,7 @@ def get_weight(pol, Z, G, cleanflag=True, maxiter=1000,complex=True,fast=False, 
                         constraints = [cp.abs(x[k])<=bound[k] for k in range(MM.shape[1])]
                         objective = cp.Minimize(cp.sum_squares(MM2 @ x - GG))
                         prob = cp.Problem(objective, constraints)
-                        result = prob.solve(solver = "SCS",verbose = False, eps = eps)
+                        prob.solve(solver = "SCS",verbose = False, eps = eps)
                         # result = prob.solve(solver = cp.MOSEK,verbose = False,mosek_params = mosek_params_dict)
                         R[:,i,j] = x.value
                         R[:,j,i] = np.conj(x.value)
@@ -142,12 +140,12 @@ def erroreval(pol,  Z, G, cleanflag=True, maxiter=1000,fast = False, complex = T
 def pole_fitting(Delta, Z, tol = None,Np = None, mmin=None,mmax = 50, maxiter = 50,cleanflag=False,fast=False, disp=False, complex = True):
     #pole estimation
     #tol needs to be fixed
-    if Np == None and tol == None:
+    if Np is None and tol is None:
         raise Exception("One needs to specify either the number of poles or the fitting error tolerance.")
-    if Np != None and tol != None: 
+    if Np is not None and tol is not None: 
         raise Exception("One can not specify both the number of poles and the fitting error tolerance. Only specify one of them.")
-    if Np == None:
-        if mmin ==None or mmin <4:
+    if Np is None:
+        if mmin is None or mmin <4:
             mmin = 4
         if mmin %2 == 1:
             mmin = mmin+1
@@ -166,40 +164,46 @@ def pole_fitting(Delta, Z, tol = None,Np = None, mmin=None,mmax = 50, maxiter = 
         pol = np.real(pol)
         weight, _, residue = get_weight(pol, 1.0j*Z, Delta,cleanflag=cleanflag,complex=complex,fast = fast)
         # print(np.max(np.abs(residue)))
-        if tol!=None:
+        if tol is not None:
             if np.max(np.abs(residue))>tol*10:
                 continue
-        if Np==None: 
+        if Np is None: 
             pol, weight = aaa_reduce(pol, weight, 1e-5)
         # print("Number of poles is ", len(pol))
-        if cleanflag == True:
+        if cleanflag:
             if maxiter>0:
-                fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=cleanflag,complex=complex)
+                def fhere(pole):
+                    return erroreval(pole,1j*Z,Delta,cleanflag=cleanflag,complex=complex)
+                # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=cleanflag,complex=complex)
                 res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-10,"ftol":1e-10})
         else: 
-            fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=True,complex=complex)
-            res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" : False, "gtol":1e-10,"ftol":1e-10})
+            def fhere1(pole):
+                return erroreval(pole,1j*Z,Delta,cleanflag=True,complex=complex)
+            # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=True,complex=complex)
+            res = scipy.optimize.minimize(fhere1,pol, method='L-BFGS-B', jac=True,options= {"disp" : False, "gtol":1e-10,"ftol":1e-10})
             if maxiter>0:
-                fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=False,complex= complex,fast = fast)
-                res = scipy.optimize.minimize(fhere,res.x, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-10,"ftol":1e-10})
+                def fhere2(pole):
+                    return erroreval(pole,1j*Z,Delta,cleanflag=False,complex=complex,fast = fast)
+                # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=False,complex= complex,fast = fast)
+                res = scipy.optimize.minimize(fhere2,res.x, method='L-BFGS-B', jac=True,options= {"disp" :disp,"maxiter":maxiter, "gtol":1e-10,"ftol":1e-10})
         
         weight, _, residuenew = get_weight(res.x, 1j*Z, Delta,cleanflag=cleanflag,fast=fast,complex=complex)
-        if check_weight_psd(weight)==False:
+        if not check_psd(weight):
             weight, _, residuenew = get_weight(res.x, 1j*Z, Delta,cleanflag=False,complex=complex)
-        err = np.linalg.norm(residuenew)
-        if tol != None:
-            if np.max(np.abs(residuenew))<tol:
-                return res.x, weight, np.max(np.abs(residuenew))
+        err = np.max(np.abs(residuenew))
+        if tol is not None:
+            if err<tol:
+                return res.x, weight, err
         else:
-            return res.x, weight, np.max(np.abs(residuenew))
+            return res.x, weight, err
 
         
 
-    if tol != None:
+    if tol is not None:
         print("Fail to reach desired fitting error!") 
     return res.x, weight, np.max(np.abs(residuenew))
 
-def check_weight_psd(weight,atol=1e-6):
+def check_psd(weight,atol=1e-6):
     check_psd = True
     for i in range(weight.shape[0]):
         val, _ = np.linalg.eig(weight[i])

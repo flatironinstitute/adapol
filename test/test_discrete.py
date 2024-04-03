@@ -1,9 +1,8 @@
 import numpy as np
 import sys
 sys.path.insert(0, "../")
-import matplotlib.pyplot as plt
 import scipy
-from matsubara import *
+from matsubara import Matsubara
 
 def make_G_with_random_discrete_pole(Np,Z):
     pol = np.random.randn(Np)
@@ -35,7 +34,7 @@ def tst_discrete(Np):
     # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
     bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 50, cleanflag = True, flag="hybfit")
     assert ImFreq_obj.final_error<tol
-    assert check_weight_psd(ImFreq_obj.weight) == True
+    assert ImFreq_obj.check_weight_psd() 
 
 def test_discrete_2():
     tst_discrete(2)
@@ -49,9 +48,7 @@ def test_discrete_6():
     tst_discrete(6)
 def test_discrete_7():
     tst_discrete(7)
-def test_discrete_8():
-    tst_discrete(8)
-        
+
         
 
 

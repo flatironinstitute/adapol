@@ -1,1 +1,1 @@
-from .matsubara import *
+from .matsubara import Matsubara
