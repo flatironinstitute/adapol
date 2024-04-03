@@ -7,7 +7,7 @@ import scipy
 import scipy.optimize
 import cvxpy as cp
 import matplotlib.pyplot as plt
-from aaa import *
+from .aaa import *
 # import mosek
 def eval_with_pole(pol, Z, weight):
     pol_t = np.reshape(pol,[pol.size,1])

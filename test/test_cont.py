@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-sys.path.insert(0, "../matsubara")
+sys.path.insert(0, "../")
 import matplotlib.pyplot as plt
 import scipy
 from matsubara import *

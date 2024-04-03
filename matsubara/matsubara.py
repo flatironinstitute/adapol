@@ -1,8 +1,8 @@
 import sys
 # sys.path.insert(0, "../")
 import numpy as np
-from aaa import *
-from fit_utils import *
+from .aaa import *
+from .fit_utils import *
 
 import matplotlib.pyplot as plt
 import scipy
