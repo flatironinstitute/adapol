@@ -23,28 +23,38 @@ Imfreq_obj = Matsubara(Delta, Z)
 ## Hybridization Fitting
 There are two choices for doing hybridization fitting. One can either fit with desired accuracy `eps`:
 ```python
-bath_energy, bath_hyb = Imfreq_obj.bathfitting_tol(tol = 1e-6)
+bath_energy, bath_hyb = Imfreq_obj.fitting(tol = 1e-6, flag = "hybfit")
 ```
 Or fit with specified number of interpolation points `Np`:
 ```python
-bath_energy, bath_hyb = Imfreq_obj.bathfitting_num_poles(Np = 4)
+bath_energy, bath_hyb = Imfreq_obj.fitting(Np = 4, flag = "hybfit")
 ```
-Here `bath_energy` and `bath_hyb` are desired quantities of hybridization orbitals. 
+Here `bath_energy` $E$ and `bath_hyb` $V$ are desired quantities of hybridization orbitals. They satisfy
+
+```math
+\Delta(\mathrm i \omega_k)_{mn} \approx \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
+```
 
 In more sophisticated applications, one might need to specify other flags, such as `maxiter`, `cleanflag` and `disp`. See comments in `matsubara.py` for details.
+
+One can look at the final error of the hybridization fitting:
+
+```python
+print(Imfreq_obj.final_error)
+```
 
 ## Analytic continuation
 
 Similarly, there are two choices for analytic continuation:
 
 ```python
-greens_function = Imfreq_obj.analytic_cont_tol(tol = 1e-6)
+greens_function = Imfreq_obj.fitting(tol = 1e-6, flag = "anacont")
 ```
 
 or
 
 ```python
-greens_function = Imfreq_obj.analytic_cont_num_poles(Np = 4)
+greens_function = Imfreq_obj.fitting(Np = 4, flag = "anacont")
 ```
 
 The output now is a function evaluator for the Green's functions. For example, if one wish to evaluate the Green's function on `wgrid`, one can do:
