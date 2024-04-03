@@ -27,16 +27,16 @@ class Matsubara(object):
             Examples:
             --------
             Bath fitting: return bath energies (1d array) and bath hybridizations (2d array)
-                Energy, Orbitals = Matsubara.fitting(mode = "pole", Np = Np, flag = "hybfit") # hybridization fitting with Np poles
-                Energy, Orbitals = Matsubara.fitting(mode = "tol", tol = tol, flag = "hybfit") # hybridization fitting with fixed error tolerance tol
+                Energy, Orbitals = Matsubara.fitting(Np = Np, flag = "hybfit") # hybridization fitting with Np poles
+                Energy, Orbitals = Matsubara.fitting(tol = tol, flag = "hybfit") # hybridization fitting with fixed error tolerance tol
 
             Analytic continuation: return function evaluator
-                func = Matsubara.fitting(mode = "pole", Np = Np, flag = "anacont") # analytic continuation with Np poles
-                func = Matsubara.fitting(mode = "tol", tol = tol, flag = "anacont") # analytic continuation with fixed error tolerance tol
+                func = Matsubara.fitting(Np = Np, flag = "anacont") # analytic continuation with Np poles
+                func = Matsubara.fitting(tol = tol, flag = "anacont") # analytic continuation with fixed error tolerance tol
             
             Bath fitting / Analytic continuation with improved accuracy:
-                Matsubara.fitting(mode = mode, tol = tol, flag = flag, cleanflag = False) 
-                Matsubara.fitting(mode = mode, Np = Np, flag = flag, cleanflag = False)
+                Matsubara.fitting(tol = tol, flag = flag, cleanflag = False) 
+                Matsubara.fitting(Np = Np, flag = flag, cleanflag = False)
 
             Parameters:
             --------
