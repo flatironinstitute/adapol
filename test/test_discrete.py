@@ -24,19 +24,34 @@ def make_G_with_random_discrete_pole(Np,Z):
         G = (M@(weight.reshape(Np,Norb*Norb))).reshape(Nw,Norb,Norb)
     return pol, vec, weight, G
 
-if __name__ == "__main__":
+
+def tst_discrete(Np): 
     beta = 20
     N = 105
     Z = (np.linspace(-N,N,N+1))*np.pi/beta
-    tol = 1e-6
-    for Np in range(2,10):
-        pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np,Z)
+    tol = 1e-6 
+    pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np,Z)
+    ImFreq_obj = Matsubara(Delta = Delta, Z = Z)
+    # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
+    bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 50, cleanflag = True, flag="hybfit")
+    assert ImFreq_obj.final_error<tol
+    assert check_weight_psd(ImFreq_obj.weight) == True
 
-        ImFreq_obj = Matsubara(Delta = Delta, Z = Z)
-        # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
-        bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 50, cleanflag = True, flag="hybfit")
-        print("Fitting error is ",ImFreq_obj.final_error)
-        print("Weight PSD is ", check_weight_psd(ImFreq_obj.weight))
+def test_discrete_2():
+    tst_discrete(2)
+def test_discrete_3():
+    tst_discrete(3)
+def test_discrete_4():
+    tst_discrete(4)
+def test_discrete_5():
+    tst_discrete(5)
+def test_discrete_6():
+    tst_discrete(6)
+def test_discrete_7():
+    tst_discrete(7)
+def test_discrete_8():
+    tst_discrete(8)
+        
         
 
 

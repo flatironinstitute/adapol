@@ -25,19 +25,20 @@ def make_G_with_cont_spec(N1,Z,rho,a=-1.0, b=1.0,eps=1e-12):
         
     return H, G
 
-if __name__ == "__main__":
-    beta = 20
-    N = 55
-    Z = (np.linspace(-N,N,N+1))*np.pi/beta
+beta = 20
+N = 55
+Z = (np.linspace(-N,N,N+1))*np.pi/beta
 
-    dim = 3
-    H, Delta = make_G_with_cont_spec(dim,Z, semicircular)
-    tol = 1e-8
-    for Np in [4,6,8,10,12]:
-        # pol, weight, err = pole_fitting(Delta, Z, Np = Np , maxiter = 500,disp=False,cleanflag=True)
-        ImFreq_obj = Matsubara(Delta = Delta,Z = Z)
-        bath_energy, bath_hyb = ImFreq_obj.fitting(Np = Np, maxiter = 500, disp = False, cleanflag = True, flag = "hybfit")
-        # bath_energy, bath_hyb = ImFreq_obj.bathfitting_num_poles(Np = Np, maxiter = 500, disp = False, cleanflag = True)
-        print("When number of poles is ", len(ImFreq_obj.pol))
-        print("Fitting error is ",ImFreq_obj.final_error)
-        print("Weight PSD is ", check_weight_psd(ImFreq_obj.weight))
+dim = 3
+H, Delta = make_G_with_cont_spec(dim,Z, semicircular)
+tol = 1e-8
+def fit_cont(tol):
+    ImFreq_obj = Matsubara(Delta = Delta,Z = Z)
+    bath_energy, bath_hyb = ImFreq_obj.fitting(tol = tol, maxiter = 500, disp = False, cleanflag = True, flag = "hybfit")
+   
+    assert ImFreq_obj.final_error<tol
+    assert check_weight_psd(ImFreq_obj.weight) == True
+
+
+def test_cont():
+    fit_cont(1e-4)
