@@ -1,172 +1,251 @@
 import numpy as np
 from .fit_utils import pole_fitting, eval_with_pole, check_psd
-class Matsubara(object):
-    def __init__(self, Delta, Z):
-        """ Initialization of a Matsubara object
-        Parameters:
-        --------
-        Delta: Matsubara functions in the imaginary frequency domain, np array
-            size: Nw * Norb * Norb
-            if Delta is a 1d-array, it will be reshaped into Np * 1 * 1
-        
-        Z: Matsubara frequencies, 1d array
-            size: Nw*1
-            Note: Z = k*pi/beta not 1j*k*pi/beta
-
-        """
-        if len(Delta.shape)==1:
-            Delta = Delta.reshape(Delta.shape[0],1,1)
-        self.Delta = Delta
-        self.Z = Z
-    
-
-     
-    def fitting(self, tol=None, Np = None, flag = "hybfit",eps = 1e-7, cleanflag=False, maxiter = 500, mmin = 4, mmax = 50, disp = False):
-        '''
-            The main fitting function for both hybridization fitting and analytic continuation.
-            Examples:
-            --------
-            Bath fitting: return bath energies (1d array) and bath hybridizations (2d array)
-                Energy, Orbitals = Matsubara.fitting(Np = Np, flag = "hybfit") # hybridization fitting with Np poles
-                Energy, Orbitals = Matsubara.fitting(tol = tol, flag = "hybfit") # hybridization fitting with fixed error tolerance tol
-
-            Analytic continuation: return function evaluator
-                func = Matsubara.fitting(Np = Np, flag = "anacont") # analytic continuation with Np poles
-                func = Matsubara.fitting(tol = tol, flag = "anacont") # analytic continuation with fixed error tolerance tol
-            
-            Bath fitting / Analytic continuation with improved accuracy:
-                Matsubara.fitting(tol = tol, flag = flag, cleanflag = False) 
-                Matsubara.fitting(Np = Np, flag = flag, cleanflag = False)
-
-            Parameters:
-            --------
-            tol: Fitting error tolreance, float
-                If tol is specified, the fitting will be conducted with fixed error tolerance tol.
-                default: None
-
-            Np: number of Matsubara points used for fitting, integer
-                If Np is specified, the fitting will be conducted with fixed number of poles.
-                default: None
-                Np needs to be an even integer, and number of poles is Np - 1.
-
-            flag: string
-                "hybfit" for bath fitting, "anacont" for analytic continuation
-                default: "hybfit"
-
-            eps: float, optional
-                Truncation threshold for bath orbitals while doing SVD of weight matrices in hybridization fitting
-                default:1e-7
-
-            cleanflag: bool
-                whether to use least square to replace semidefinite programming (SDP) to fasten calculation
-                default: False
-
-            maxiter: int
-                maximum number of iterations
-                default: 500
-
-            mmin, mmax: number of minimum or maximum poles, integer
-                default: mmin = 4, mmax = 50
-                if tol is specified, mmin and mmax will be used as the minimum and maximum number of poles.
-                if Np is specified, mmin and mmax will not be used.
-
-            disp: bool
-                whether to display optimization details
-                default: False
 
 
+def anacont(
+    Delta,
+    Z,
+    tol=None,
+    Np=None,
+    solver="lstsq",
+    maxiter=500,
+    mmin=4,
+    mmax=50,
+    verbose=False,
+):
+    """
+    The main fitting function for both hybridization fitting.
+    Examples:
+    --------
 
-            
-            Returns:
-            --------
-            If flag == "anacont":
+    func = anacont(Np = Np) # analytic continuation with Np poles
+    func = anacont(tol = tol) # analytic continuation with fixed error tolerance tol
 
-                func: function
-                    Analytic continuation function
-                    func(w) = sum_n weight[n]/(w-pol[n]) 
+    Analytic continuation with improved accuracy:
+        fitting(tol = tol, flag = flag, cleanflag = False)
+        fitting(Np = Np, flag = flag, cleanflag = False)
 
-            If flag == "hybfit":
+    Parameters:
+    --------
+    tol: Fitting error tolreance, float
+        If tol is specified, the fitting will be conducted with fixed error tolerance tol.
+        default: None
 
-                bathenergy: np.array (Nb)
-                    Bath energy
-
-                bathhyb: np.array (Nb, Norb)
-                    Bath hybridization
-            
-                    
-            Available attributes:
-            --------
-            The following things that can be accessed after fitting:
-
-            self.pol: np.array
-                poles obtained from fitting
-
-            self.weight: np.array
-                weights obtained from fitting
-
-            self.fitting_error: float
-                fitting error
-
-            if flag == "hybfit":
-            
-                self.func: function
-                    Hybridization function evaluator
-                    func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
-
-                self.Delta_reconstruct: np.array (Nw, Norb, Norb)
-                    Reconstructed Delta from bath orbitals,calculated from func(1j*Z)
-
-                self.final_error: float
-                    final fitting error
+    Np: number of Matsubara points used for fitting, integer
+        If Np is specified, the fitting will be conducted with fixed number of poles.
+        default: None
+        Np needs to be an even integer, and number of poles is Np - 1.
 
 
-        '''
-        if tol is None and Np is None:
-            raise ValueError("Please specify either tol or Np")
-        if tol is not None and Np is not None:
-            raise ValueError("Please specify either tol or Np. One can not specify both of them.")
-        if Np is not None:
-            self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, Np = Np, \
-                                                                            maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        elif tol is not None:
-            self.pol, self.weight, self.fitting_error = pole_fitting(self.Delta, self.Z, tol = tol, mmin = mmin, mmax=mmax, \
-                                                                            maxiter = maxiter, cleanflag=cleanflag, disp=disp)
-        if flag == "anacont":
-            self.func = lambda Z: eval_with_pole(self.pol, Z, self.weight)
-            return self.func 
-        elif flag == "hybfit":
-            self.obtain_orbitals(eps=eps) 
-            self.func = lambda Z: eval_with_pole(self.bathenergy, Z, self.bath_mat)
-            self.Delta_reconstruct = self.func(1j*self.Z)
-            self.final_error = np.max(np.abs(self.Delta - self.Delta_reconstruct))
-            return self.bathenergy, self.bathhyb
-    
+    solver: string
+        The solver that is used for optimization.
+        choices: "lstsq", "sdp"
+        default: "lstsq"
 
-    def obtain_orbitals(self,eps=1e-7):
-        '''
-        obtaining bath orbitals through svd
-        '''
-        polelist = []
-        veclist = []
-        matlist = []
-        for i in range(self.weight.shape[0]):
-            eigval, eigvec = np.linalg.eig(self.weight[i])
-            for j in range(eigval.shape[0]):
-                if eigval[j]>eps:
-                    polelist.append(self.pol[i])
-                    veclist.append(eigvec[:,j]*np.sqrt(eigval[j]))
-                    matlist.append((eigvec[:,j,None]*np.conjugate(eigvec[:,j].T))*(eigval[j]))
+    maxiter: int
+        maximum number of iterations
+        default: 500
 
-                    
-        self.bathenergy, self.bathhyb, self.bath_mat = np.array(polelist), np.array(veclist), np.array(matlist)
+    mmin, mmax: number of minimum or maximum poles, integer
+        default: mmin = 4, mmax = 50
+        if tol is specified, mmin and mmax will be used as the minimum and maximum number of poles.
+        if Np is specified, mmin and mmax will not be used.
 
-    def check_weight_psd(self, atol = 1e-6):
-        '''
-        check whether the weight matrices are positive semidefinite
-        '''
-        
-        return check_psd(self.weight, atol = atol)
+    disp: bool
+        whether to display optimization details
+        default: False
 
 
 
 
+    Returns:
+    --------
+    func: function
+            Analytic continuation function
+            func(w) = sum_n weight[n]/(w-pol[n])
+
+    fitting_error: float
+        fitting error
+
+    pol: np.array (Np)
+        poles obtained from fitting
+
+    weight: np.array (Np, Norb, Norb)
+        weights obtained from fitting
+
+    """
+
+    # input is the same as hybfit
+    # Check dimensions
+    assert len(Z.shape) == 1 or len(Z.shape) == 2
+    if len(Z.shape) == 2:
+        assert Z.shape[1] == 1
+        Z = Z.flatten()
+    assert len(Delta.shape) == 3 or len(Delta.shape) == 1
+    if len(Delta.shape) == 1:
+        assert Delta.shape[0] == Z.shape[0]
+        Delta = Delta[:, None, None]
+    if len(Delta.shape) == 3:
+        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[1] == Delta.shape[2]
+
+    solver = solver.lower()
+    assert solver == "lstsq" or solver == "sdp"
+
+    # Check input tol or Np
+    if tol is None and Np is None:
+        raise ValueError("Please specify either tol or Np")
+    if tol is not None and Np is not None:
+        raise ValueError(
+            "Please specify either tol or Np. One can not specify both of them."
+        )
+    if Np is not None:
+        pol, weight, fitting_error = pole_fitting(
+            Delta, Z, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+        )
+    elif tol is not None:
+        pol, weight, fitting_error = pole_fitting(
+            Delta,
+            Z,
+            tol=tol,
+            mmin=mmin,
+            mmax=mmax,
+            maxiter=maxiter,
+            solver=solver,
+            disp=verbose,
+        )
+
+    func = lambda Z: eval_with_pole(pol, Z, weight)
+    return func, fitting_error, pol, weight
+
+
+def hybfit(
+    Delta,
+    Z,
+    tol=None,
+    Np=None,
+    svdeps=1e-7,
+    solver="lstsq",
+    maxiter=500,
+    mmin=4,
+    mmax=50,
+    verbose=False,
+):
+    """
+    The main fitting function for both hybridization fitting.
+    Examples:
+    --------
+
+        fitting(Np = Np) # hybridization fitting with Np poles
+        fitting(tol = tol) # hybridization fitting with fixed error tolerance tol
+
+
+    Bath fitting with improved accuracy:
+        fitting(tol = tol, flag = flag, cleanflag = False)
+        fitting(Np = Np, flag = flag, cleanflag = False)
+
+    Parameters:
+    --------
+    svdeps: float, optional
+        Truncation threshold for bath orbitals while doing SVD of weight matrices in hybridization fitting
+        default:1e-7
+
+    tol, Np, cleanflag, maxiter, mmin, mmax, disp: see above in anacont
+
+
+
+
+    Returns:
+    --------
+
+
+    bathenergy: np.array (Nb)
+        Bath energy
+
+    bathhyb: np.array (Nb, Norb)
+        Bath hybridization
+
+    final_error: float
+        final fitting error
+
+    func: function
+        Hybridization function evaluator
+        func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
+
+    pol: np.array (Np)
+        poles obtained from fitting
+
+    weight: np.array (Np, Norb, Norb)
+        weights obtained from fitting
+
+    """
+
+    # Check dimensions
+    assert len(Z.shape) == 1 or len(Z.shape) == 2
+    if len(Z.shape) == 2:
+        assert Z.shape[1] == 1
+        Z = Z.flatten()
+    assert len(Delta.shape) == 3 or len(Delta.shape) == 1
+    if len(Delta.shape) == 1:
+        assert Delta.shape[0] == Z.shape[0]
+        Delta = Delta[:, None, None]
+    if len(Delta.shape) == 3:
+        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[1] == Delta.shape[2]
+
+    # Check input tol or Np
+    if tol is None and Np is None:
+        raise ValueError("Please specify either tol or Np")
+    if tol is not None and Np is not None:
+        raise ValueError(
+            "Please specify either tol or Np. One can not specify both of them."
+        )
+    if Np is not None:
+        pol, weight, fitting_error = pole_fitting(
+            Delta, Z, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+        )
+    elif tol is not None:
+        pol, weight, fitting_error = pole_fitting(
+            Delta,
+            Z,
+            tol=tol,
+            mmin=mmin,
+            mmax=mmax,
+            maxiter=maxiter,
+            solver=solver,
+            disp=verbose,
+        )
+
+    bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdeps=svdeps)
+    func = lambda Z: eval_with_pole(bathenergy, Z, bath_mat)
+    Delta_reconstruct = func(1j * Z)
+    final_error = np.max(np.abs(Delta - Delta_reconstruct))
+    return bathenergy, bathhyb, final_error, func, pol, weight
+
+
+def obtain_orbitals(pol, weight, svdeps=1e-7):
+    """
+    obtaining bath orbitals through svd
+    """
+    polelist = []
+    veclist = []
+    matlist = []
+    for i in range(weight.shape[0]):
+        eigval, eigvec = np.linalg.eig(weight[i])
+        for j in range(eigval.shape[0]):
+            if eigval[j] > svdeps:
+                polelist.append(pol[i])
+                veclist.append(eigvec[:, j] * np.sqrt(eigval[j]))
+                matlist.append(
+                    (eigvec[:, j, None] * np.conjugate(eigvec[:, j].T)) * (eigval[j])
+                )
+
+    return np.array(polelist), np.array(veclist), np.array(matlist)
+
+
+def check_weight_psd(weight, atol=1e-6):
+    """
+    check whether the weight matrices are positive semidefinite
+    """
+
+    return check_psd(weight, atol=atol)
