@@ -4,7 +4,7 @@ from .fit_utils import pole_fitting, eval_with_pole, check_psd
 
 def anacont(
     Delta,
-    Z,
+    wn_vec,
     tol=None,
     Np=None,
     solver="lstsq",
@@ -77,16 +77,16 @@ def anacont(
 
     # input is the same as hybfit
     # Check dimensions
-    assert len(Z.shape) == 1 or len(Z.shape) == 2
-    if len(Z.shape) == 2:
-        assert Z.shape[1] == 1
-        Z = Z.flatten()
+    assert len(wn_vec.shape) == 1 or len(wn_vec.shape) == 2
+    if len(wn_vec.shape) == 2:
+        assert wn_vec.shape[1] == 1
+        wn_vec = wn_vec.flatten()
     assert len(Delta.shape) == 3 or len(Delta.shape) == 1
     if len(Delta.shape) == 1:
-        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[0] == wn_vec.shape[0]
         Delta = Delta[:, None, None]
     if len(Delta.shape) == 3:
-        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[0] == wn_vec.shape[0]
         assert Delta.shape[1] == Delta.shape[2]
 
     solver = solver.lower()
@@ -101,12 +101,12 @@ def anacont(
         )
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, Z, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(
             Delta,
-            Z,
+            wn_vec,
             tol=tol,
             mmin=mmin,
             mmax=mmax,
@@ -121,10 +121,10 @@ def anacont(
 
 def hybfit(
     Delta,
-    Z,
+    wn_vec,
     tol=None,
     Np=None,
-    svdeps=1e-7,
+    svdtol=1e-7,
     solver="lstsq",
     maxiter=500,
     mmin=4,
@@ -146,7 +146,7 @@ def hybfit(
 
     Parameters:
     --------
-    svdeps: float, optional
+    svdtol: float, optional
         Truncation threshold for bath orbitals while doing SVD of weight matrices in hybridization fitting
         default:1e-7
 
@@ -181,16 +181,16 @@ def hybfit(
     """
 
     # Check dimensions
-    assert len(Z.shape) == 1 or len(Z.shape) == 2
-    if len(Z.shape) == 2:
-        assert Z.shape[1] == 1
-        Z = Z.flatten()
+    assert len(wn_vec.shape) == 1 or len(wn_vec.shape) == 2
+    if len(wn_vec.shape) == 2:
+        assert wn_vec.shape[1] == 1
+        wn_vec = wn_vec.flatten()
     assert len(Delta.shape) == 3 or len(Delta.shape) == 1
     if len(Delta.shape) == 1:
-        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[0] == wn_vec.shape[0]
         Delta = Delta[:, None, None]
     if len(Delta.shape) == 3:
-        assert Delta.shape[0] == Z.shape[0]
+        assert Delta.shape[0] == wn_vec.shape[0]
         assert Delta.shape[1] == Delta.shape[2]
 
     # Check input tol or Np
@@ -202,12 +202,12 @@ def hybfit(
         )
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, Z, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(
             Delta,
-            Z,
+            wn_vec,
             tol=tol,
             mmin=mmin,
             mmax=mmax,
@@ -216,14 +216,14 @@ def hybfit(
             disp=verbose,
         )
 
-    bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdeps=svdeps)
+    bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdtol=svdtol)
     func = lambda Z: eval_with_pole(bathenergy, Z, bath_mat)
-    Delta_reconstruct = func(1j * Z)
+    Delta_reconstruct = func(1j * wn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
     return bathenergy, bathhyb, final_error, func, pol, weight
 
 
-def obtain_orbitals(pol, weight, svdeps=1e-7):
+def obtain_orbitals(pol, weight, svdtol=1e-7):
     """
     obtaining bath orbitals through svd
     """
@@ -233,7 +233,7 @@ def obtain_orbitals(pol, weight, svdeps=1e-7):
     for i in range(weight.shape[0]):
         eigval, eigvec = np.linalg.eig(weight[i])
         for j in range(eigval.shape[0]):
-            if eigval[j] > svdeps:
+            if eigval[j] > svdtol:
                 polelist.append(pol[i])
                 veclist.append(eigvec[:, j] * np.sqrt(eigval[j]))
                 matlist.append(
