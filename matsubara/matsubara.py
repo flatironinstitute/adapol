@@ -4,7 +4,7 @@ from .fit_utils import pole_fitting, eval_with_pole, check_psd
 
 def anacont(
     Delta,
-    wn_vec,
+    iwn_vec,
     tol=None,
     Np=None,
     solver="lstsq",
@@ -27,6 +27,13 @@ def anacont(
 
     Parameters:
     --------
+    Delta: np.array (Nw, Norb, Norb)
+        The input Matsubara function in Matsubara frequency
+
+    iwn_vec: np.array (Nw)
+        The Matsubara frequency vector, complex-valued
+
+
     tol: Fitting error tolreance, float
         If tol is specified, the fitting will be conducted with fixed error tolerance tol.
         default: None
@@ -75,18 +82,17 @@ def anacont(
 
     """
 
-    # input is the same as hybfit
     # Check dimensions
-    assert len(wn_vec.shape) == 1 or len(wn_vec.shape) == 2
-    if len(wn_vec.shape) == 2:
-        assert wn_vec.shape[1] == 1
-        wn_vec = wn_vec.flatten()
+    assert len(iwn_vec.shape) == 1 or len(iwn_vec.shape) == 2
+    if len(iwn_vec.shape) == 2:
+        assert iwn_vec.shape[1] == 1
+        iwn_vec = iwn_vec.flatten()
     assert len(Delta.shape) == 3 or len(Delta.shape) == 1
     if len(Delta.shape) == 1:
-        assert Delta.shape[0] == wn_vec.shape[0]
+        assert Delta.shape[0] == iwn_vec.shape[0]
         Delta = Delta[:, None, None]
     if len(Delta.shape) == 3:
-        assert Delta.shape[0] == wn_vec.shape[0]
+        assert Delta.shape[0] == iwn_vec.shape[0]
         assert Delta.shape[1] == Delta.shape[2]
 
     solver = solver.lower()
@@ -99,6 +105,9 @@ def anacont(
         raise ValueError(
             "Please specify either tol or Np. One can not specify both of them."
         )
+    
+    wn_vec = np.imag(iwn_vec)
+
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
             Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
@@ -121,7 +130,7 @@ def anacont(
 
 def hybfit(
     Delta,
-    wn_vec,
+    iwn_vec,
     tol=None,
     Np=None,
     svdtol=1e-7,
@@ -146,6 +155,12 @@ def hybfit(
 
     Parameters:
     --------
+    Delta: np.array (Nw, Norb, Norb)
+        The input hybridization function in Matsubara frequency
+
+    iwn_vec: np.array (Nw)
+        The Matsubara frequency vector, complex-valued
+
     svdtol: float, optional
         Truncation threshold for bath orbitals while doing SVD of weight matrices in hybridization fitting
         default:1e-7
@@ -180,18 +195,22 @@ def hybfit(
 
     """
 
+   
     # Check dimensions
-    assert len(wn_vec.shape) == 1 or len(wn_vec.shape) == 2
-    if len(wn_vec.shape) == 2:
-        assert wn_vec.shape[1] == 1
-        wn_vec = wn_vec.flatten()
+    assert len(iwn_vec.shape) == 1 or len(iwn_vec.shape) == 2
+    if len(iwn_vec.shape) == 2:
+        assert iwn_vec.shape[1] == 1
+        iwn_vec = iwn_vec.flatten()
     assert len(Delta.shape) == 3 or len(Delta.shape) == 1
     if len(Delta.shape) == 1:
-        assert Delta.shape[0] == wn_vec.shape[0]
+        assert Delta.shape[0] == iwn_vec.shape[0]
         Delta = Delta[:, None, None]
     if len(Delta.shape) == 3:
-        assert Delta.shape[0] == wn_vec.shape[0]
+        assert Delta.shape[0] == iwn_vec.shape[0]
         assert Delta.shape[1] == Delta.shape[2]
+
+    solver = solver.lower()
+    assert solver == "lstsq" or solver == "sdp"
 
     # Check input tol or Np
     if tol is None and Np is None:
@@ -200,6 +219,9 @@ def hybfit(
         raise ValueError(
             "Please specify either tol or Np. One can not specify both of them."
         )
+    
+    wn_vec = np.imag(iwn_vec)
+
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
             Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
@@ -218,7 +240,7 @@ def hybfit(
 
     bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdtol=svdtol)
     func = lambda Z: eval_with_pole(bathenergy, Z, bath_mat)
-    Delta_reconstruct = func(1j * wn_vec)
+    Delta_reconstruct = func(iwn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
     return bathenergy, bathhyb, final_error, func, pol, weight
 

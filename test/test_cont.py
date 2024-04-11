@@ -7,7 +7,7 @@ from matsubara import hybfit, check_weight_psd
 
 
 def Kw(w, v):
-    return 1 / (1j * v - w)
+    return 1 / ( v - w)
 
 
 def semicircular(x):
@@ -41,7 +41,7 @@ def make_G_with_cont_spec(N1, Z, rho, a=-1.0, b=1.0, eps=1e-12):
 
 beta = 20
 N = 55
-Z = (np.linspace(-N, N, N + 1)) * np.pi / beta
+Z = 1j *(np.linspace(-N, N, N + 1)) * np.pi / beta
 
 dim = 3
 H, Delta = make_G_with_cont_spec(dim, Z, semicircular)

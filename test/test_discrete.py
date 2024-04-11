@@ -13,9 +13,9 @@ def make_G_with_random_discrete_pole(Np, Z):
     weight = np.array(
         [vec[:, i, None] * np.transpose(np.conj(vec[:, i])) for i in range(Np)]
     )
-    # Z is real
+
     pol_t = np.reshape(pol, [pol.size, 1])
-    M = 1 / (1j * Z - pol_t)
+    M = 1 / ( Z - pol_t)
     M = M.transpose()
     if len(weight.shape) == 1:
         weight = weight / sum(weight)
@@ -31,7 +31,7 @@ def make_G_with_random_discrete_pole(Np, Z):
 def tst_discrete(Np):
     beta = 20
     N = 105
-    Z = (np.linspace(-N, N, N + 1)) * np.pi / beta
+    Z = 1j *(np.linspace(-N, N, N + 1)) * np.pi / beta
     tol = 1e-6
     pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np, Z)
 
