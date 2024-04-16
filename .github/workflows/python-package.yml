@@ -36,5 +36,5 @@ jobs:
       continue-on-error: true
     - name: Test with pytest
       run: |
-        echo "$HOME/matsubara" >> $GITHUB_PATH
+        export PYTHONPATH=$HOME/matsubara:$PYTHONPATH
         pytest
