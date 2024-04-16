@@ -1,7 +1,4 @@
 import numpy as np
-import sys
-
-# sys.path.insert(0, "../")
 import scipy
 from matsubara import hybfit, check_weight_psd
 
