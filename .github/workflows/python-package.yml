@@ -36,4 +36,5 @@ jobs:
       continue-on-error: true
     - name: Test with pytest
       run: |
+        echo "$HOME" >> $GITHUB_PATH
         pytest
