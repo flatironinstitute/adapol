@@ -123,8 +123,8 @@ def anacont(
             solver=solver,
             disp=verbose,
         )
-
-    func = lambda Z: eval_with_pole(pol, Z, weight)
+    def func(Z):
+        return eval_with_pole(pol, Z, weight)
     return func, fitting_error, pol, weight
 
 
@@ -239,7 +239,8 @@ def hybfit(
         )
 
     bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdtol=svdtol)
-    func = lambda Z: eval_with_pole(bathenergy, Z, bath_mat)
+    def func(Z):
+        return eval_with_pole(bathenergy, Z, bath_mat)
     Delta_reconstruct = func(iwn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
     return bathenergy, bathhyb, final_error, func, pol, weight
