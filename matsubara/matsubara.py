@@ -292,9 +292,8 @@ def hybfit_triqs(
 
     """
     try:
-        from triqs.gf.meshes import MeshDLRImFreq, MeshDLRImTime
-        from triqs.gf import MeshImFreq, MeshImTime
-        print("Package imported successfully!")
+        from triqs.gf.meshes import MeshDLRImFreq
+        from triqs.gf import MeshImFreq
     except ImportError:
         raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
                           "Please ensure it is installed.")
