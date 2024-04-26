@@ -145,13 +145,8 @@ def hybfit(
     Examples:
     --------
 
-        fitting(Np = Np) # hybridization fitting with Np poles
-        fitting(tol = tol) # hybridization fitting with fixed error tolerance tol
-
-
-    Bath fitting with improved accuracy:
-        fitting(tol = tol, flag = flag, cleanflag = False)
-        fitting(Np = Np, flag = flag, cleanflag = False)
+        hybfit(Delta, iwn_vec, Np = Np) # hybridization fitting with Np poles
+        hybfit(Delta, iwn_vec, tol = tol) # hybridization fitting with fixed error tolerance tol
 
     Parameters:
     --------
@@ -244,6 +239,74 @@ def hybfit(
     Delta_reconstruct = func(iwn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
     return bathenergy, bathhyb, final_error, func, pol, weight
+
+
+def hybfit_triqs(
+    Delta_triqs,
+    tol=None,
+    Np=None,
+    svdtol=1e-7,
+    solver="lstsq",
+    maxiter=500,
+    mmin=4,
+    mmax=50,
+    verbose=False,
+):
+    """
+    The triqs interface for hybridization fitting.
+    The function requires triqs package in python.
+    Examples:
+    --------
+
+        hybfit_triqs(delta_triqs, Np = Np) # hybridization fitting with Np poles
+        hybfit_triqs(delta_triqs, tol = tol) # hybridization fitting with fixed error tolerance tol
+
+    Parameters:
+    --------
+    Delta_triqs: triqs Green's function container
+        The input hybridization function in Matsubara frequency
+
+    tol, Np, cleanflag, maxiter, mmin, mmax, disp: see above in hybfit
+
+    Returns:
+    --------
+
+    bathenergy: np.array (Nb)
+        Bath energy
+
+    bathhyb: np.array (Nb, Norb)
+        Bath hybridization
+
+    final_error: float
+        final fitting error
+
+    func: function
+        Hybridization function evaluator
+        func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
+
+    pol: np.array (Np)
+        poles obtained from fitting
+
+    weight: np.array (Np, Norb, Norb)
+        weights obtained from fitting
+
+    """
+    try:
+        from triqs.gf.meshes import MeshDLRImFreq, MeshDLRImTime
+        from triqs.gf import MeshImFreq, MeshImTime
+        print("Package imported successfully!")
+    except ImportError:
+        raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
+                          "Please ensure it is installed.")
+
+    if not isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        raise TypeError("Delta.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
+
+    delta_data = Delta_triqs.data.copy()
+    iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
+
+    return hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver,
+                  maxiter, mmin, mmax, verbose)
 
 
 def obtain_orbitals(pol, weight, svdtol=1e-7):

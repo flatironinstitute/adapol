@@ -1,2 +1,2 @@
-from .matsubara import hybfit, anacont, check_weight_psd
-__all__ = ["hybfit", "anacont", "check_weight_psd"]
+from .matsubara import hybfit, hybfit_triqs, anacont, check_weight_psd
+__all__ = ["hybfit", "hybfit_triqs", "anacont", "check_weight_psd"]
