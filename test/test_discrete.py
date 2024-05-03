@@ -41,25 +41,11 @@ def tst_discrete(Np):
     
 
 
-def test_discrete_2():
-    tst_discrete(2)
+@pytest.mark.parametrize("Np", [2, 3, 4, 5, 6, 7])
+def test_discrete(Np):
+    tst_discrete(Np)
 
 
-def test_discrete_3():
-    tst_discrete(3)
-
-
-def test_discrete_4():
-    tst_discrete(4)
-
-
-def test_discrete_5():
-    tst_discrete(5)
-
-
-def test_discrete_6():
-    tst_discrete(6)
-
-
-def test_discrete_7():
-    tst_discrete(7)
+@pytest.mark.triqs
+def test_discrete_triqs():
+    assert 1 < 2
