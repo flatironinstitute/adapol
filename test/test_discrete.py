@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import scipy
 from matsubara import hybfit
