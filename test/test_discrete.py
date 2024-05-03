@@ -4,6 +4,7 @@ from matsubara import hybfit, check_weight_psd
 
 
 def make_G_with_random_discrete_pole(Np, Z):
+    np.random.seed(0)
     pol = np.random.randn(Np)
     pol = pol / np.max(np.abs(pol))
     vec = scipy.stats.ortho_group.rvs(dim=Np)
