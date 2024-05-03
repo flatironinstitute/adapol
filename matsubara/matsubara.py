@@ -351,7 +351,6 @@ def hybfit_triqs(
         from triqs.gf import MeshImFreq
         from triqs.gf.gf import Gf
         from triqs.gf.block_gf import BlockGf
-        from triqs.gf.map_block import map_block
     except ImportError:
         raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
                           "Please ensure it is installed.")
