@@ -349,18 +349,23 @@ def hybfit_triqs(
     try:
         from triqs.gf.meshes import MeshDLRImFreq
         from triqs.gf import MeshImFreq
+        from triqs.gf.gf import Gf
+        from triqs.gf.block_gf import BlockGf
+        from triqs.gf.map_block import map_block
     except ImportError:
         raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
                           "Please ensure it is installed.")
 
-    if not isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
-        raise TypeError("Delta.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
-
-    delta_data = Delta_triqs.data.copy()
-    iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
-
-    return hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver,
-                  maxiter, mmin, mmax, verbose)
+    if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        delta_data = Delta_triqs.data.copy()
+        iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
+        return hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver,
+                      maxiter, mmin, mmax, verbose)
+    elif isinstance(Delta_triqs, BlockGf):
+        return map_block(lambda delta_bl: hybfit_triqs(delta_bl, tol, Np, svdtol, solver, maxiter,
+                                                       mmin, mmax, verbose), Delta_triqs)
+    else:
+        raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
 
 
 def obtain_orbitals(pol, weight, svdtol=1e-7):
