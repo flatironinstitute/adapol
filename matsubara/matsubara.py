@@ -128,6 +128,66 @@ def anacont(
     return func, fitting_error, pol, weight
 
 
+def anacont_triqs(
+    Delta_triqs,
+    tol=None,
+    Np=None,
+    solver="lstsq",
+    maxiter=500,
+    mmin=4,
+    mmax=50,
+    verbose=False,
+):
+    """
+    The triqs interface for analytical continuation.
+    The function requires triqs package in python.
+    Examples:
+    --------
+
+    func = anacont(Np = Np) # analytic continuation with Np poles
+    func = anacont(tol = tol) # analytic continuation with fixed error tolerance tol
+
+    Parameters:
+    --------
+    Delta_triqs: triqs Green's function container
+        The input hybridization function in Matsubara frequency
+
+    tol, Np, cleanflag, maxiter, mmin, mmax, disp: see above in anacont
+
+
+    Returns:
+    --------
+    func: function
+            Analytic continuation function
+            func(w) = sum_n weight[n]/(w-pol[n])
+
+    fitting_error: float
+        fitting error
+
+    pol: np.array (Np)
+        poles obtained from fitting
+
+    weight: np.array (Np, Norb, Norb)
+        weights obtained from fitting
+
+    """
+    try:
+        from triqs.gf.meshes import MeshDLRImFreq
+        from triqs.gf import MeshImFreq
+    except ImportError:
+        raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
+                          "Please ensure it is installed.")
+
+    if not isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        raise TypeError("Delta.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
+
+    delta_data = Delta_triqs.data.copy()
+    iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
+
+    return anacont(delta_data, iwn_vec, tol, Np, solver, maxiter,
+                   mmin, mmax, verbose)
+
+
 def hybfit(
     Delta,
     iwn_vec,
