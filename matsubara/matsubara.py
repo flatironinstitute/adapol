@@ -359,11 +359,25 @@ def hybfit_triqs(
     if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
         delta_data = Delta_triqs.data.copy()
         iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
-        return hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver,
-                      maxiter, mmin, mmax, verbose)
+        results = hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose)
+
+        delta_fit = Gf(mesh=Delta_triqs.mesh, target_shape=Delta_triqs.target_shape)
+        eps, V = results[0], results[1].T.conj()
+        one_fermion = 1 / (iwn_vec[:, None] - eps[None, :])
+        print(one_fermion.shape)
+
+        delta_fit.data[:] = np.einsum('wkj,jl->wkl',
+                                      V[None, :, :] * one_fermion[:, None, :],
+                                      V.T.conj())
+        return delta_fit, results
     elif isinstance(Delta_triqs, BlockGf):
-        return map_block(lambda delta_bl: hybfit_triqs(delta_bl, tol, Np, svdtol, solver, maxiter,
-                                                       mmin, mmax, verbose), Delta_triqs)
+        results_list, delta_list = [], []
+        for j, (block, delta_blk) in enumerate(Delta_triqs):
+            delta_fit, results = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter,
+                                              mmin, mmax, verbose)
+            delta_list.append(delta_fit)
+            results_list.append(results)
+        return BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list), results_list
     else:
         raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
 
