@@ -1,4 +1,4 @@
-import pytest
+import pytest # noqa
 import numpy as np
 import scipy
 from matsubara import hybfit
