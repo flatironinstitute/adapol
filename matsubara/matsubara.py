@@ -38,10 +38,10 @@ def anacont(
         If tol is specified, the fitting will be conducted with fixed error tolerance tol.
         default: None
 
-    Np: number of Matsubara points used for fitting, integer
+    Np: number of poles, integer
         If Np is specified, the fitting will be conducted with fixed number of poles.
         default: None
-        Np needs to be an even integer, and number of poles is Np - 1.
+        Np needs to be an odd integer, and number of supoort points is Np + 1.
 
 
     solver: string
@@ -110,7 +110,7 @@ def anacont(
 
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Ns=Np+1, maxiter=maxiter, solver=solver, disp=verbose
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(
@@ -274,7 +274,7 @@ def hybfit(
 
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, wn_vec, Np=Np, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Ns=Np + 1, maxiter=maxiter, solver=solver, disp=verbose
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(

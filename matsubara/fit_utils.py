@@ -153,7 +153,7 @@ def pole_fitting(
     Delta,
     Z,
     tol=None,
-    Np=None,
+    Ns=None,
     mmin=None,
     mmax=50,
     maxiter=50,
@@ -170,15 +170,15 @@ def pole_fitting(
 
     # pole estimation
     # tol needs to be fixed
-    if Np is None and tol is None:
+    if Ns is None and tol is None:
         raise Exception(
             "One needs to specify either the number of poles or the fitting error tolerance."
         )
-    if Np is not None and tol is not None:
+    if Ns is not None and tol is not None:
         raise Exception(
             "One can not specify both the number of poles and the fitting error tolerance. Only specify one of them."
         )
-    if Np is None:
+    if Ns is None:
         if mmin is None or mmin < 4:
             mmin = 4
         if mmin % 2 == 1:
@@ -186,9 +186,9 @@ def pole_fitting(
         if mmax > 2 * (Z.shape[0] // 2):
             mmax = 2 * (Z.shape[0] // 2)
     else:
-        if Np % 2 == 1:
-            Np = Np + 1
-        mmin, mmax = Np, Np
+        if Ns % 2 == 1:
+            Ns = Ns + 1
+        mmin, mmax = Ns, Ns
     if len(Delta.shape) == 1:
         Delta = Delta.reshape(Delta.shape[0], 1, 1)
 
@@ -202,7 +202,7 @@ def pole_fitting(
         if tol is not None:
             if np.max(np.abs(residue)) > tol * 10:
                 continue
-        if Np is None:
+        if Ns is None:
             pol, weight = aaa_reduce(pol, weight, 1e-5)
         # print("Number of poles is ", len(pol))
         if cleanflag:
