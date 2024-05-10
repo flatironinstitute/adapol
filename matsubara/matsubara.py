@@ -137,6 +137,7 @@ def anacont_triqs(
     mmin=4,
     mmax=50,
     verbose=False,
+    debug=False
 ):
     """
     The triqs interface for analytical continuation.
@@ -152,6 +153,10 @@ def anacont_triqs(
     Delta_triqs: triqs Green's function container
         The input hybridization function in Matsubara frequency
 
+    debug: bool
+        return additional outputs for debugging.
+        Default: False
+
     tol, Np, cleanflag, maxiter, mmin, mmax, disp: see above in anacont
 
 
@@ -161,31 +166,50 @@ def anacont_triqs(
             Analytic continuation function
             func(w) = sum_n weight[n]/(w-pol[n])
 
-    fitting_error: float
-        fitting error
+    if debug == True:
+        fitting_error: float
+            fitting error
 
-    pol: np.array (Np)
-        poles obtained from fitting
+        pol: np.array (Np)
+            poles obtained from fitting
 
-    weight: np.array (Np, Norb, Norb)
-        weights obtained from fitting
+        weight: np.array (Np, Norb, Norb)
+            weights obtained from fitting
 
     """
     try:
-        from triqs.gf.meshes import MeshDLRImFreq
-        from triqs.gf import MeshImFreq
+        from triqs.gf import Gf, BlockGf, MeshImFreq, MeshDLRImFreq
     except ImportError:
         raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
                           "Please ensure it is installed.")
 
-    if not isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
-        raise TypeError("Delta.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
+    if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
+        func, fit_error, pol, weight = anacont(Delta_triqs.data, iwn_vec, tol, Np, solver, maxiter,
+                                               mmin, mmax, verbose)
+        print('optimization finished with fitting error {:.3e}'.format(fit_error))
 
-    delta_data = Delta_triqs.data.copy()
-    iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
+        if debug:
+            return func, fit_error, pol, weight
+        else:
+            return func
+    elif isinstance(Delta_triqs, BlockGf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        func_list, error_list, pol_list, weight_list = [], [], [], []
+        for j, (block, delta_blk) in enumerate(Delta_triqs):
+            func, fit_error, pol, weight = anacont_triqs(delta_blk, tol, Np, solver, maxiter, mmin,
+                                                         mmax, verbose)
+            func_list.append(func)
+            if debug:
+                error_list.append(fit_error)
+                pol_list.append(pol)
+                weight_list.append(weight)
 
-    return anacont(delta_data, iwn_vec, tol, Np, solver, maxiter,
-                   mmin, mmax, verbose)
+        if debug:
+            return func_list, error_list, pol_list, weight_list
+        else:
+            return func_list
+    else:
+        raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
 
 
 def hybfit(
@@ -322,6 +346,10 @@ def hybfit_triqs(
     Delta_triqs: triqs Green's function container
         The input hybridization function in Matsubara frequency
 
+    debug: bool
+        return additional outputs for debugging.
+        Default: False
+
     tol, Np, cleanflag, maxiter, mmin, mmax, disp: see above in hybfit
 
     Returns:
@@ -345,10 +373,7 @@ def hybfit_triqs(
             weights obtained from fitting
     """
     try:
-        from triqs.gf.meshes import MeshDLRImFreq
-        from triqs.gf import MeshImFreq
-        from triqs.gf.gf import Gf
-        from triqs.gf.block_gf import BlockGf
+        from triqs.gf import Gf, BlockGf, MeshImFreq, MeshDLRImFreq
     except ImportError:
         raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
                           "Please ensure it is installed.")

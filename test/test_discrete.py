@@ -43,8 +43,7 @@ def tst_discrete(Np):
 
 def tst_discrete_triqs(Np):
     try:
-        from triqs.gf import Gf, BlockGf
-        from triqs.gf.meshes import MeshImFreq
+        from triqs.gf import Gf, BlockGf, MeshImFreq
     except ImportError:
         raise ImportError("It seems like you are running tests with the triqs interface "
                           "but failed to import the triqs package ((https://triqs.github.io/triqs/latest/). "
@@ -57,7 +56,6 @@ def tst_discrete_triqs(Np):
     tol = 1e-6
     pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np, Z)
 
-    print("Delta shape = {}".format(Delta.shape))
     norb = Delta.shape[-1]
     iw_mesh = MeshImFreq(beta=beta, S='Fermion', n_iw=(N+1)//2)
     delta_iw = Gf(mesh=iw_mesh, target_shape=[norb, norb])

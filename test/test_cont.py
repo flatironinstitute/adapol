@@ -1,7 +1,7 @@
 import pytest # noqa
 import numpy as np
 import scipy
-from matsubara import hybfit
+from matsubara import hybfit, hybfit_triqs
 
 
 def Kw(w, v):
@@ -54,5 +54,35 @@ def fit_cont(tol):
     assert final_error < tol
 
 
+def fit_cont_triqs(tol):
+    try:
+        from triqs.gf import Gf, BlockGf, MeshImFreq
+    except ImportError:
+        raise ImportError("It seems like you are running tests with the triqs interface "
+                          "but failed to import the triqs package ((https://triqs.github.io/triqs/latest/). "
+                          "Please ensure that it is installed, or run \"pytest -m 'not triqs'\" to disable "
+                          "the tests for triqs.")
+
+    norb = Delta.shape[-1]
+    iw_mesh = MeshImFreq(beta=beta, S='Fermion', n_iw=(N+1)//2)
+    delta_iw = Gf(mesh=iw_mesh, target_shape=[norb, norb])
+    delta_iw.data[:] = Delta
+
+    # Gf interface
+    V, eps, delta_fit, final_error = hybfit_triqs(delta_iw, tol=tol, maxiter=500, debug=True)
+    assert final_error < tol
+
+    # BlockGf interface
+    delta_blk = BlockGf(name_list=['up', 'down'], block_list=[delta_iw, delta_iw], make_copies=True)
+    V, eps, delta_fit, final_error, weight = hybfit_triqs(delta_blk, tol=tol, maxiter=500, debug=True)
+    assert final_error[0] < tol and final_error[1] < tol
+
+
 def test_cont():
     fit_cont(5e-4)
+
+
+@pytest.mark.triqs
+def test_cont_triqs():
+    fit_cont_triqs(5e-4)
+
