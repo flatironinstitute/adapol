@@ -380,21 +380,19 @@ def hybfit_triqs(
 
     if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
         iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
-        results = hybfit(Delta_triqs.data, iwn_vec, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose)
-        eps_opt, V_opt, final_error, func,  = hybfit(Delta_triqs.data, iwn_vec, tol, Np,
-                                                   svdtol, solver, maxiter, mmin, mmax, verbose)[:4]
+        eps_opt, V_opt, final_error, func = hybfit(Delta_triqs.data, iwn_vec, tol, Np,
+                                                   svdtol, solver, maxiter, mmin, mmax, verbose)
         print('optimization finished with fitting error {:.3e}'.format(final_error))
 
         delta_fit = Gf(mesh=Delta_triqs.mesh, target_shape=Delta_triqs.target_shape)
-        delta_fit.data[:] = results[3](iwn_vec)
+        delta_fit.data[:] = func(iwn_vec)
 
         if debug:
-            # V_opt, eps_opt, delta_fit, error, weight
-            return results[1].T.conj(), results[0], delta_fit, results[2], results[5]
+            return V_opt.T.conj(), eps_opt, delta_fit, final_error
         else:
-            return results[1].T.conj(), results[0], delta_fit
+            return V_opt.T.conj(), eps_opt, delta_fit
     elif isinstance(Delta_triqs, BlockGf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
-        V_list, eps_list, delta_list, error_list, weight_list = [], [], [], [], []
+        V_list, eps_list, delta_list, error_list = [], [], [], []
         for j, (block, delta_blk) in enumerate(Delta_triqs):
             res = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose, debug)
             V_list.append(res[0])
@@ -402,10 +400,9 @@ def hybfit_triqs(
             delta_list.append(res[2])
             if debug:
                 error_list.append(res[3])
-                weight_list.append(res[4])
 
         if debug:
-            return V_list, eps_list, BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list), error_list, weight_list
+            return V_list, eps_list, BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list), error_list
         else:
             return V_list, eps_list, BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list)
     else:

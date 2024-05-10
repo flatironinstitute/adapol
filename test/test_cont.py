@@ -74,7 +74,7 @@ def fit_cont_triqs(tol):
 
     # BlockGf interface
     delta_blk = BlockGf(name_list=['up', 'down'], block_list=[delta_iw, delta_iw], make_copies=True)
-    V, eps, delta_fit, final_error, weight = hybfit_triqs(delta_blk, tol=tol, maxiter=500, debug=True)
+    V, eps, delta_fit, final_error = hybfit_triqs(delta_blk, tol=tol, maxiter=500, debug=True)
     assert final_error[0] < tol and final_error[1] < tol
 
 
