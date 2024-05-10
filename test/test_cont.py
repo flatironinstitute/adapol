@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from matsubara import hybfit, check_weight_psd
+from matsubara import hybfit
 
 
 def Kw(w, v):

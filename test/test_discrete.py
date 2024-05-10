@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from matsubara import hybfit, check_weight_psd
+from matsubara import hybfit
 
 
 def make_G_with_random_discrete_pole(Np, Z):
