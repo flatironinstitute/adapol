@@ -306,6 +306,7 @@ def hybfit_triqs(
     mmin=4,
     mmax=50,
     verbose=False,
+    debug=False
 ):
     """
     The triqs interface for hybridization fitting.
@@ -326,25 +327,22 @@ def hybfit_triqs(
     Returns:
     --------
 
-    bathenergy: np.array (Nb)
-        Bath energy
-
     bathhyb: np.array (Nb, Norb)
         Bath hybridization
 
-    final_error: float
-        final fitting error
+    bathenergy: np.array (Nb)
+        Bath energy
 
-    func: function
-        Hybridization function evaluator
-        func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
+    Delta_fit: triqs Gf or BlockGf
+        Discretized hybridization function
+        The input hybridization function in Matsubara frequency
 
-    pol: np.array (Np)
-        poles obtained from fitting
+    if debug == True:
+        final_error: float
+            final fitting error
 
-    weight: np.array (Np, Norb, Norb)
-        weights obtained from fitting
-
+        weight: np.array (Np, Norb, Norb)
+            weights obtained from fitting
     """
     try:
         from triqs.gf.meshes import MeshDLRImFreq
@@ -356,27 +354,35 @@ def hybfit_triqs(
                           "Please ensure it is installed.")
 
     if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
-        delta_data = Delta_triqs.data.copy()
         iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
-        results = hybfit(delta_data, iwn_vec, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose)
+        results = hybfit(Delta_triqs.data, iwn_vec, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose)
+        eps_opt, V_opt, final_error, func,  = hybfit(Delta_triqs.data, iwn_vec, tol, Np,
+                                                   svdtol, solver, maxiter, mmin, mmax, verbose)[:4]
+        print('optimization finished with fitting error {:.3e}'.format(final_error))
 
         delta_fit = Gf(mesh=Delta_triqs.mesh, target_shape=Delta_triqs.target_shape)
-        eps, V = results[0], results[1].T.conj()
-        one_fermion = 1 / (iwn_vec[:, None] - eps[None, :])
-        print(one_fermion.shape)
+        delta_fit.data[:] = results[3](iwn_vec)
 
-        delta_fit.data[:] = np.einsum('wkj,jl->wkl',
-                                      V[None, :, :] * one_fermion[:, None, :],
-                                      V.T.conj())
-        return delta_fit, results
-    elif isinstance(Delta_triqs, BlockGf):
-        results_list, delta_list = [], []
+        if debug:
+            # V_opt, eps_opt, delta_fit, error, weight
+            return results[1].T.conj(), results[0], delta_fit, results[2], results[5]
+        else:
+            return results[1].T.conj(), results[0], delta_fit
+    elif isinstance(Delta_triqs, BlockGf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
+        V_list, eps_list, delta_list, error_list, weight_list = [], [], [], [], []
         for j, (block, delta_blk) in enumerate(Delta_triqs):
-            delta_fit, results = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter,
-                                              mmin, mmax, verbose)
-            delta_list.append(delta_fit)
-            results_list.append(results)
-        return BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list), results_list
+            res = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose, debug)
+            V_list.append(res[0])
+            eps_list.append(res[1])
+            delta_list.append(res[2])
+            if debug:
+                error_list.append(res[3])
+                weight_list.append(res[4])
+
+        if debug:
+            return V_list, eps_list, BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list), error_list, weight_list
+        else:
+            return V_list, eps_list, BlockGf(name_list=list(Delta_triqs.indices), block_list=delta_list)
     else:
         raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshImFreq or MeshDLRImFreq.")
 
