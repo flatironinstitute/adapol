@@ -46,12 +46,11 @@ H, Delta = make_G_with_cont_spec(dim, Z, semicircular)
 
 
 def fit_cont(tol):
-    bathenergy, bathhyb, final_error, func, pol, weight = hybfit(
+    bathenergy, bathhyb, final_error, func = hybfit(
         Delta, Z, tol=tol, maxiter=500
     )
 
     assert final_error < tol
-    assert check_weight_psd(weight)
 
 
 def test_cont():

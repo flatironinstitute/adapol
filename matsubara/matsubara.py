@@ -58,7 +58,7 @@ def anacont(
         if tol is specified, mmin and mmax will be used as the minimum and maximum number of poles.
         if Np is specified, mmin and mmax will not be used.
 
-    disp: bool
+    verbose: bool
         whether to display optimization details
         default: False
 
@@ -242,11 +242,6 @@ def hybfit(
         Hybridization function evaluator
         func(w) = sum_n bathhyb[n,i]*conj(bathhyb[n,j])/(1j*w-bathenergy[n])
 
-    pol: np.array (Np)
-        poles obtained from fitting
-
-    weight: np.array (Np, Norb, Norb)
-        weights obtained from fitting
 
     """
 
@@ -298,7 +293,7 @@ def hybfit(
         return eval_with_pole(bathenergy, Z, bath_mat)
     Delta_reconstruct = func(iwn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
-    return bathenergy, bathhyb, final_error, func, pol, weight
+    return bathenergy, bathhyb, final_error, func
 
 
 def hybfit_triqs(

@@ -34,11 +34,11 @@ def tst_discrete(Np):
     pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np, Z)
 
     # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
-    bathenergy, bathhyb, final_error, func, pol, weight = hybfit(
+    bathenergy, bathhyb, final_error, func = hybfit(
         Delta, Z, tol=tol, maxiter=50
     )
-    assert final_error < tol * 2
-    assert check_weight_psd(weight)
+    assert final_error < tol 
+    
 
 
 def test_discrete_2():
