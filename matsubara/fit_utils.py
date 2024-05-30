@@ -54,12 +54,6 @@ def get_weight(
         else:
             if not fast:
                 Nw = len(Z)
-                diff_param_real = [cp.Parameter((Np)) for _ in range(Nw)]
-                diff_param_imag = [cp.Parameter((Np)) for _ in range(Nw)]
-                for diff, val in zip(diff_param_real, M):
-                    diff.value = val.real
-                for diff, val in zip(diff_param_imag, M):
-                    diff.value = val.imag
 
                 if complex:
                     X = [cp.Variable((Norb, Norb), hermitian=True) for i in range(Np)]
@@ -67,18 +61,15 @@ def get_weight(
                 else:
                     X = [cp.Variable((Norb, Norb), PSD=True) for i in range(Np)]
 
-                Gfit = 0
+            
+                Gfit = []
                 for w in range(Nw):
-                    Gfit += cp.sum_squares(
-                        sum([diff_param_real[w][i] * X[i] for i in range(Np)])
-                        + sum([1j * diff_param_imag[w][i] * X[i] for i in range(Np)])
-                        - G[w, :, :]
-                    )
+                    Gfit.append(cp.sum_squares(sum([ M[w,i]*X[i] for i in range(Np)]) - G[w,:,:]))
 
                 if complex:
-                    prob = cp.Problem(cp.Minimize(Gfit), constraints)
+                    prob = cp.Problem(cp.Minimize(sum(Gfit)), constraints)
                 else:
-                    prob = cp.Problem(cp.Minimize(Gfit))
+                    prob = cp.Problem(cp.Minimize(sum(Gfit)))
                 prob.solve(solver="SCS", verbose=False, eps=eps)
                 # todo: add options for mosek
                 # mosek_params_dict = {"MSK_DPAR_INTPNT_CO_TOL_PFEAS": 1.e-8,\
