@@ -1,7 +1,7 @@
 import pytest # noqa
 import numpy as np
 import scipy
-from matsubara import hybfit, hybfit_triqs
+from aaadapol import hybfit, hybfit_triqs
 
 
 def make_G_with_random_discrete_pole(Np, Z):

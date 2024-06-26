@@ -1,7 +1,7 @@
 import pytest # noqa
 import numpy as np
 import scipy
-from matsubara import hybfit, hybfit_triqs
+from aaadapol import hybfit, hybfit_triqs
 
 
 def Kw(w, v):
