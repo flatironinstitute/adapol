@@ -31,19 +31,18 @@ Z = np.linspace(-25.,25.,26)*np.pi/beta  #Matsubara frequencies
 Delta = 1.0/(1j*Z-0.5) + 2.0/(1j*Z+0.2) + 0.5/(1j*Z+0.7) # Matsubara functions on these frequencies
 ```
 
-With `Delta` and `Z`, one first initialize the Matsubara object:
-```python
-Imfreq_obj = Matsubara(Delta, Z)
-```
-
 ### Hybridization Fitting
-There are two choices for doing hybridization fitting. One can either fit with desired accuracy `eps`:
+The hybridization fitting is handled by the `hybfit` function.
 ```python
-bath_energy, bath_hyb = Imfreq_obj.fitting(tol = 1e-6, flag = "hybfit")
+from aaadapol import hybfit
+```
+There are two choices for doing hybridization fitting. One can either fit with desired accuracy tolerance `tol`:
+```python
+bath_energy, bath_hyb, final_error, func = hybfit(Delta, Z, tol=tol)
 ```
 Or fit with specified number of interpolation points `Np`:
 ```python
-bath_energy, bath_hyb = Imfreq_obj.fitting(Np = 4, flag = "hybfit")
+bath_energy, bath_hyb, final_error, func = hybfit(Delta, Z, Np = Np)
 ```
 Here `bath_energy` $E$ and `bath_hyb` $V$ are desired quantities of hybridization orbitals. They satisfy
 
@@ -51,36 +50,21 @@ Here `bath_energy` $E$ and `bath_hyb` $V$ are desired quantities of hybridizatio
 \Delta(\mathrm i \omega_k)_{mn} \approx \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
 ```
 
-In more sophisticated applications, one might need to specify other flags, such as `maxiter`, `cleanflag` and `disp`. See comments in `matsubara.py` for details.
+In more sophisticated applications, one might need to specify other flags, such as `maxiter`, `cleanflag` and `disp`. See the documentation for details.
 
 One can look at the final error of the hybridization fitting:
 
 ```python
-print(Imfreq_obj.final_error)
+print(final_error)
+```
+### Triqs interface
+
+For triqs users, if the Green's function data `delta_triqs` is stored as a `triqs.gf.Gf` object or `triqs.gf.BlockGf` object, then the hybridization fitting could be done using the `hybfit_triqs` function:
+```python
+from aaadapol import hybfit_triqs
+bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_triqs, tol=tol, maxiter=500, debug=True)
 ```
 
 ### Analytic continuation
 
-Similarly, there are two choices for analytic continuation:
-
-```python
-greens_function = Imfreq_obj.fitting(tol = 1e-6, flag = "anacont")
-```
-
-or
-
-```python
-greens_function = Imfreq_obj.fitting(Np = 4, flag = "anacont")
-```
-
-The output now is a function evaluator for the Green's functions. For example, if one wish to evaluate the Green's function on `wgrid`, one can do:
-
-```python
-wgrid = np.linspace(-1,1,100)+1j*0.01
-G_w = greens_function(wgrid)
-```
-and then one can plot the spectral function:
-```python
-import matplotlib.pyplot as plt
-plt.plot(wgrid.real, -np.squeeze(G_w).imag/np.pi)
-```
+To use this code for analytic continuation is similar, and we refer to the documentation for details.
