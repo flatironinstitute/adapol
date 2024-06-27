@@ -1,5 +1,5 @@
 ## Introduction
-[AAAdapol](https://github.com/Hertz4/AAAdapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form:
+[`AAAdapol`](https://github.com/Hertz4/AAAdapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form:
 ```math
 G(\mathrm i \omega_k) = \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
 ```
@@ -8,15 +8,21 @@ AAAdapol is short for **A**ntoulas–**A**nderson **Ad**aptive **pol**e-fitting.
 Current applications include
 (1) hybridization fitting, (2) analytic continuation.
 
+We also provide a [TRIQS](https://triqs.github.io/) interface if the Matsubara functions are stored in `triqs` Green's function container.
+
 ## Installation
-AAAdapol has the following prerequisites:
-- numpy, scipy
-- cvxpy, when conducting hybridization fitting for matrix-valued (instead of scalar-valued) Green's functions.
+`AAAdapol` has `numpy` and `scipy` as its prerequisites. [`cvxpy`](https://www.cvxpy.org/) is also required for hybridization fitting of matrix-valued (instead of scalar-valued) Green's functions.
+
+To install `AAAdapol`, run
+```terminal
+pip install aaadapol
+```
 
 
+## Examples
+In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/AAAdapol/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/AAAdapol/example/semicircle.ipynb), showcasing how to use `AAAdapol` for both discrete spectrum and continuous spectrum. We also demonstrate how to use our code through the triqs interface.
 
-## Toy example
-Let us illustrate how to use the code with the following toy example:
+Below is a quick introduction through the following toy example:
 # Setup
 ```python
 import numpy as np
