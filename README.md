@@ -1,4 +1,4 @@
-## Introduction
+# Introduction
 [`AAAdapol`](https://github.com/Hertz4/AAAdapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form:
 ```math
 G(\mathrm i \omega_k) = \sum_l \frac{V_lV_l^{\dagger}}{\mathrm i\omega_k - E_l}.
@@ -10,7 +10,7 @@ Current applications include
 
 We also provide a [TRIQS](https://triqs.github.io/) interface if the Matsubara functions are stored in `triqs` Green's function container.
 
-## Installation
+# Installation
 `AAAdapol` has `numpy` and `scipy` as its prerequisites. [`cvxpy`](https://www.cvxpy.org/) is also required for hybridization fitting of matrix-valued (instead of scalar-valued) Matsubara functions.
 
 To install `AAAdapol`, run
@@ -19,7 +19,7 @@ pip install aaadapol
 ```
 
 
-## Examples
+# Examples
 In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/AAAdapol/blob/main/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/AAAdapol/blob/main/example/semicircle.ipynb), showcasing how to use `AAAdapol` for both discrete spectrum and continuous spectrum. We also demonstrate how to use our code through the triqs interface.
 
 Below is a quick introduction through the following toy example:
@@ -68,3 +68,10 @@ bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_triqs, tol=tol,
 ### Analytic continuation
 
 To use this code for analytic continuation is similar, and we refer to the documentation for details.
+
+# References
+To cite this work, ...
+### Other References
+1. Huang, Zhen, Emanuel Gull, and Lin Lin. "Robust analytic continuation of Green's functions via projection, pole estimation, and semidefinite relaxation." Physical Review B 107.7 (2023): 075151.
+2. Mejuto-Zaera, Carlos, et al. "Efficient hybridization fitting for dynamical mean-field theory via semi-definite relaxation." Physical Review B 101.3 (2020): 035143.
+3. Nakatsukasa, Yuji, Olivier Sète, and Lloyd N. Trefethen. "The AAA algorithm for rational approximation." SIAM Journal on Scientific Computing 40.3 (2018): A1494-A1522.
