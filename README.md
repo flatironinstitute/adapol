@@ -11,7 +11,7 @@ Current applications include
 We also provide a [TRIQS](https://triqs.github.io/) interface if the Matsubara functions are stored in `triqs` Green's function container.
 
 ## Installation
-`AAAdapol` has `numpy` and `scipy` as its prerequisites. [`cvxpy`](https://www.cvxpy.org/) is also required for hybridization fitting of matrix-valued (instead of scalar-valued) Green's functions.
+`AAAdapol` has `numpy` and `scipy` as its prerequisites. [`cvxpy`](https://www.cvxpy.org/) is also required for hybridization fitting of matrix-valued (instead of scalar-valued) Matsubara functions.
 
 To install `AAAdapol`, run
 ```terminal
@@ -23,7 +23,7 @@ pip install aaadapol
 In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/AAAdapol/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/AAAdapol/example/semicircle.ipynb), showcasing how to use `AAAdapol` for both discrete spectrum and continuous spectrum. We also demonstrate how to use our code through the triqs interface.
 
 Below is a quick introduction through the following toy example:
-# Setup
+### Setup
 ```python
 import numpy as np
 beta = 20
@@ -36,7 +36,7 @@ With `Delta` and `Z`, one first initialize the Matsubara object:
 Imfreq_obj = Matsubara(Delta, Z)
 ```
 
-# Hybridization Fitting
+### Hybridization Fitting
 There are two choices for doing hybridization fitting. One can either fit with desired accuracy `eps`:
 ```python
 bath_energy, bath_hyb = Imfreq_obj.fitting(tol = 1e-6, flag = "hybfit")
@@ -59,7 +59,7 @@ One can look at the final error of the hybridization fitting:
 print(Imfreq_obj.final_error)
 ```
 
-# Analytic continuation
+### Analytic continuation
 
 Similarly, there are two choices for analytic continuation:
 
