@@ -1,7 +1,7 @@
 ## Introduction
 [`AAAdapol`](https://github.com/Hertz4/AAAdapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form:
 ```math
-G(\mathrm i \omega_k) = \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
+G(\mathrm i \omega_k) = \sum_l \frac{|v_l\rangle\langle v_l|}{\mathrm i\omega_k - E_l}.
 ```
 AAAdapol is short for **A**ntoulas–**A**nderson **Ad**aptive **pol**e-fitting. 
 
