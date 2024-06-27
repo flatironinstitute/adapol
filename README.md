@@ -62,7 +62,7 @@ print(final_error)
 For triqs users, if the Green's function data `delta_triqs` is stored as a `triqs.gf.Gf` object or `triqs.gf.BlockGf` object, then the hybridization fitting could be done using the `hybfit_triqs` function:
 ```python
 from aaadapol import hybfit_triqs
-bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_triqs, tol=tol, maxiter=500, debug=True)
+bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_triqs, tol=tol, debug=True)
 ```
 
 ### Analytic continuation
