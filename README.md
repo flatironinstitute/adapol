@@ -1,4 +1,9 @@
-This is a python package for Matsubara functions in the imaginary frequency domain. 
+## Introduction
+[AAAdapol](https://github.com/Hertz4/AAAdapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form:
+```math
+G(\mathrm i \omega_k) = \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
+```
+AAAdapol is short for **A**ntoulas–**A**nderson **Ad**aptive **pol**e-fitting.
 
 Current applications include
 
@@ -6,8 +11,16 @@ Current applications include
 
 - analytic continuation.
 
+## Installation
+AAAdapol has the following prerequisites:
+- numpy, scipy
+- cvxpy, when conducting hybridization fitting for matrix-valued (instead of scalar-valued) Green's functions.
+
+
+
+## Toy example
 Let us illustrate how to use the code with the following toy example:
-## Setup
+# Setup
 ```python
 import numpy as np
 beta = 20
@@ -20,7 +33,7 @@ With `Delta` and `Z`, one first initialize the Matsubara object:
 Imfreq_obj = Matsubara(Delta, Z)
 ```
 
-## Hybridization Fitting
+# Hybridization Fitting
 There are two choices for doing hybridization fitting. One can either fit with desired accuracy `eps`:
 ```python
 bath_energy, bath_hyb = Imfreq_obj.fitting(tol = 1e-6, flag = "hybfit")
@@ -43,7 +56,7 @@ One can look at the final error of the hybridization fitting:
 print(Imfreq_obj.final_error)
 ```
 
-## Analytic continuation
+# Analytic continuation
 
 Similarly, there are two choices for analytic continuation:
 
