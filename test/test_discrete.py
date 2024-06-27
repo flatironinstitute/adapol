@@ -4,7 +4,7 @@ import scipy
 from aaadapol import hybfit, hybfit_triqs
 
 
-def make_G_with_random_discrete_pole(Np, Z):
+def make_Delta_with_random_discrete_pole(Np, Z):
     np.random.seed(0)
     pol = np.random.randn(Np)
     pol = pol / np.max(np.abs(pol))
@@ -18,13 +18,13 @@ def make_G_with_random_discrete_pole(Np, Z):
     M = M.transpose()
     if len(weight.shape) == 1:
         weight = weight / sum(weight)
-        G = M @ weight
+        Delta = M @ weight
     else:
         Np = weight.shape[0]
         Norb = weight.shape[1]
         Nw = len(Z)
-        G = (M @ (weight.reshape(Np, Norb * Norb))).reshape(Nw, Norb, Norb)
-    return pol, vec, weight, G
+        Delta = (M @ (weight.reshape(Np, Norb * Norb))).reshape(Nw, Norb, Norb)
+    return pol, vec, weight, Delta
 
 
 def tst_discrete(Np):
@@ -32,9 +32,8 @@ def tst_discrete(Np):
     N = 105
     Z = 1j *(np.linspace(-N, N, N + 1)) * np.pi / beta
     tol = 1e-6
-    pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np, Z)
+    pol_true, vec_true, weight_true, Delta = make_Delta_with_random_discrete_pole(Np, Z)
 
-    # bath_energy, bath_hyb = ImFreq_obj.bathfitting_tol(tol = tol, maxiter = 50, disp = False, cleanflag = True)
     bathenergy, bathhyb, final_error, func = hybfit(
         Delta, Z, tol=tol, maxiter=50
     )
@@ -54,7 +53,7 @@ def tst_discrete_triqs(Np):
     N = 105
     Z = 1j * (np.linspace(-N, N, N + 1)) * np.pi / beta
     tol = 1e-6
-    pol_true, vec_true, weight_true, Delta = make_G_with_random_discrete_pole(Np, Z)
+    pol_true, vec_true, weight_true, Delta = make_Delta_with_random_discrete_pole(Np, Z)
 
     norb = Delta.shape[-1]
     iw_mesh = MeshImFreq(beta=beta, S='Fermion', n_iw=(N+1)//2)
@@ -62,12 +61,12 @@ def tst_discrete_triqs(Np):
     delta_iw.data[:] = Delta
 
     # Gf interface
-    V, eps, delta_fit, final_error = hybfit_triqs(delta_iw, tol=tol, maxiter=50, debug=True)
+    bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_iw, tol=tol, maxiter=50, debug=True)
     assert final_error < tol
 
     # BlockGf interface
     delta_blk = BlockGf(name_list=['up', 'down'], block_list=[delta_iw, delta_iw], make_copies=True)
-    V, eps, delta_fit, final_error = hybfit_triqs(delta_blk, tol=tol, maxiter=50, debug=True)
+    bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_blk, tol=tol, maxiter=50, debug=True)
     assert final_error[0] < tol and final_error[1] < tol
 
 
