@@ -3,7 +3,9 @@
 ```math
 G(\mathrm i \omega_k) = \sum_l \frac{V_{lm} V_{ln}^*}{\mathrm i\omega_k - E_l}.
 ```
-AAAdapol is short for **A**ntoulas–**A**nderson **Ad**aptive **pol**e-fitting. Current applications include
+AAAdapol is short for **A**ntoulas–**A**nderson **Ad**aptive **pol**e-fitting. 
+
+Current applications include
 (1) hybridization fitting, (2) analytic continuation.
 
 ## Installation
