@@ -20,7 +20,7 @@ pip install aaadapol
 
 
 ## Examples
-In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/AAAdapol/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/AAAdapol/example/semicircle.ipynb), showcasing how to use `AAAdapol` for both discrete spectrum and continuous spectrum. We also demonstrate how to use our code through the triqs interface.
+In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/AAAdapol/blob/main/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/AAAdapol/blob/main/example/semicircle.ipynb), showcasing how to use `AAAdapol` for both discrete spectrum and continuous spectrum. We also demonstrate how to use our code through the triqs interface.
 
 Below is a quick introduction through the following toy example:
 ### Setup
