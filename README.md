@@ -63,7 +63,6 @@ For triqs users, if the Green's function data `delta_triqs` is stored as a `triq
 from adapol import hybfit_triqs
 bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_triqs, tol=tol, debug=True)
 ```
-
 ### Analytic continuation
 
 To use this code for analytic continuation is similar, and we refer to the documentation for details.
