@@ -1,7 +1,7 @@
 import pytest # noqa
 import numpy as np
 import scipy
-from aaadapol import hybfit, hybfit_triqs
+from adapol import hybfit, hybfit_triqs
 
 
 def make_Delta_with_random_discrete_pole(Np, Z):
