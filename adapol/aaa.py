@@ -1,5 +1,5 @@
 """
-This code implements a specific variant if the AAA algorithm.
+This code implements a specific variant of the AAA algorithm.
 
 """
 
