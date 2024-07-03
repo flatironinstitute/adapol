@@ -7,7 +7,7 @@ Obtain bath fitting from pole fitting
 --------------------------------------------
 
 In bath fitting, given :math:`\Delta(\mathrm i\nu_k)` evaluated on :math:`\{\mathrm i\nu_k\}_{k=1}^{N_{w}}`, we wish to find 
-$V_p, E_p$ such that
+:math:`V_p, E_p` such that
 
 .. math::
 
