@@ -92,7 +92,11 @@ The Matsubara function :math:`G(\mathrm i\nu_k)` (as defined in Eq. :math:`\eqre
 :math:`G(z)` is analytic in the upper half-plane, and in the lower half plane, but has a branch cut in the real axis.
 In the special case that :math:`\rho(w)` is sum of Dirac delta functions, :math:`G(z)` is a rational function and is analytic in the entire complex plane except for the poles.
 
+More importantly, :math:`\rho(w)` and :math:`G(z)` are related by the following formula:
 
+.. math::
+    
+        \rho(w) = -\frac{1}{\pi} \lim_{\eta\to 0^+} \operatorname{Im} G(w+\mathrm i\eta).
 
 
 
