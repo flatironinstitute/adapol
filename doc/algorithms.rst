@@ -25,13 +25,13 @@ This is achieved by the following strategy:
         \Delta(\mathrm i\nu_k) = \sum_{p=1}^{N_p} \frac{M_p}{\mathrm i\nu_k - \lambda_p}, M_p\geq 0, \tag{1} \label{polefit}
         \end{equation}
     
-    Here :math:`M_p` are :math:`N\times N` positive semidefinite matrices.
+    Here :math:`M_p` are :math:`N_{\text{orb}}\times N_{\text{orb}}` positive semidefinite matrices.
 
 - Compute eigenvalue decomposition of :math:`M_p`:
 
     .. math::
 
-        M_p = \sum_{j=1}^{N} V_{j}^{(p)} (V_{j}^{(p)})^{\dagger}. \tag{2} \label{eigdecomp}
+        M_p = \sum_{j=1}^{N_{\text{orb}}} V_{j}^{(p)} (V_{j}^{(p)})^{\dagger}. \tag{2} \label{eigdecomp}
 
 - Combining :math:`\eqref{polefit}` and :math:`\eqref{eigdecomp}`, we obtain the desired bath fitting:
 
