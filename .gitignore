@@ -2,3 +2,4 @@
 .DS_Store
 __pycache__/aaa.cpython-310.pyc
 *.pyc
+doc/_build/
