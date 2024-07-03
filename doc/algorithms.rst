@@ -7,7 +7,7 @@ Obtain bath fitting from pole fitting
 --------------------------------------------
 
 In bath fitting, given :math:`\Delta(\mathrm i\nu_k)` evaluated on :math:`\{\mathrm i\nu_k\}_{k=1}^{N_{w}}`, we wish to find 
-:math:`V_p, E_p` such that
+:math:`V_j, E_j` such that
 
 .. math::
 
@@ -19,19 +19,19 @@ This is achieved by the following strategy:
  
 - Find pole fitting with semidefinite constraints:
 
-.. math::
+    .. math::
     
         \begin{equation}
         \Delta(\mathrm i\nu_k) = \sum_{p=1}^{N_p} \frac{M_p}{\mathrm i\nu_k - \lambda_p}, M_p\geq 0, \tag{1} \label{polefit}
         \end{equation}
     
-Here :math:`M_p` are :math:`N\times N` positive semidefinite matrices.
+    Here :math:`M_p` are :math:`N\times N` positive semidefinite matrices.
 
 - Compute eigenvalue decomposition of :math:`M_p`:
 
-.. math::
+    .. math::
 
-    M_p = \sum_{j=1}^{N} V_{j}^{(p)} (V_{j}^{(p)})^{\dagger}. \tag{2} \label{eigdecomp}
+        M_p = \sum_{j=1}^{N} V_{j}^{(p)} (V_{j}^{(p)})^{\dagger}. \tag{2} \label{eigdecomp}
 
 - Combining :math:`\eqref{polefit}` and :math:`\eqref{eigdecomp}`, we obtain the desired bath fitting:
 
