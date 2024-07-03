@@ -109,7 +109,7 @@ If :math:`G(\mathrm i\nu_k)` is a single-particle Green's function, (or similarl
 
     G_{ij}(\mathrm i\nu_k) =\frac{1}{Z} \sum_{r, s} \frac{\left\langle\Psi_s\left|\hat{c}_i\right| \Psi_r\right\rangle\left\langle\Psi_r\left|\hat{c}_j^{\dagger}\right| \Psi_s\right\rangle}{z+E_s-E_r}\left(\mathrm{e}^{-\beta E_s} \mp \mathrm{e}^{-\beta E_r}\right),
 
-where :math:`\hat{c}_i, \hat{c}_i^{\dagger}` are the annihilation and creation operator for the $i$ th orbital, :math:`\left|\Psi_s\right\rangle` is the :math:`s`-th eigenvector of the Hamiltonian :math:`\hat H` with energy :math:`E_s`.
+where :math:`\hat{c}_i, \hat{c}_i^{\dagger}` are the annihilation and creation operator for the :math:`i`-th orbital, :math:`\left|\Psi_s\right\rangle` is the :math:`s`-th eigenvector of the Hamiltonian :math:`\hat H` with energy :math:`E_s`.
 
 By grouping the :math:`(r,s)` indices into a single index :math:`p`, we have a more compact form:
 
@@ -128,11 +128,11 @@ In the matrix case, the spectral function is:
 
 .. math::
     
-        {\mathrm{Spec}}(w) = \operatorname{Tr}[\rho(w)].
+        {\mathrm{Spec}}(w) = \sum_{i=1}^{N_{\text{orb}}}\rho_{ii}(w).
 
 Using the analytic continuation properties,
 the spectral function could be evaluated by calculating the Green's function on the real axis with infinitesimal broadening:
 
 .. math::
     
-        \rho(w) = -\frac{1}{\pi} \lim_{\eta\to 0^+} \operatorname{Im} G(w+\mathrm i\eta).
+        \mathrm{Spec}(w) = -\frac{1}{\pi} \lim_{\eta\to 0^+}  \sum_{i=1}^{N_{\text{orb}}} \operatorname{Im} (G_{ii}(w+\mathrm i\eta)).
