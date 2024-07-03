@@ -71,7 +71,7 @@ def get_weight(
                 else:
                     prob = cp.Problem(cp.Minimize(sum(Gfit)))
                 prob.solve(solver="SCS", verbose=False, eps=eps)
-                # todo: add options for mosek
+                #  MOSEK parameters
                 # mosek_params_dict = {"MSK_DPAR_INTPNT_CO_TOL_PFEAS": 1.e-8,\
                 #                     "MSK_DPAR_INTPNT_CO_TOL_DFEAS": 1.e-8,
                 #                     "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": 1.e-8,
