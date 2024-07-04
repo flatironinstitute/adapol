@@ -1,4 +1,5 @@
 import numpy as np
+from .fit_utils import pole_fitting, eval_with_pole
 
 def anacont(
     Delta,

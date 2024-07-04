@@ -1,4 +1,4 @@
-from .hybfit import hybfit, hybfit_triqs, check_weight_psd
+from .hybfit import hybfit, hybfit_triqs
 from .anacont import anacont
-
+from .fit_utils import check_psd
 __all__ = ["hybfit", "hybfit_triqs", "check_weight_psd", "anacont"]

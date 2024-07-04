@@ -1,4 +1,5 @@
-from .fit_utils import pole_fitting, eval_with_pole, check_psd
+import numpy as np
+from .fit_utils import pole_fitting, eval_with_pole
 
 def hybfit(
     Delta,
