@@ -35,5 +35,5 @@ jobs:
         ruff check --output-format=github . -v
     - name: Test with pytest
       run: |
-        export PYTHONPATH=$HOME/matsubara:$PYTHONPATH
+        pip install -e .
         pytest -m "not triqs"
