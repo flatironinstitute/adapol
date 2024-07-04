@@ -1,15 +1,15 @@
 Hybridization fitting
 =====================
 
-.. autofunction:: adapol.matsubara.hybfit
+.. autofunction:: adapol.hybfit.hybfit
 
 Analytic continuation
 =====================
 
-.. autofunction:: adapol.matsubara.anacont
+.. autofunction:: adapol.anacont.anacont
 
 TRIQS interface 
 =====================
 
-.. autofunction:: adapol.matsubara.hybfit_triqs
-.. autofunction:: adapol.matsubara.anacont_triqs
+.. autofunction:: adapol.hybfit.hybfit_triqs
+.. autofunction:: adapol.anacont.anacont_triqs
