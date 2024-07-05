@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algorithms &mdash; Adapol 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation" href="documentation.html" />
+    <link rel="prev" title="Physical background" href="theories.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Adapol
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="theories.html">Physical background</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#obtain-bath-fitting-from-pole-fitting">Obtain bath fitting from pole fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rational-approximation-via-modified-aaa-algorithm">Rational approximation via (modified) AAA algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#semidefinite-programming">Semidefinite programming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bi-level-optimization">Bi-level optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Adapol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Algorithms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/algorithms.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="algorithms">
+<span id="id1"></span><h1>Algorithms<a class="headerlink" href="#algorithms" title="Link to this heading"></a></h1>
+<section id="obtain-bath-fitting-from-pole-fitting">
+<h2>Obtain bath fitting from pole fitting<a class="headerlink" href="#obtain-bath-fitting-from-pole-fitting" title="Link to this heading"></a></h2>
+<p>In bath fitting, given <span class="math notranslate nohighlight">\(\Delta(\mathrm i\nu_k)\)</span> evaluated on <span class="math notranslate nohighlight">\(\{\mathrm i\nu_k\}_{k=1}^{N_{w}}\)</span>, we wish to find
+<span class="math notranslate nohighlight">\(V_j, E_j\)</span> such that</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+\Delta(\mathrm i\nu_k) = \sum_{j=1}^{N_b} \frac{V_jV_j^{\dagger}}{\mathrm i\nu_k - E_j}.
+\end{equation}\]</div>
+<p>This is achieved by the following strategy:</p>
+<ul>
+<li><p>Find pole fitting with semidefinite constraints:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{equation}
+\Delta(\mathrm i\nu_k) = \sum_{p=1}^{N_p} \frac{M_p}{\mathrm i\nu_k - \lambda_p}, M_p\geq 0, \tag{1} \label{polefit}
+\end{equation}\]</div>
+<p>Here <span class="math notranslate nohighlight">\(M_p\)</span> are <span class="math notranslate nohighlight">\(N_{\text{orb}}\times N_{\text{orb}}\)</span> positive semidefinite matrices.</p>
+</div></blockquote>
+</li>
+<li><p>Compute eigenvalue decomposition of <span class="math notranslate nohighlight">\(M_p\)</span>:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[M_p = \sum_{j=1}^{N_{\text{orb}}} V_{j}^{(p)} (V_{j}^{(p)})^{\dagger}. \tag{2} \label{eigdecomp}\]</div>
+</div></blockquote>
+</li>
+<li><p>Combining <span class="math notranslate nohighlight">\(\eqref{polefit}\)</span> and <span class="math notranslate nohighlight">\(\eqref{eigdecomp}\)</span>, we obtain the desired bath fitting:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[\Delta(\mathrm i\nu_k) = \sum_{pj} \frac{V_{j}^{(p)}(V_{j}^{(p)})^{\dagger}}{\mathrm i\nu_k - \lambda_p}.\]</div>
+</section>
+<section id="rational-approximation-via-modified-aaa-algorithm">
+<h2>Rational approximation via (modified) AAA algorithm<a class="headerlink" href="#rational-approximation-via-modified-aaa-algorithm" title="Link to this heading"></a></h2>
+<p>To find the poles <span class="math notranslate nohighlight">\(\lambda_p\)</span> in <span class="math notranslate nohighlight">\(\eqref{polefit}\)</span>, we use the <a class="reference external" href="https://epubs.siam.org/doi/10.1137/16M1106122">AAA algorithm</a>, which is a rational approximation algorithm based on the Barycentric interpolant:</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+f(z) = \frac{p(z)}{q(z)} = \frac{\sum_{j=1}^{m} \frac{c_jf_j}{z - z_j}}{\sum_{j=1}^{m} \frac{c_j}{z - z_j}.}.
+\tag{3} \label{bary}
+\end{equation}\]</div>
+<p>The AAA algorithm is an iterative procedure. It selects the next support point in a greedy fashion.
+Suppose we have obtained an approximant <span class="math notranslate nohighlight">\(\widetilde f\)</span> from the <span class="math notranslate nohighlight">\((k-1)\)</span>-th iteration, using support point <span class="math notranslate nohighlight">\(z_1,\cdots z_{k-1}\)</span>.
+At the <span class="math notranslate nohighlight">\(k\)</span>-th iteration, we do the following:</p>
+<ol class="arabic">
+<li><p>Select the next support point <span class="math notranslate nohighlight">\(z_k\)</span> at which the previous approximant <span class="math notranslate nohighlight">\(\widetilde f\)</span> has the largest error.</p></li>
+<li><p>Find <span class="math notranslate nohighlight">\(c_k\)</span> in <span class="math notranslate nohighlight">\(\eqref{bary}\)</span> by solving the following linear square problem:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{equation}
+\min_{\{c_k\}} \sum_{z\neq z_1,\cdots z_k} \left| f(z) q(z) - p(z) \right|^2. \quad \text{s.t.} \|c\|_2= 1.
+\end{equation}\]</div>
+<p>This is a linear problem and amounts to solving a SVD problem. (See details in <a class="reference external" href="https://epubs.siam.org/doi/10.1137/16M1106122">paper</a>).</p>
+</div></blockquote>
+</li>
+<li><p>If the new approximant has reached desired accuracy, stop the iteration. Otherwise, repeat the above steps.</p></li>
+</ol>
+<p>The poles of <span class="math notranslate nohighlight">\(f(z)\)</span> are the zeros of <span class="math notranslate nohighlight">\(q(z)\)</span>, which can be found by solving the following generalized eigenvalue problem:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{equation}
+\left(\begin{array}{ccccc}
+0 &amp; c_1 &amp; c_2 &amp; \cdots &amp; c_m \\
+1 &amp; z_1 &amp; &amp; &amp; \\
+1 &amp; &amp; z_2 &amp; &amp; \\
+\vdots &amp; &amp; &amp; \ddots &amp; \\
+1 &amp; &amp; &amp; &amp; z_m
+\end{array}\right)=\lambda\left(\begin{array}{lllll}
+0 &amp; &amp; &amp; &amp; \\
+&amp; 1 &amp; &amp; &amp; \\
+&amp; &amp; 1 &amp; &amp; \\
+&amp; &amp; &amp; \ddots &amp; \\
+&amp; &amp; &amp; &amp; 1
+\end{array}\right)
+\end{equation}\end{split}\]</div>
+<p>For our application, we modify the AAA algorithm to deal with matrix-valued functions by replacing <span class="math notranslate nohighlight">\(f_j\)</span> with matrices <span class="math notranslate nohighlight">\(F_j\)</span>.</p>
+</section>
+<section id="semidefinite-programming">
+<h2>Semidefinite programming<a class="headerlink" href="#semidefinite-programming" title="Link to this heading"></a></h2>
+<p>After obtaining <span class="math notranslate nohighlight">\(\lambda_p\)</span>, we need to find the weight matrices <span class="math notranslate nohighlight">\(M_p\)</span> in <span class="math notranslate nohighlight">\(\eqref{polefit}\)</span>.
+We are solving the following problem:</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+\min_{\{M_p\}} \sum_{k=1}^{N_w} \left\| \Delta(\mathrm i\nu_k) - \sum_{p=1}^{N_p} \frac{M_p}{\mathrm i\nu_k - \lambda_p} \right\|_F^2, \quad \text{s.t. } M_p\geq 0.
+\end{equation}\]</div>
+<p>This is a linear problem with respect to <span class="math notranslate nohighlight">\(M_p\)</span>, and has semidefinite constraints, therefore could be solved efficiently via standard semidefinite programming (SDP) solvers.</p>
+</section>
+<section id="bi-level-optimization">
+<h2>Bi-level optimization<a class="headerlink" href="#bi-level-optimization" title="Link to this heading"></a></h2>
+<p>With <span class="math notranslate nohighlight">\(\lambda_p\)</span> and <span class="math notranslate nohighlight">\(M_p\)</span> obtained, we can further refine the poles and weights by solving the following bi-level optimization.
+Let us define the error function as</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+\text{Err}(\lambda_p, M_p) =  \sum_{k=1}^{N_w} \left\| \Delta(\mathrm i\nu_k) - \sum_{p=1}^{N_p} \frac{M_p}{\mathrm i\nu_k - \lambda_p} \right\|_F^2.
+\end{equation}\]</div>
+<p>Note that <span class="math notranslate nohighlight">\(\text{Err}\)</span> is linear in <span class="math notranslate nohighlight">\(M_p\)</span> but nonlinear in <span class="math notranslate nohighlight">\(\lambda_p\)</span>. As we have mentioned, optimization in <span class="math notranslate nohighlight">\(M_p\)</span> is  a SDP problem and therefore is robust, while optimization in <span class="math notranslate nohighlight">\(\lambda_p\)</span> is a nonlinear problem and could be very challenging.
+This motivates us to define <span class="math notranslate nohighlight">\(\text{Err}(\lambda_1,\cdots, \lambda_{N_p})\)</span> as a function of <span class="math notranslate nohighlight">\(\{\lambda_p\}\)</span> only:</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+\text{Err}(\lambda_1,\cdots, \lambda_{N_p}) = \min_{\{M_p\}}\text{Err}(\lambda_p, M_p)
+\end{equation}\]</div>
+<p>The value of <span class="math notranslate nohighlight">\(\text{Err}(\lambda_1,\cdots, \lambda_{N_p})\)</span> is obtained by solving a SDP problem.
+The gradient of <span class="math notranslate nohighlight">\(\text{Err}(\lambda_1,\cdots, \lambda_{N_p})\)</span> could also be obtained analytically.
+(For details, see eq. 28 <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.075151">here</a>.)
+And thus we could use a gradient-based optimization algorithm (L-BFGS) to minimize <span class="math notranslate nohighlight">\(\text{Err}(\lambda_1,\cdots, \lambda_{N_p})\)</span> with respect to <span class="math notranslate nohighlight">\(\{\lambda_p\}\)</span>.</p>
+<p>For performances, robustness and other details of this bi-level optimization framework, see again <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.075151">our original paper</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="theories.html" class="btn btn-neutral float-left" title="Physical background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="documentation.html" class="btn btn-neutral float-right" title="Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Zhen Huang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
