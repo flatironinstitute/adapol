@@ -22,7 +22,7 @@ pip install adapol
 See the detailed [documentation](https://flatironinstitute.github.io/adapol/) for physical background, algorithms and user manual.
 
 # Examples
-In the `examples` directory, we provide two examples [`discrete.ipynb`](https://github.com/Hertz4/adapol/blob/main/example/discrete.ipynb) and [`semicircle.ipynb`](https://github.com/Hertz4/adapol/blob/main/example/semicircle.ipynb), showcasing how to use `adapol` for both discrete spectrum and continuous spectrum.
+In the `tutorial` page, we provide two examples [`discrete.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/discrete.html) and [`semicircle.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/semicircle.html), showcasing how to use `adapol` for both discrete spectrum and continuous spectrum.
 
 In these notebooks, we also demonstrate how to use our code through the triqs interface.
 
