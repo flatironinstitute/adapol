@@ -110,52 +110,52 @@
 <p>Here <span class="math notranslate nohighlight">\(\beta\)</span> is the inverse temperature.</p>
 <p>Let us first set inverse temperature <span class="math notranslate nohighlight">\(\beta\)</span> and the Matsubara
 frequencies <span class="math notranslate nohighlight">\(Z = \{\mathrm i\nu_n\}\)</span>.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
-import matplotlib.pyplot as plt
-from adapol import hybfit
-import scipy
-beta = 20
-N = 55
-Z = 1j *(np.linspace(-N, N, N + 1)) * np.pi / beta
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">adapol</span> <span class="kn">import</span> <span class="n">hybfit</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">55</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">beta</span>
 </pre></div>
 </div>
 <p>Now we construct the Matsubara data using the above equation. The
 integral is evaluated with adaptive quadrature:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def Kw(w, v):
-    return 1 / ( v - w)
-def semicircular(x):
-    return 2 * np.sqrt(1 - x**2) / np.pi
-def make_Delta_with_cont_spec( Z, rho, a=-1.0, b=1.0, eps=1e-12):
-    Delta = np.zeros((Z.shape[0]), dtype=np.complex128)
-    for n in range(len(Z)):
-        def f(w):
-            return Kw(w , Z[n]) * rho(w)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">Kw</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span> <span class="n">v</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">semicircular</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span class="k">def</span> <span class="nf">make_Delta_with_cont_spec</span><span class="p">(</span> <span class="n">Z</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">a</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">):</span>
+    <span class="n">Delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z</span><span class="p">)):</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Kw</span><span class="p">(</span><span class="n">w</span> <span class="p">,</span> <span class="n">Z</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">*</span> <span class="n">rho</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
 
-        # f = lambda w: Kw(w-en[i],Z[n])*rho(w)
-        Delta[n] = scipy.integrate.quad(
-            f, a, b, epsabs=eps, epsrel=eps, complex_func=True
-        )[0]
+        <span class="c1"># f = lambda w: Kw(w-en[i],Z[n])*rho(w)</span>
+        <span class="n">Delta</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">epsabs</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span> <span class="n">epsrel</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span> <span class="n">complex_func</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
 
-    return Delta
+    <span class="k">return</span> <span class="n">Delta</span>
 
-Delta = make_Delta_with_cont_spec( Z, semicircular)
+<span class="n">Delta</span> <span class="o">=</span> <span class="n">make_Delta_with_cont_spec</span><span class="p">(</span> <span class="n">Z</span><span class="p">,</span> <span class="n">semicircular</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Below we show that by increasing number of modes <span class="math notranslate nohighlight">\(N_p\)</span>, the
 fitting error decreases.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>error = []
-Nbath = []
-for Np in range(2, 12, 2):
-    bathenergy, bathhyb, final_error, func = hybfit(Delta, Z, Np = Np, verbose=False)
-    Nbath.append(len(bathenergy))
-    error.append(final_error)
-plt.yscale(&#39;log&#39;)
-plt.plot(Nbath, error, &#39;o-&#39;)
-plt.xlabel(&#39;Number of bath sites&#39;)
-plt.ylabel(&#39;Fitting Error&#39;)
-plt.title(&quot;Semicircular Density &quot;)
-plt.show()
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">error</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">Nbath</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">Np</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="n">bathenergy</span><span class="p">,</span> <span class="n">bathhyb</span><span class="p">,</span> <span class="n">final_error</span><span class="p">,</span> <span class="n">func</span> <span class="o">=</span> <span class="n">hybfit</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">Np</span> <span class="o">=</span> <span class="n">Np</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">Nbath</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bathenergy</span><span class="p">))</span>
+    <span class="n">error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_error</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Nbath</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Number of bath sites&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Fitting Error&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Semicircular Density &quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="../_images/output_6_0.png" src="../_images/output_6_0.png" />
@@ -163,29 +163,29 @@ plt.show()
 </h2><p>Let us demonstrate how to use our code if the Matsubara functions are
 given using the TRIQS data structure.</p>
 <p>In trqis, the Matsubara frequencies are defined using <code class="docutils literal notranslate"><span class="pre">MeshImFreq</span></code>:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from triqs.gf import MeshImFreq
-Norb = 1
-iw_mesh = MeshImFreq(beta=beta, S=&#39;Fermion&#39;, n_iw=Z.shape[0]//2)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshImFreq</span>
+<span class="n">Norb</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">iw_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">hybfit_triqs</span></code> function could handle TRIQS Green’s functions
 object <code class="docutils literal notranslate"><span class="pre">GF</span></code> and <code class="docutils literal notranslate"><span class="pre">BlockGf</span></code>:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from triqs.gf import Gf, BlockGf
-from adapol import hybfit_triqs
-delta_iw = Gf(mesh=iw_mesh, target_shape=[Norb, Norb])
-delta_iw.data[:,0,0] = Delta
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">BlockGf</span>
+<span class="kn">from</span> <span class="nn">adapol</span> <span class="kn">import</span> <span class="n">hybfit_triqs</span>
+<span class="n">delta_iw</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">iw_mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">Norb</span><span class="p">,</span> <span class="n">Norb</span><span class="p">])</span>
+<span class="n">delta_iw</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Delta</span>
 
-#Construct BlockGf object
-delta_blk = BlockGf(name_list=[&#39;up&#39;, &#39;down&#39;], block_list=[delta_iw, delta_iw], make_copies=True)
+<span class="c1">#Construct BlockGf object</span>
+<span class="n">delta_blk</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="n">block_list</span><span class="o">=</span><span class="p">[</span><span class="n">delta_iw</span><span class="p">,</span> <span class="n">delta_iw</span><span class="p">],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-tol = 1e-6
-# Gf interface for hybridization fitting
-bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_iw, tol=tol, maxiter=50, debug=True)
-assert final_error &lt; tol
+<span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="c1"># Gf interface for hybridization fitting</span>
+<span class="n">bathhyb</span><span class="p">,</span> <span class="n">bathenergy</span><span class="p">,</span> <span class="n">delta_fit</span><span class="p">,</span> <span class="n">final_error</span> <span class="o">=</span> <span class="n">hybfit_triqs</span><span class="p">(</span><span class="n">delta_iw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">final_error</span> <span class="o">&lt;</span> <span class="n">tol</span>
 
-# BlockGf interface for hybridization fitting
-bathhyb, bathenergy, delta_fit, final_error = hybfit_triqs(delta_blk, tol=tol, maxiter=50, debug=True)
-assert final_error[0] &lt; tol and final_error[1] &lt; tol
+<span class="c1"># BlockGf interface for hybridization fitting</span>
+<span class="n">bathhyb</span><span class="p">,</span> <span class="n">bathenergy</span><span class="p">,</span> <span class="n">delta_fit</span><span class="p">,</span> <span class="n">final_error</span> <span class="o">=</span> <span class="n">hybfit_triqs</span><span class="p">(</span><span class="n">delta_blk</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">final_error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tol</span> <span class="ow">and</span> <span class="n">final_error</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tol</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">optimization</span> <span class="n">finished</span> <span class="k">with</span> <span class="n">fitting</span> <span class="n">error</span> <span class="mf">9.538e-08</span>
