@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ "main", "triqs" ]
+    branches: [ "main", "0.1.x" ]
   pull_request:
-    branches: [ "main", "triqs" ]
+    branches: [ "main", "0.1.x" ]
 
 jobs:
   build:
@@ -44,9 +44,9 @@ jobs:
         make html
 
     - name: Deploy documentation to website
-      if: matrix.python-version == '3.12' && github.ref == 'refs/heads/main'
+      if: matrix.python-version == '3.12' && github.ref == 'refs/heads/0.1.x'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: doc/_build/html
         branch: github.io
-        target-folder: docs/main
+        target-folder: docs/0.1.x
