@@ -17,9 +17,13 @@ To install `adapol`, run
 pip install adapol
 ```
 
+
+
 # Documentation
 
 See the detailed [documentation](https://flatironinstitute.github.io/adapol/) for physical background, algorithms and user manual.
+
+`Adapol` is a stand-alone package. For TRIQS users, we also provide a TRIQS interface. See [user manual](https://flatironinstitute.github.io/adapol/latest/python.html#triqs-interface) for details.
 
 # Examples
 In the `tutorial` page, we provide two examples [`discrete.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/discrete.html) and [`semicircle.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/semicircle.html), showcasing how to use `adapol` for both discrete spectrum and continuous spectrum.
