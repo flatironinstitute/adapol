@@ -1,3 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "adapol"
 version = "0.1.0"
+authors = [
+  { name="Zhen Huang", email="hertz@berkeley.edu" },
+  { name="Chia-Nan Yeh", email="cyeh@flatironinstitute.org"},
+  { name="Nils Wentzell", email="nwentzell@flatironinstitute.org"},
+  { name="Jason Kaye", email="jkaye@flatironinstitute.org"},
+  { name="Lin Lin", email="linlin@berkeley.edu"}
+]
+description = "Adaptive Pole Fitting for Quantum Many-Body Physics "
+readme = "README.md"
+keywords = ["Bath", "Fitting", "Hybridization", "DMFT", "Matsubara"]
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "cvxpy"
+]
+
+[project.urls]
+"Homepage" = "https://flatironinstitute.github.io/adapol"
+"Bug Tracker" = "https://github.com/flatironinstitute/adapol/issues"
