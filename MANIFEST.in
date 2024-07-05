@@ -1,0 +1,9 @@
+prune .git
+prune .github
+prune build
+prune doc
+prune example
+prune packaging
+prune test
+
+global-exclude .gitignore pytest.ini
