@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pytest numpy scipy cvxpy sphinx sphinx-rtd-theme nbsphinx
+        python -m pip install pytest numpy scipy cvxpy sphinx sphinx-rtd-theme nbsphinx ipython
         # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with Ruff
       run: |
