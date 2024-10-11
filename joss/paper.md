@@ -34,6 +34,7 @@ affiliations:
    index: 4
 date: 10 October 2024
 bibliography: paper.bib
+link-citations: true
 
 ---
 
@@ -43,25 +44,24 @@ Matsubara Green's functions encode thermal properties of a quantum many-body sys
 As a result, the decomposition of Matsubara Green's functions often appears as a crucial subroutine in various quantum many-body calculation frameworks.
 In the frequency domain, such decompositions are known as the following pole fitting problem:
 $$G({i} \nu_k) \approx \sum_{p=1}^{N_p} \frac{v_pv_p^\dagger}{{i} \nu_k-E_p}.$$
-Such pole fitting problems arise naturally in various applications, such as in hybridization fitting [@georges1996dynamical; @mejuto2020efficient; @HuangKayeStrand2024etal] and analytic continuation of Matsubara Green's functions [@fei2021nevanlinna; @HuangGullLin2023].
+Such pole fitting problems arise naturally in various applications, such as in hybridization fitting [@georges1996dynamical; @mejuto2020efficient; @huang2024_3] and analytic continuation of Matsubara Green's functions [@fei2021nevanlinna; @huang2023].
 The Matsubara data usually has non-zero non-diagonal components, hindering the problem from being treated in a component-wise fashion.
-This fitting problem has been found to have a highly nonconvex loss landscape (see Figure 3 in [@HuangGullLin2023]). The residue matrix $R_p$ corresponding to the pole $E_p$, i.e., $R_p = v_pv_p^\dagger$, is constrained to be a rank-1 positive semidefinite matrix. Furthermore, the given Matsubara data could be potentially noisy, making methods based solely on rational interpolations possibly unstable [@schott2016analytic;  @fei2021nevanlinna].
+This fitting problem has been found to have a highly nonconvex loss landscape (see Figure 3 in [@huang2023]). The residue matrix $R_p$ corresponding to the pole $E_p$, i.e., $R_p = v_pv_p^\dagger$, is constrained to be a rank-1 positive semidefinite matrix. Furthermore, the given Matsubara data could be potentially noisy, making methods based solely on rational interpolations possibly unstable [@schott2016analytic;  @fei2021nevanlinna].
 
-We implemented an adaptive pole fitting (Adapol) procedure to circument the above challenges [@HuangGullLin2023; @HuangKayeStrand2024etal].
-We first use the AAA algorithm [@NakatsukasaSeteTrefethen2018], which is a state-of-the-art rational approximation algorithm, to find an initial guess for the poles $E_p$, then use linear fitting, optimization and singular value decomposition to obtain the final values of $E_p$ and $v_p$.
+We implemented an adaptive pole fitting (Adapol) procedure to circument the above challenges [@huang2023; @huang2024_3].
+We first use the AAA algorithm [@nakatsukasa2018], which is a state-of-the-art rational approximation algorithm, to find an initial guess for the poles $E_p$, then use linear fitting, optimization and singular value decomposition to obtain the final values of $E_p$ and $v_p$.
 The adapol procedure can provide an accurate fitting to the Matsubara data, is noise-robust and also gives  results guranteed to satisfy causality.
 
-Adapol could be regarded as an efficient approach for obtaining a low-rank compression of the Matsubara data, where the number of terms $N_p$ is comparable (and usually smaller) than the DLR representation [@HuangKayeStrand2024etal], which is known to achieve the optimal scaling [@kaye2022discrete,@kaye2022libdlr]. This has enabled recent algorithmic advances in dynamical mean-field theory [@mejuto2020efficient] and fast Feynman diagram evaluations [@kayeHuangStrandetat2024].
+Adapol could be regarded as an efficient approach for obtaining a low-rank compression of the Matsubara data, where the number of terms $N_p$ is comparable (and usually smaller) than the DLR representation [@huang2024_3], which is known to achieve the optimal scaling [@kaye2022discrete;@kaye2022libdlr]. This has enabled recent algorithmic advances in dynamical mean-field theory [@mejuto2020efficient] and fast Feynman diagram evaluations [@kaye2024].
 
 # Statement of need
 
 Adapol is a python library which conducts the adaptive pole fitting for Matsubara Green's functions. 
-The analytic continuation of Green's functions using pole fitting was implemented in Matlab [@HuangGullLin2023].
-Nevertheless, Adapol provides a very crucial framework for future code developments. On the one hand, it incorporates more application scenarios by providing application interface (API) for both hybridization fitting and analytic continuations. On the other hand, 
+The analytic continuation of Green's functions using pole fitting was implemented in Matlab [@huang2023]. Nevertheless, Adapol provides a very crucial framework for future code developments. On the one hand, it incorporates more application scenarios by providing application interface (API) for both hybridization fitting and analytic continuations. On the other hand, 
 adapol is implemented in python, and provides a user-friendly interface for TRIQS [@parcollet2015triqs], enabling TRIQS users to use Adapol with very slight modifications of their existing routines.
 
 Adapol is distributed under the Apache License Version 2.0 through a public Git repository
-[@Huang2024]. The online project documentation [@Huang2024_2] contains  background on the physics of Matsubara Green's functions and the mathematics of pole fitting, a detailed user guide describing several physical examples and the TRIQS interface, and also the API reference documentation for all functions. 
+[@huang2024]. The online project documentation [@huang2024_2] contains  background on the physics of Matsubara Green's functions and the mathematics of pole fitting, a detailed user guide describing several physical examples and the TRIQS interface, and also the API reference documentation for all functions. 
 
 # Acknowledgements
 
