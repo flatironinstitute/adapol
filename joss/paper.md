@@ -1,12 +1,12 @@
 ---
-title: 'adapol: Adaptive pole fitting for Matsubara functions'
+title: 'adapol: Adaptive pole-fitting for Matsubara functions'
 tags:
   - python
   - quantum many-body systems
   - imaginary time Green's function
   - Matsubara Green's function
   - many-body Green's function methods
-  - pole fitting
+  - pole-fitting
   - hybridization fitting
   - analytic continuation
 authors:
@@ -41,24 +41,26 @@ link-citations: true
 
 # Summary
 
-The Green's function approach to quantum many-body physics aims to replace high-dimensional wavefunctions with correlation functions that are more closely related to experimental observables of interest, such as spectral and response functions.
+The Green's function approach to quantum many-body physics aims to replace high-dimensional wavefunctions with correlation functions which are more closely related to experimental observables of interest, such as spectral and response functions.
 Within this framework, real-time quantities, such as the Green's function, self-energy, and hybridization functions, are often represented in the discrete "Matsubara" domain on the imaginary frequency axis. A variety of physical observables can be directly recovered from the Matsubara Green's function, and many quantities of interest can be calculated more efficiently in this formalism.
 
 A common computational task within this framework is decomposing a Matsubara function into a sum of simple poles:
 $$G_{ab}(\mathrm{i} \omega_n) \approx \sum_{p=1}^{N_p} \frac{v_{ap}v_{bp}^{*}}{\mathrm{i} \omega_n-E_p}.$$
 Here, $\mathbf{G}(i\omega_{n})$ is a matrix-valued function of the Matsubara frequency point $\mathrm i \omega_n = (2n+1) \pi\mathrm{i} / \beta$ for fermionic functions, and $i \omega_n = 2 n \pi\mathrm{i} / \beta$ for bosonic functions, with $\beta$ representing the inverse temperature and $n \in \mathbb{Z}$. The pair $(E_p,\mathbf{v}_p)$ can be interpreted as a set of eigenpairs for an effective non-interacting Hamiltonian model.
-This "pole-fitting" problem is a natural step in various numerical methods, such as hybridization fitting for quantum impurity solvers [@georges1996dynamical; @mejuto2020efficient; @huang2024_3], and the analytic continuation of Matsubara Green's functions [@fei2021nevanlinna; @huang2023].
-Due to the rank-one positive-semidefiniteness constraint implied by the model, obtaining the best fit from Matsubara frequency data cannot be handled component-wise and presents a highly non-convex optimization landscape (see, e.g., Fig. 3 in [@huang2023]). Additionally, given Matsubara data may be noisy in certain applications, instabilities can arise in methods that rely solely on standard rational approximation techniques [@schott2016analytic; @fei2021nevanlinna].
+This "pole-fitting" problem is a crucial step in various numerical methods, such as hybridization fitting for quantum impurity solvers [@georges1996dynamical; @mejuto2020efficient; @shinaoka21; @kaye24; @gazizova24], and the analytic continuation of Matsubara Green's functions [@fei2021nevanlinna; @fei21_2; @ying22; @huang2023; @zhang24; @zhang24_2].
+As a consequence of the rank-one positive-semidefiniteness constraint implied by the model, a best fit from Matsubara frequency data cannot be obtained component-wise, leading to a highly non-convex optimization landscape (see, e.g., Fig. 3 in [@huang2023]). Additionally, given that Matsubara data may be noisy in certain applications, instabilities can arise in methods which rely solely on standard rational approximation techniques [@schott2016analytic; @fei2021nevanlinna].
 
-Our Python package `adapol` ("add a pole") implements an adaptive pole fitting procedure introduced in [@huang2023; @huang2024_3].
-This method first utilizes the AAA rational approximation algorithm [@nakatsukasa2018] to find an initial guess for the pole locations $E_p$, followed by optimization and singular value decomposition to refine $E_p$ and obtain $v_p$.
-This procedure has been shown to provide an accurate fit for Matsubara data in a black-box and noise-robust manner. It has enabled recent advances in dynamical mean-field theory [@mejuto2020efficient] and Feynman diagram evaluation [@kaye2024], offering a more efficient low-rank decomposition compared to the discrete Lehmann representation [@kaye2022discrete; @kaye2022libdlr] for fixed functions [@huang2024_3] [JK: Review this sentence] [JK: Mention/cite IR work on hybridization fitting] [JK: Review and expand references].
+Our Python package `adapol` ("add a pole") implements an adaptive pole-fitting procedure introduced in [@huang2023; @huang2024_3].
+The method first uses the AAA rational approximation algorithm [@nakatsukasa2018] to find an initial guess for the pole locations $E_p$. It then uses non-convex optimization and singular value decomposition to refine $E_p$ and obtain $v_p$.
+Variants of this procedure have been shown to provide an accurate and compact fit for Matsubara data in a black-box and noise-robust manner, enabling new algorithms for dynamical mean-field theory [@mejuto2020efficient] and Feynman diagram evaluation [huang2024_3]. For example, [huang2024_3] demonstrates that the procedure yields a more compact pole approximation than the generic discrete Lehmann representation [@kaye2022discrete] for fixed objective functions. 
+
+[JK: Mention/cite IR work on hybridization fitting] [JK: Review and expand references].
 
 # Statement of Need
 
-`adapol` is a simple and self-contained package that can be incorporated into codes requiring Matsubara pole-fitting. It includes a specialized API for common tasks such as hybridization fitting and analytic continuation, along with a user-friendly interface to the TRIQS package [@parcollet2015triqs], enabling TRIQS users to utilize `adapol` with minimal modifications to their existing code.
+`adapol` is a simple and self-contained package which can be incorporated into codes requiring Matsubara pole-fitting. It includes a specialized API for common tasks such as hybridization fitting and analytic continuation, along with a user-friendly interface to the TRIQS package [@parcollet2015triqs], enabling TRIQS users to utilize `adapol` with minimal modifications to their existing code.
 
-`adapol` is distributed under the Apache License Version 2.0 and is available on GitHub [@huang2024]. The documentation [@huang2024_2] provides background on the physics of Matsubara functions and the mathematics of pole fitting, along with a detailed user guide, example applications, the TRIQS interface, and API reference documentation for all functions.
+`adapol` is distributed under the Apache License Version 2.0 and is available on GitHub [@huang2024]. The documentation [@huang2024_2] provides background on the physics of Matsubara functions and the mathematics of pole-fitting, along with a detailed user guide, example applications, the TRIQS interface, and API reference documentation for all functions.
 
 # Acknowledgements
 
