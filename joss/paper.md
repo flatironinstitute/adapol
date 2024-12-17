@@ -54,8 +54,6 @@ Our Python package `adapol` ("add a pole") implements an adaptive pole-fitting p
 The method first uses the AAA rational approximation algorithm [@nakatsukasa2018] to find an initial guess for the pole locations $E_p$. It then uses non-convex optimization and singular value decomposition to refine $E_p$ and obtain $v_p$.
 Variants of this procedure have been shown to provide an accurate and compact fit for Matsubara data in a black-box and noise-robust manner, enabling new algorithms for dynamical mean-field theory [@mejuto2020efficient] and Feynman diagram evaluation [huang2024_3]. For example, [huang2024_3] demonstrates that the procedure yields a more compact pole approximation than the generic discrete Lehmann representation [@kaye2022discrete] for fixed objective functions. 
 
-[JK: Mention/cite IR work on hybridization fitting] [JK: Review and expand references].
-
 # Statement of Need
 
 `adapol` is a simple and self-contained package which can be incorporated into codes requiring Matsubara pole-fitting. It includes a specialized API for common tasks such as hybridization fitting and analytic continuation, along with a user-friendly interface to the TRIQS package [@parcollet2015triqs], enabling TRIQS users to utilize `adapol` with minimal modifications to their existing code.
