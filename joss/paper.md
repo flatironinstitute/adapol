@@ -9,21 +9,24 @@ tags:
   - pole-fitting
   - hybridization fitting
   - analytic continuation
+
 authors:
   - name: Zhen Huang
     corresponding: true # (This is how to denote the corresponding author)
+    orcid: 0000-0002-4801-8635
     affiliation: 1
   - name: Chia-Nan Yeh
     orcid: 0000-0002-4166-0764
     affiliation: 2
+  - name: Lin Lin
+    orcid: 0000-0001-6860-9566
+    affiliation: "1, 4"
   - name: Jason Kaye
     orcid: 0000-0001-8045-6179
     affiliation: "2, 3" # (Multiple affiliations must be quoted)
   - name: Nils Wentzell
     orcid: 0000-0003-3613-007X
     affiliation: 2
-  - name: Lin Lin
-    affiliation: "1, 4"
 affiliations:
  - name: Department of Mathematics, University of California, Berkeley, CA 94720, USA
    index: 1
