@@ -55,7 +55,7 @@ As a consequence of the rank-one positive-semidefiniteness constraint implied by
 
 Our Python package `adapol` ("add a pole") implements an adaptive pole-fitting procedure introduced in [@huang2023; @huang2024_3].
 The method first uses the AAA rational approximation algorithm [@nakatsukasa2018] to find an initial guess for the pole locations $E_p$. It then uses non-convex optimization and singular value decomposition to refine $E_p$ and obtain $v_p$.
-Variants of this procedure have been shown to provide an accurate and compact fit for Matsubara data in a black-box and noise-robust manner, enabling new algorithms for dynamical mean-field theory [@mejuto2020efficient] and Feynman diagram evaluation [huang2024_3]. For example, [huang2024_3] demonstrates that the procedure yields a more compact pole approximation than the generic discrete Lehmann representation [@kaye2022discrete] for fixed objective functions. 
+Variants of this procedure have been shown to provide an accurate and compact fit for Matsubara data in a black-box and noise-robust manner, enabling new algorithms for dynamical mean-field theory [@mejuto2020efficient] and Feynman diagram evaluation [@huang2024_3]. For example, [@huang2024_3] demonstrates that the procedure yields a more compact pole approximation than the generic discrete Lehmann representation [@kaye2022discrete] for fixed objective functions. 
 
 # Statement of Need
 
@@ -65,4 +65,4 @@ Variants of this procedure have been shown to provide an accurate and compact fi
 
 # Acknowledgements
 
-The work by Z.H. is supported by the Simons Targeted Grants in Mathematics and Physical Sciences on Moiré Materials Magic. The Flatiron Institute is a division of the Simons Foundation.
+This work is partially supported by the Simons Targeted Grants in Mathematics and Physical Sciences on Moiré Materials Magic (Z.H., L.L.). The Flatiron Institute is a division of the Simons Foundation.
