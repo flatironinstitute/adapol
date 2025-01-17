@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>adapol.anacont &mdash; Adapol 0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -71,12 +71,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for adapol.anacont</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.fit_utils</span> <span class="kn">import</span> <span class="n">pole_fitting</span><span class="p">,</span> <span class="n">eval_with_pole</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.fit_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">pole_fitting</span><span class="p">,</span> <span class="n">eval_with_pole</span>
 
 <div class="viewcode-block" id="anacont">
 <a class="viewcode-back" href="../../python.html#adapol.anacont.anacont">[docs]</a>
-<span class="k">def</span> <span class="nf">anacont</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">anacont</span><span class="p">(</span>
     <span class="n">Delta</span><span class="p">,</span>
     <span class="n">iwn_vec</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -200,7 +200,7 @@
             <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
             <span class="n">disp</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">Z</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">Z</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">eval_with_pole</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">func</span><span class="p">,</span> <span class="n">fitting_error</span><span class="p">,</span> <span class="n">pol</span><span class="p">,</span> <span class="n">weight</span></div>
 
@@ -208,7 +208,7 @@
 
 <div class="viewcode-block" id="anacont_triqs">
 <a class="viewcode-back" href="../../python.html#adapol.anacont.anacont_triqs">[docs]</a>
-<span class="k">def</span> <span class="nf">anacont_triqs</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">anacont_triqs</span><span class="p">(</span>
     <span class="n">Delta_triqs</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">Np</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -254,7 +254,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Failed to import the triqs package (https://triqs.github.io/triqs/latest/). &quot;</span>
                           <span class="s2">&quot;Please ensure it is installed.&quot;</span><span class="p">)</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>adapol.hybfit &mdash; Adapol 0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -71,12 +71,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for adapol.hybfit</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.fit_utils</span> <span class="kn">import</span> <span class="n">pole_fitting</span><span class="p">,</span> <span class="n">eval_with_pole</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.fit_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">pole_fitting</span><span class="p">,</span> <span class="n">eval_with_pole</span>
 
 <div class="viewcode-block" id="hybfit">
 <a class="viewcode-back" href="../../python.html#adapol.hybfit.hybfit">[docs]</a>
-<span class="k">def</span> <span class="nf">hybfit</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hybfit</span><span class="p">(</span>
     <span class="n">Delta</span><span class="p">,</span>
     <span class="n">iwn_vec</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -179,7 +179,7 @@
         <span class="p">)</span>
 
     <span class="n">bathenergy</span><span class="p">,</span> <span class="n">bathhyb</span><span class="p">,</span> <span class="n">bath_mat</span> <span class="o">=</span> <span class="n">obtain_orbitals</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">svdtol</span><span class="o">=</span><span class="n">svdtol</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">Z</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">Z</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">eval_with_pole</span><span class="p">(</span><span class="n">bathenergy</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">bath_mat</span><span class="p">)</span>
     <span class="n">Delta_reconstruct</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">iwn_vec</span><span class="p">)</span>
     <span class="n">final_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Delta</span> <span class="o">-</span> <span class="n">Delta_reconstruct</span><span class="p">))</span>
@@ -189,7 +189,7 @@
 
 <div class="viewcode-block" id="hybfit_triqs">
 <a class="viewcode-back" href="../../python.html#adapol.hybfit.hybfit_triqs">[docs]</a>
-<span class="k">def</span> <span class="nf">hybfit_triqs</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hybfit_triqs</span><span class="p">(</span>
     <span class="n">Delta_triqs</span><span class="p">,</span>
     <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">Np</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -252,7 +252,7 @@
 <span class="sd">            weights obtained from fitting</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Failed to import the triqs package (https://triqs.github.io/triqs/latest/). &quot;</span>
                           <span class="s2">&quot;Please ensure it is installed.&quot;</span><span class="p">)</span>
@@ -288,7 +288,7 @@
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error: Delta_triqs.mesh must be an instance of MeshImFreq or MeshDLRImFreq.&quot;</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">obtain_orbitals</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">svdtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">obtain_orbitals</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">svdtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    obtaining bath orbitals through svd</span>
 <span class="sd">    &quot;&quot;&quot;</span>
