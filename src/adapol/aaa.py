@@ -1,6 +1,18 @@
 """
 This code implements a specific variant of the AAA algorithm.
 
+The major modifications compared to the original AAA algorithm are:
+1. The input functions are matrix-valued; 
+2. The interpolation points are on the imaginary axis, i.e., Z = i * R_+;
+3. An symmetry is imposed on the interpolation points, whichh is used to obtain real-valued poles.
+
+The implementation follows the convention in the original AAA paper [1], as well as its matlab [2] and python [3] implementations.
+
+References:
+
+    1. The AAA Algorithm for Rational Approximation, Yuji Nakatsukasa, Olivier Sete, and Lloyd N. Trefethen, SIAM Journal on Scientific Computing 2018 40:3, A1494-A1522https://doi.org/10.1137/16M1106122
+    2. http://www.chebfun.org
+    3. https://github.com/c-f-h/baryrat/blob/master/baryrat.py
 """
 
 import numpy as np
@@ -8,116 +20,87 @@ import scipy.linalg
 
 
 def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
-    """ """
-    Z = np.asanyarray(Z).ravel()
-
     # only use input z that are on iR_+. Will map them to iR_- by taking conjugate of function value.
     half_index = np.imag(Z) > 0
     Z_half = Z[half_index]
     F_half = F[half_index, :, :]
-    M_half = len(Z_half)
+    N_half = len(Z_half)
 
     Z = np.append(Z_half, np.conjugate(Z_half))
 
     Norb = F.shape[1]
     F_other_half = np.zeros_like(F_half)
-    for i in range(M_half):
+    for i in range(N_half):
         F_other_half[i, :, :] = np.conjugate(np.transpose(F_half[i, :, :]))
     F = np.concatenate((F_half, F_other_half), axis=0)
 
-    M = M_half * 2
+    N = N_half * 2
 
-    F_mat = np.reshape(F, (M, Norb * Norb))
+    F_mat = np.reshape(F, (N, Norb * Norb))
 
-    J = list(range(M))
-    zj = np.empty(0, dtype=Z.dtype)
-    fj = np.empty((0, Norb * Norb), dtype=F.dtype)
-    C = np.empty([M, 0], dtype=F.dtype)
-    errors = []
+    I = [i for i in range(N)]
+    z_interp = []
+    f_interp = np.empty((0, Norb * Norb), dtype=F.dtype)
 
-    reltol = tol * np.linalg.norm(F_mat, np.inf)
+    F_mat_fit = np.sum(F_mat) * np.ones((N, Norb * Norb), dtype=F_mat.dtype) / (N * Norb * Norb)
+    
+    for n in  range(2, mmax + 1, 2):
+        jj = np.argmax(np.sum(abs(F_mat - F_mat_fit) ** 2, 1))
+        z_interp.append(Z[jj])
+        f_interp = np.concatenate((f_interp, F_mat[jj : jj + 1, :]), axis=0)
+        I.remove(jj)
 
-    R = np.mean(F_mat) * np.ones_like(F_mat)
+        jj2 = (jj + N_half) % N
+        z_interp.append(Z[jj2])
+        f_interp = np.concatenate((f_interp, F_mat[jj2 : jj2 + 1, :]), axis=0)
 
-    mlist = range(2, mmax + 1, 2)
+        I.remove(jj2)
 
-    for m in mlist:
-        # find largest residual
-        jj = np.argmax(np.sum(abs(F_mat - R) ** 2, 1))
-        zj = np.append(zj, (Z[jj],))
-        fj = np.concatenate((fj, F_mat[jj : jj + 1, :]), axis=0)
-        J.remove(jj)
+        Cauchy_mat = 1.0 / (Z[I, None] - np.array(z_interp)[None, :])
 
-        # Cauchy matrix containing the basis functions as columns
-
-        jj2 = (jj + M_half) % M
-        zj = np.append(zj, (Z[jj2],))
-        fj = np.concatenate((fj, F_mat[jj2 : jj2 + 1, :]), axis=0)
-
-        J.remove(jj2)
-
-        C = 1.0 / (Z[J, None] - zj[None, :])
-
-        # Loewner matrix
-        Apart = np.zeros(((M - m) * Norb * Norb, m), dtype=F.dtype)
+        Apart = np.zeros(((N - n) * Norb * Norb, n), dtype=F.dtype)
         for i in range(Norb * Norb):
             Fhere = F_mat[:, i]
-            fjhere = fj[:, i]
+            fhere = f_interp[:, i]
 
-            Apart[range(0 + i, i + (M - m) * Norb * Norb, Norb * Norb), :] = (
-                Fhere[J, None] - fjhere[None, :]
-            ) * C
+            Apart[range(0 + i, i + (N - n) * Norb * Norb, Norb * Norb), :] = (Fhere[I, None] - fhere[None, :]) * Cauchy_mat
 
-        Awidth = np.size(Apart, 1)
-        Apart_l = Apart[:, range(0, Awidth, 2)]
-        Apart_r = Apart[:, range(1, Awidth, 2)]
+        Apart_l = Apart[:, range(0, n, 2)]
+        Apart_r = Apart[:, range(1, n, 2)]
         Anew = np.concatenate((Apart_l + Apart_r, (Apart_l - Apart_r) * 1j), axis=1)
         Anew = np.concatenate((np.real(Anew), np.imag(Anew)), axis=0)
+        
+        _, _, Vh = scipy.linalg.svd(Anew, full_matrices=False)
 
-        # compute weights as right singular vector for smallest singular value
-        _, _, Vh = np.linalg.svd(Anew, full_matrices=False)
+        w_r = Vh[-1, :]
 
-        wj_r = Vh[-1, :]
+        w_r = np.reshape(w_r, (2, int(n / 2)))
+        w_c = np.zeros((2, int(n / 2)), dtype=np.complex128)
+        w_c[0, :] = w_r[0, :] + 1j * w_r[1, :]
+        w_c[1, :] = w_r[0, :] - 1j * w_r[1, :]
 
-        wj_r = np.reshape(wj_r, (2, int(m / 2)))
-        wj_c = np.zeros((2, int(m / 2)), dtype=np.complex128)
-        wj_c[0, :] = wj_r[0, :] + 1j * wj_r[1, :]
-        wj_c[1, :] = wj_r[0, :] - 1j * wj_r[1, :]
-
-        wj = np.asanyarray(wj_c.T).ravel()
-
-        # approximation: numerator / denominator
-
-        D = C.dot(wj)
-
-        # update residual
-        R = F_mat.copy()
+        weight = w_c.T.flatten()
+        F_mat_fit = F_mat * 1.0
 
         for i in range(Norb * Norb):
-            fjhere = fj[:, i]
-            N = C.dot(wj * fjhere)  # needs to change N and R
-            R[J, i] = N / D
+            F_mat_fit[I, i] = (Cauchy_mat @ (weight * f_interp[:, i])) / (Cauchy_mat @ weight)
 
-        # check for convergence
-        errors.append(np.linalg.norm(F_mat - R, np.inf))
-        if errors[-1] <= reltol:
+        if np.max(np.abs(F_mat_fit - F_mat)) <= tol:
             break
 
-    fj = fj.reshape(m, Norb, Norb)
-    pol = aaa_pol(zj, wj)
-    return pol, zj, fj, wj
+    f_interp = f_interp.reshape(n, Norb, Norb)
+    z_interp = np.array(z_interp)
+    pol = find_pol(z_interp, weight)
+    return pol, z_interp, f_interp, weight
 
 
-def aaa_pol(zj, wj):
-    """Return the poles and residues of the rational function."""
-
-    m = len(wj)
-
-    # compute poles
-    B = np.eye(m + 1)
-    B[0, 0] = 0
-    E = np.block([[0, wj], [np.ones((m, 1)), np.diag(zj)]])
-    evals = scipy.linalg.eigvals(E, B)
-    pol = np.real_if_close(evals[np.isfinite(evals)])
-
-    return pol
+def find_pol(z, w):
+    m = len(w)
+    mat1, mat2 = np.zeros((m + 1, m + 1), dtype=np.complex128), np.zeros((m + 1, m + 1), dtype=np.complex128)
+    for i in range(m):
+        mat2[0, i + 1] = w[i]
+        mat2[i + 1, 0] = 1.0
+        mat2[i + 1, i + 1] = z[i]
+        mat1[i + 1, i + 1] = 1.0
+    pol = scipy.linalg.eigvals(mat2, mat1)
+    return np.real_if_close(pol[np.isfinite(pol)])
