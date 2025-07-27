@@ -38,7 +38,7 @@ def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
 
     F_mat = np.reshape(F, (N, Norb * Norb))
 
-    I = [i for i in range(N)]
+    Ilist = [i for i in range(N)]
     z_interp = []
     f_interp = np.empty((0, Norb * Norb), dtype=F.dtype)
 
@@ -48,28 +48,28 @@ def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
         jj = np.argmax(np.sum(abs(F_mat - F_mat_fit) ** 2, 1))
         z_interp.append(Z[jj])
         f_interp = np.concatenate((f_interp, F_mat[jj : jj + 1, :]), axis=0)
-        I.remove(jj)
+        Ilist.remove(jj)
 
         jj2 = (jj + N_half) % N
         z_interp.append(Z[jj2])
         f_interp = np.concatenate((f_interp, F_mat[jj2 : jj2 + 1, :]), axis=0)
 
-        I.remove(jj2)
+        Ilist.remove(jj2)
 
-        Cauchy_mat = 1.0 / (Z[I, None] - np.array(z_interp)[None, :])
+        Cauchy_mat = 1.0 / (Z[Ilist, None] - np.array(z_interp)[None, :])
 
         Apart = np.zeros(((N - n) * Norb * Norb, n), dtype=F.dtype)
         for i in range(Norb * Norb):
             Fhere = F_mat[:, i]
             fhere = f_interp[:, i]
 
-            Apart[range(0 + i, i + (N - n) * Norb * Norb, Norb * Norb), :] = (Fhere[I, None] - fhere[None, :]) * Cauchy_mat
+            Apart[range(0 + i, i + (N - n) * Norb * Norb, Norb * Norb), :] = (Fhere[Ilist, None] - fhere[None, :]) * Cauchy_mat
 
         Apart_l = Apart[:, range(0, n, 2)]
         Apart_r = Apart[:, range(1, n, 2)]
         Anew = np.concatenate((Apart_l + Apart_r, (Apart_l - Apart_r) * 1j), axis=1)
         Anew = np.concatenate((np.real(Anew), np.imag(Anew)), axis=0)
-        
+
         _, _, Vh = scipy.linalg.svd(Anew, full_matrices=False)
 
         w_r = Vh[-1, :]
@@ -83,7 +83,7 @@ def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
         F_mat_fit = F_mat * 1.0
 
         for i in range(Norb * Norb):
-            F_mat_fit[I, i] = (Cauchy_mat @ (weight * f_interp[:, i])) / (Cauchy_mat @ weight)
+            F_mat_fit[Ilist, i] = (Cauchy_mat @ (weight * f_interp[:, i])) / (Cauchy_mat @ weight)
 
         if np.max(np.abs(F_mat_fit - F_mat)) <= tol:
             break
