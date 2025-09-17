@@ -9,9 +9,13 @@ from .aaa import aaa_matrix_real
 
 
 # import mosek
-def eval_with_pole(pol, Z, weight):
+def eval_with_pole(pol, Z, weight, statistics="Fermion"):
     pol_t = np.reshape(pol, [pol.size, 1])
-    M = 1 / (Z - pol_t)
+    if statistics == "Fermion":
+        M = 1 / (Z - pol_t)
+    else:
+        M = pol_t / (Z - pol_t)
+        M[:, Z == 0] = -1.0
     M = M.transpose()
     if len(weight.shape) == 1:
         return M @ weight
@@ -21,10 +25,15 @@ def eval_with_pole(pol, Z, weight):
 
 
 def get_weight(
-    pol, Z, G, cleanflag=True, maxiter=1000, complex=True, fast=False, eps=1e-8
+    pol, Z, G, cleanflag=True, maxiter=1000, complex=True, fast=False, eps=1e-8, statistics="Fermion"
 ):
     pol_t = np.reshape(pol, [pol.size, 1])
-    M = 1 / (Z - pol_t)
+    if statistics == "Fermion":
+        M = 1 / (Z - pol_t)
+    else:
+        M = pol_t / (Z - pol_t)
+        M[:, Z == 0] = -1.0
+    
     M = M.transpose()
     MM = np.concatenate([M.real, M.imag])
     if len(G.shape) == 1:
@@ -117,9 +126,9 @@ def aaa_reduce(pol, R, eps=1e-6):
     return pol[nonz_index], R[nonz_index]
 
 
-def erroreval(pol, Z, G, cleanflag=True, maxiter=1000, fast=False, complex=True):
+def erroreval(pol, Z, G, cleanflag=True, maxiter=1000, fast=False, complex=True, statistics="Fermion"):
     R, M, residue = get_weight(
-        pol, Z, G, cleanflag=cleanflag, maxiter=maxiter, complex=complex, fast=fast
+        pol, Z, G, cleanflag=cleanflag, maxiter=maxiter, complex=complex, fast=fast, statistics=statistics
     )
     if len(G.shape) == 1:
         y = np.linalg.norm(residue)
@@ -152,6 +161,7 @@ def pole_fitting(
     fast=False,
     disp=False,
     complex=True,
+    statistics="Fermion",
 ):
     # set cleanflag
     if solver == "lstsq":
@@ -187,7 +197,7 @@ def pole_fitting(
         pol, _, _, _ = aaa_matrix_real(Delta, 1j * Z, mmax=m)
         pol = np.real(pol)
         weight, _, residue = get_weight(
-            pol, 1.0j * Z, Delta, cleanflag=cleanflag, complex=complex, fast=fast
+            pol, 1.0j * Z, Delta, cleanflag=cleanflag, complex=complex, fast=fast, statistics=statistics
         )
         # print(np.max(np.abs(residue)))
         if tol is not None:
@@ -201,7 +211,7 @@ def pole_fitting(
 
                 def fhere(pole):
                     return erroreval(
-                        pole, 1j * Z, Delta, cleanflag=cleanflag, complex=complex
+                        pole, 1j * Z, Delta, cleanflag=cleanflag, complex=complex, statistics=statistics
                     )
 
                 # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=cleanflag,complex=complex)
@@ -220,7 +230,7 @@ def pole_fitting(
         else:
 
             def fhere1(pole):
-                return erroreval(pole, 1j * Z, Delta, cleanflag=True, complex=complex)
+                return erroreval(pole, 1j * Z, Delta, cleanflag=True, complex=complex, statistics=statistics)
 
             # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=True,complex=complex)
             res = scipy.optimize.minimize(
@@ -234,7 +244,7 @@ def pole_fitting(
 
                 def fhere2(pole):
                     return erroreval(
-                        pole, 1j * Z, Delta, cleanflag=False, complex=complex, fast=fast
+                        pole, 1j * Z, Delta, cleanflag=False, complex=complex, fast=fast, statistics=statistics
                     )
 
                 # fhere = lambda pole: erroreval(pole,1j*Z,Delta,cleanflag=False,complex= complex,fast = fast)
@@ -252,11 +262,11 @@ def pole_fitting(
                 )
 
         weight, _, residuenew = get_weight(
-            res.x, 1j * Z, Delta, cleanflag=cleanflag, fast=fast, complex=complex
+            res.x, 1j * Z, Delta, cleanflag=cleanflag, fast=fast, complex=complex, statistics=statistics
         )
         if not check_psd(weight):
             weight, _, residuenew = get_weight(
-                res.x, 1j * Z, Delta, cleanflag=False, complex=complex
+                res.x, 1j * Z, Delta, cleanflag=False, complex=complex, statistics=statistics
             )
         err = np.max(np.abs(residuenew))
         if tol is not None:
@@ -292,7 +302,7 @@ def kernel(tau, omega):
     kernel[:, m] = np.exp((1. - tau)*w_m) / (1 + np.exp(w_m))
 
     return kernel
-def get_weight_t(pol, tgrid, Deltat, beta):
+def get_weight_t(pol, tgrid, Deltat, beta, statistics="Fermion"):
     M = -kernel(tgrid/beta, pol*beta)
     shape_iaa = Deltat.shape
     shape_iA = (shape_iaa[0], shape_iaa[1]*shape_iaa[2])
@@ -302,8 +312,8 @@ def get_weight_t(pol, tgrid, Deltat, beta):
     
     weight = weight.reshape(shape_xaa)
     return weight, M, residue
-def erroreval_t(pol,  tgrid, Deltat, beta):
-    R, M, residue = get_weight_t(pol, tgrid, Deltat, beta)
+def erroreval_t(pol,  tgrid, Deltat, beta, statistics="Fermion"):
+    R, M, residue = get_weight_t(pol, tgrid, Deltat, beta, statistics=statistics)
     if len(Deltat.shape)==1:
         y = np.linalg.norm(residue)
         grad = np.real(np.dot(np.conj(residue) ,(R*(M**2))))
@@ -319,7 +329,9 @@ def erroreval_t(pol,  tgrid, Deltat, beta):
 
     grad = -grad/y
     return y, grad
-def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense,beta, Np_max=50,eps = 1e-5,Hermitian=True):
+def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense,beta, Np_max=50,eps = 1e-5,Hermitian=True, statistics="Fermion"):
+    if statistics not in ["Fermion"]:
+        raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
     Num_of_nonzero_entries = 0
     for i in range(Deltaiw.shape[1]):
         for j in range(Deltaiw.shape[2]):
@@ -332,7 +344,7 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense,beta, Np_max
         weight, _, residue = get_weight_t(pol, tgrid, Deltat,beta)
         pol, weight = aaa_reduce(pol, weight,eps)
         def fhere(pole):
-            return erroreval_t(pole, tgrid, Deltat,beta)    
+            return erroreval_t(pole, tgrid, Deltat,beta, statistics=statistics) 
          
         res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" :False,"gtol":1e-14,"ftol":1e-14})
         weight, _, residue = get_weight_t(res.x, tgrid, Deltat,beta)

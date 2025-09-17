@@ -11,6 +11,7 @@ def anacont(
     mmin=4,
     mmax=50,
     verbose=False,
+    statistics="Fermion",
 ):
     """
     The function for analytical continuation.
@@ -64,14 +65,20 @@ def anacont(
         whether to display optimization details
         default: False
 
+    :code:`statistics`: str
+        statistics of the hybridization function. Currently "Fermion" and "Boson" is supported.
+        Default: "Fermion"
+
 
 
 
     Returns:
     ---------
     :code:`func`: function
-            Analytic continuation function:
+            Analytic continuation function. In the fermionic case:
             :math:`f(z) = \sum_n \mathrm{Weight}[n]/(z-\mathrm{pol}[n]).`
+            In the bosonic case:
+            :math:`f(z) = \sum_n \mathrm{Weight}[n]\mathrm{pol}[n]/(z-\mathrm{pol}[n]).`
 
     :code:`fitting_error`: float
         fitting error
@@ -112,7 +119,7 @@ def anacont(
 
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, wn_vec, Ns=Np+1, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Ns=Np+1, maxiter=maxiter, solver=solver, disp=verbose, statistics=statistics
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(
@@ -124,9 +131,10 @@ def anacont(
             maxiter=maxiter,
             solver=solver,
             disp=verbose,
+            statistics=statistics
         )
     def func(Z):
-        return eval_with_pole(pol, Z, weight)
+        return eval_with_pole(pol, Z, weight, statistics=statistics)
     return func, fitting_error, pol, weight
 
 
@@ -139,7 +147,8 @@ def anacont_triqs(
     mmin=4,
     mmax=50,
     verbose=False,
-    debug=False
+    debug=False,
+    statistics="Fermion"
 ):
     """
     The triqs interface for analytical continuation.
@@ -157,6 +166,9 @@ def anacont_triqs(
     :code:`tol`, :code:`Np`, :code:`solver`, :code:`maxiter`, :code:`mmin`, :code:`mmax`, :code:`verbose`: 
         same as in anacont
 
+    :code:`statistics`: str
+        statistics of the hybridization function. Currently "Fermion" and "Boson" is supported.
+        Default: "Fermion"
 
     Returns:
     ---------
@@ -184,7 +196,7 @@ def anacont_triqs(
     if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
         iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
         func, fit_error, pol, weight = anacont(Delta_triqs.data, iwn_vec, tol, Np, solver, maxiter,
-                                               mmin, mmax, verbose)
+                                               mmin, mmax, verbose, statistics=statistics)
         print('optimization finished with fitting error {:.3e}'.format(fit_error))
 
         if debug:
@@ -195,7 +207,7 @@ def anacont_triqs(
         func_list, error_list, pol_list, weight_list = [], [], [], []
         for j, (block, delta_blk) in enumerate(Delta_triqs):
             func, fit_error, pol, weight = anacont_triqs(delta_blk, tol, Np, solver, maxiter, mmin,
-                                                         mmax, verbose)
+                                                         mmax, verbose, statistics=statistics)
             func_list.append(func)
             if debug:
                 error_list.append(fit_error)

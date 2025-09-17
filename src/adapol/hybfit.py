@@ -12,6 +12,7 @@ def hybfit(
     mmin=4,
     mmax=50,
     verbose=False,
+    statistics="Fermion",
 ):
     """
     The function for hybridization fitting.
@@ -40,6 +41,9 @@ def hybfit(
     :code:`tol`, :code:`Np`, :code:`solver`, :code:`maxiter`, :code:`mmin`, :code:`mmax`, :code:`verbose`: 
         see below in anacont
 
+    :code:`statistics`: str
+        statistics of the hybridization function. Currently "Fermion" and "Boson" is supported.
+        Default: "Fermion"
 
     Returns:
     ---------
@@ -55,8 +59,10 @@ def hybfit(
         final fitting error
 
     :code:`func`: function
-        Hybridization function evaluator
+        Hybridization function evaluator. In the fermionic case:
         :math:`f(z) = \sum_n V_{ni}V_{nj}^*/(z-E_n).`
+        Or in the bosonic case:
+        :math:`f(z) = \sum_n V_{ni}V_{nj}^*E_n/(z-E_n).`
 
     """
 
@@ -89,7 +95,7 @@ def hybfit(
 
     if Np is not None:
         pol, weight, fitting_error = pole_fitting(
-            Delta, wn_vec, Ns=Np + 1, maxiter=maxiter, solver=solver, disp=verbose
+            Delta, wn_vec, Ns=Np + 1, maxiter=maxiter, solver=solver, disp=verbose, statistics=statistics
         )
     elif tol is not None:
         pol, weight, fitting_error = pole_fitting(
@@ -101,11 +107,12 @@ def hybfit(
             maxiter=maxiter,
             solver=solver,
             disp=verbose,
+            statistics=statistics
         )
 
     bathenergy, bathhyb, bath_mat = obtain_orbitals(pol, weight, svdtol=svdtol)
     def func(Z):
-        return eval_with_pole(bathenergy, Z, bath_mat)
+        return eval_with_pole(bathenergy, Z, bath_mat, statistics=statistics)
     Delta_reconstruct = func(iwn_vec)
     final_error = np.max(np.abs(Delta - Delta_reconstruct))
     return bathenergy, bathhyb, final_error, func
@@ -121,7 +128,8 @@ def hybfit_triqs(
     mmin=4,
     mmax=50,
     verbose=False,
-    debug=False
+    debug=False,
+    statistics="Fermion",
 ):
     """
     The triqs interface for hybridization fitting.
@@ -153,6 +161,10 @@ def hybfit_triqs(
     :code:`tol`, :code:`Np`, :code:`solver`, :code:`maxiter`, :code:`mmin`, :code:`mmax`, :code:`verbose`: 
         same as in hybfit
 
+    :code:`statistics`: str, optional
+        statistics of the hybridization function. Currently "Fermion" and "Boson" is supported.
+        Default: "Fermion"
+
     Returns:
     ---------
 
@@ -182,7 +194,7 @@ def hybfit_triqs(
     if isinstance(Delta_triqs, Gf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
         iwn_vec = np.array([iw.value for iw in Delta_triqs.mesh.values()])
         eps_opt, V_opt, final_error, func = hybfit(Delta_triqs.data, iwn_vec, tol, Np,
-                                                   svdtol, solver, maxiter, mmin, mmax, verbose)
+                                                   svdtol, solver, maxiter, mmin, mmax, verbose, statistics=statistics)
         print('optimization finished with fitting error {:.3e}'.format(final_error))
 
         delta_fit = Gf(mesh=Delta_triqs.mesh, target_shape=Delta_triqs.target_shape)
@@ -195,7 +207,7 @@ def hybfit_triqs(
     elif isinstance(Delta_triqs, BlockGf) and isinstance(Delta_triqs.mesh, (MeshImFreq, MeshDLRImFreq)):
         V_list, eps_list, delta_list, error_list = [], [], [], []
         for j, (block, delta_blk) in enumerate(Delta_triqs):
-            res = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose, debug)
+            res = hybfit_triqs(delta_blk, tol, Np, svdtol, solver, maxiter, mmin, mmax, verbose, debug, statistics=statistics)
             V_list.append(res[0])
             eps_list.append(res[1])
             delta_list.append(res[2])
