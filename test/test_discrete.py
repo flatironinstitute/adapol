@@ -5,7 +5,7 @@ from adapol.hybfit import hybfit, hybfit_triqs
 
 
 
-def make_Delta_with_random_discrete_pole(Np, Z):
+def make_Delta_with_random_discrete_pole(Np, Z, statistics="Fermion"):
     np.random.seed(0)
     pol = np.random.randn(Np)
     pol = pol / np.max(np.abs(pol))
@@ -16,6 +16,9 @@ def make_Delta_with_random_discrete_pole(Np, Z):
 
     pol_t = np.reshape(pol, [pol.size, 1])
     M = 1 / ( Z - pol_t)
+    if statistics == "Boson":
+        M = pol_t / ( Z - pol_t)
+        M[:, Z==0] = -1.0
     M = M.transpose()
     if len(weight.shape) == 1:
         weight = weight / sum(weight)
@@ -39,7 +42,21 @@ def tst_discrete(Np):
         Delta, Z, tol=tol, maxiter=50
     )
     assert final_error < tol 
-    
+
+def tst_discrete_boson(Np):
+    beta = 20
+    N = 105
+    Z = 1j * np.arange(-N, N+1) * np.pi / beta
+    tol = 1e-6
+    pol_true, vec_true, weight_true, Delta = make_Delta_with_random_discrete_pole(Np, Z, statistics="Boson")
+
+    bathenergy, bathhyb, final_error, func = hybfit(
+        Delta, Z, tol=tol, maxiter=50, statistics="Boson"
+    )
+    f_reconstruct =  func(Z)  
+    assert final_error < tol  
+    print(np.max(np.abs(Delta - f_reconstruct)))
+    assert np.max(np.abs(Delta - f_reconstruct)) < tol*100
 
 def tst_discrete_triqs(Np):
     try:
@@ -75,6 +92,9 @@ def tst_discrete_triqs(Np):
 def test_discrete(Np):
     tst_discrete(Np)
 
+@pytest.mark.parametrize("Np", [2, 3, 4, 5, 6, 7])
+def test_discrete_boson(Np):
+    tst_discrete_boson(Np)
 
 @pytest.mark.triqs
 @pytest.mark.parametrize("Np", [2, 3, 4, 5, 6, 7])
