@@ -345,14 +345,18 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense,beta, Np_max
         pol, weight = aaa_reduce(pol, weight,eps)
         def fhere(pole):
             return erroreval_t(pole, tgrid, Deltat,beta, statistics=statistics) 
-         
-        res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" :False,"gtol":1e-14,"ftol":1e-14})
+
+        if len(pol) > 0:
+            res = scipy.optimize.minimize(fhere,pol, method='L-BFGS-B', jac=True,options= {"disp" :False,"gtol":1e-14,"ftol":1e-14})
+            x = res.x
+        else:
+            x = pol
         weight, _, residue = get_weight_t(res.x, tgrid, Deltat,beta)
         M = -kernel(tgrid_dense/beta, res.x*beta)
         residue_dense = M@weight.reshape((weight.shape[0], weight.shape[1]*weight.shape[2])) - Deltat_dense.reshape((Deltat_dense.shape[0], Deltat_dense.shape[1]*Deltat_dense.shape[2]))
         error = np.linalg.norm(residue_dense.flatten()) / np.sqrt(len(tgrid_dense))
         error =error/Num_of_nonzero_entries
         if error<eps:
-            return weight, res.x, error
+            return weight, x, error
         
     return weight, res.x, np.linalg.norm(residue)
