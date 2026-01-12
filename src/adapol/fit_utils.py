@@ -4,7 +4,7 @@
 import numpy as np
 import scipy
 import scipy.optimize
-import cvxpy as cp
+
 from .aaa import aaa_matrix_real
 
 
@@ -27,6 +27,14 @@ def eval_with_pole(pol, Z, weight, statistics="Fermion"):
 def get_weight(
     pol, Z, G, cleanflag=True, maxiter=1000, complex=True, fast=False, eps=1e-8, statistics="Fermion"
 ):
+    if not cleanflag and len(G.shape)>1:
+        try:
+            import cvxpy as cp
+        except ImportError as e:
+            raise ImportError(
+                "Optional dependency 'cvxpy' is required when use_c=True. "
+                "Install it via `pip install cvxpy`."
+            ) from e
     pol_t = np.reshape(pol, [pol.size, 1])
     if statistics == "Fermion":
         M = 1 / (Z - pol_t)
