@@ -66,12 +66,8 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense, beta,
     if statistics not in ["Fermion"]:
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
 
-    Num_of_nonzero_entries = 0
-    for i in range(Deltaiw.shape[1]):
-        for j in range(Deltaiw.shape[2]):
-            if np.max(np.abs((Deltat[:,i,j])))>1e-12:
-                Num_of_nonzero_entries += 1
-    
+    Num_of_nonzero_entries = np.sum(np.max(np.abs(Deltat), axis=0) > 1e-12)
+                
     for mmax in range(4,Np_max,2):
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
         pol = np.real(pol)
@@ -93,9 +89,11 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense, beta,
         M = -kernel(tgrid_dense/beta, x*beta)
         residue_dense = M@weight.reshape((weight.shape[0], weight.shape[1]*weight.shape[2])) - Deltat_dense.reshape((Deltat_dense.shape[0], Deltat_dense.shape[1]*Deltat_dense.shape[2]))
         error = np.linalg.norm(residue_dense.flatten()) / np.sqrt(len(tgrid_dense))
-        error =error/Num_of_nonzero_entries
 
-        if error<eps:
+        if Num_of_nonzero_entries > 0:
+            error /= Num_of_nonzero_entries
+
+        if error < eps:
             return weight, x, error
         
     return weight, x, np.linalg.norm(residue)
