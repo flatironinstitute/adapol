@@ -194,9 +194,13 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense, beta,
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
 
     Num_of_nonzero_entries = np.sum(np.max(np.abs(Deltat), axis=0) > 1e-12)
+    error_best = np.inf
+    weight_best = None
+    pol_best = None
                 
     for mmax in range(4,Np_max,2):
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
+        pol = pol[np.abs(np.imag(pol))<1e-3]
         pol = np.real(pol)
         weight, _, residue = get_weight_t(pol, tgrid, Deltat,beta)
         pol, weight = aaa_reduce(pol, weight,eps)
@@ -221,9 +225,16 @@ def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense, beta,
             error /= Num_of_nonzero_entries
 
         if error < eps:
+            print(f"Desired accuracy {eps} achieved with {len(x)} poles.")
             return weight, x, error
-        
-    return weight, x, np.linalg.norm(residue)
+        elif error < error_best:
+            
+            error_best = error.copy()
+            weight_best = weight.copy()
+            pol_best = x.copy() 
+    print("Failed to reach the desired accuracy", eps, "returning the best result found.")
+    print(f"Best error achieved: {error_best} with {len(pol_best)} poles.")
+    return weight_best, pol_best, error_best
 
 
 # duplicated from fit_utils.py, consider merge them together later
