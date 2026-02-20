@@ -60,6 +60,8 @@ def erroreval_t(pol,  tgrid, Deltat, beta, statistics="Fermion"):
     return y, grad
 
 
+    
+
 def kernel_L2_error_dlr(pol_combined):
     v1 = kernel(np.array([0.0]), pol_combined).flatten()
     v2 = kernel(np.array([0.0]), -pol_combined).flatten()
@@ -71,7 +73,9 @@ def kernel_L2_error_dlr(pol_combined):
     for i in range(len(pol_combined)):
         for j in range(len(pol_combined)):
             pol_sum = pol_combined[i] + pol_combined[j]
-            K[i,j] = (1 - np.exp(-np.abs(pol_sum) )) / np.abs(pol_sum) if np.abs(pol_sum) > 1e-15 else 1.0
+            # K[i,j] = (1 - np.exp(-np.abs(pol_sum) )) / np.abs(pol_sum) if np.abs(pol_sum) > 1e-15 else 1.0
+            x = np.abs(pol_sum)
+            K[i,j] = (-np.expm1(-x) / x ) if x > 1e-7 else 1 - x/2 + x*x/6 - x*x*x/24
             if pol_sum>0:
                 K[i,j] *= v1[i] * v1[j]
             else:                
@@ -124,7 +128,7 @@ def get_weight_dlr(pol, w_dlr, Delta_dlr, beta):
     K12 = K[:len(pol), len(pol):]
 
     Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
-    
+
     weights_reshape = -scipy.linalg.lstsq(K11, K12 @ Delta_dlr_reshape, cond=None)[0]
     weights = weights_reshape.reshape((len(pol), Delta_dlr.shape[1], Delta_dlr.shape[2]))
     return weights
