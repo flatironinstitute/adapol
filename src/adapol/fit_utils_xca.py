@@ -103,14 +103,14 @@ def erroreval_dlr(pol, weights, w_dlr,Delta_dlr,beta ):
     error_mat = np.sqrt(np.einsum('iab,ij,jab->ab', weights_combined.conj(), K, weights_combined))
     gradient = np.zeros_like(pol, dtype=np.complex128)
 
-    for l in range(len(pol_combined)):
+    for l1 in range(len(pol_combined)):
         for l_prime in range(len(pol_combined)):
-            if l < len(pol):
-                gradient_l_mat = weights_combined[l].conj() * weights_combined[l_prime]*grad[l,l_prime] 
-                gradient[l] += np.sum(gradient_l_mat /(2*error_mat))
+            if l1 < len(pol):
+                gradient_l_mat = weights_combined[l1].conj() * weights_combined[l_prime]*grad[l1,l_prime] 
+                gradient[l1] += np.sum(gradient_l_mat /(2*error_mat))
 
             if l_prime < len(pol):
-                gradient_l_prime_mat = weights_combined[l].conj() * weights_combined[l_prime]*grad[l_prime,l]
+                gradient_l_prime_mat = weights_combined[l1].conj() * weights_combined[l_prime]*grad[l_prime,l1]
                 gradient[l_prime] += np.sum(gradient_l_prime_mat /(2*error_mat))
    
 
@@ -135,40 +135,52 @@ def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  st
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
 
     Num_of_nonzero_entries = np.sum(np.max(np.abs(Delta_dlr), axis=0) > 1e-12)
+    error_best = np.inf
+    weight_best = None
+    pol_best = None
                 
     for mmax in range(4,Np_max,2):
         
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
         pol = pol[np.abs(np.imag(pol))<1e-3]
-        print(f"AAA poles: {pol}")
+ 
         pol = np.real(pol)
         weight = get_weight_dlr(pol, w_dlr, Delta_dlr, beta)
         pol, weight = aaa_reduce(pol, weight,eps)
-        print(f"AAA poles: {len(pol)}")
+ 
         
         error = erroreval_dlr(pol, weight, w_dlr, Delta_dlr, beta)[0]
-        print("AAA", error)
+ 
         def fhere(pole):
             return erroreval_dlr(pole, get_weight_dlr(pole, w_dlr, Delta_dlr, beta), w_dlr, Delta_dlr, beta) 
 
         if len(pol) > 0:
             res = scipy_minimize(
                 fhere, pol, method='L-BFGS-B', jac=True,
-                options=dict(disp=True, gtol=1e-14, ftol=1e-14))
+                options=dict(disp=False, gtol=1e-14, ftol=1e-14))
             x = res.x
         else:
             x = pol
         
         weight  = get_weight_dlr(x, w_dlr, Delta_dlr, beta)
         error = erroreval_dlr(x, weight, w_dlr, Delta_dlr, beta)[0]
-        print("L-BFGS", error)
+
         if Num_of_nonzero_entries > 0:
             error /= Num_of_nonzero_entries
 
         if error < eps:
+            print(f"Desired accuracy {eps} achieved with {len(x)} poles.")
             return weight, x, error
+        elif error < error_best:
+            error_best = error.copy()
+            weight_best = weight.copy()
+            pol_best = x.copy() 
+    print("Failed to reach the desired accuracy", eps, "returning the best result found.")
+    print(f"Best error achieved: {error_best} with {len(pol_best)} poles.")
         
-    return weight, x, error
+    return weight_best, pol_best, error_best
+        
+
 
 
 def polefitting(Deltaiw, Z, Deltat,tgrid, Deltat_dense, tgrid_dense, beta,
