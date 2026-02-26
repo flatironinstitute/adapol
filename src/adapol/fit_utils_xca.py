@@ -7,6 +7,7 @@ todo: merge this function with the above pole_fitting function.
 
 import numpy as np
 import scipy.linalg
+from numpy.polynomial.legendre import leggauss
 from scipy.optimize import minimize as scipy_minimize
 
 from .aaa import aaa_matrix_real
@@ -246,3 +247,93 @@ def aaa_reduce(pol, R, eps=1e-6):
         Rnorm[i] = np.linalg.norm(R[i])
     nonz_index = Rnorm > eps
     return pol[nonz_index], R[nonz_index]
+
+def dyadic_panel_quadrature(n_per_panel, n_levels):
+    """Build a composite Gauss-Legendre quadrature on [0, 1] with panels
+    dyadically refined towards both endpoints 0 and 1.
+
+    The panel structure is symmetric about the midpoint 1/2.  Starting from the
+    left endpoint, the panels are [0, 2^{-n_levels}], [2^{-n_levels},
+    2^{-(n_levels-1)}], ..., [1/4, 1/2], then mirrored for the right half.
+    Each panel uses ``n_per_panel`` Gauss-Legendre nodes.
+
+    Parameters
+    ----------
+    n_per_panel : int
+        Number of Gauss-Legendre nodes per panel.
+    n_levels : int
+        Number of levels of dyadic refinement (must be >= 1).
+
+    Returns
+    -------
+    nodes : ndarray, shape (N,)
+        Quadrature nodes in (0, 1).
+    weights : ndarray, shape (N,)
+        Corresponding quadrature weights (positive, summing to 1).
+    """
+    if n_levels < 1:
+        raise ValueError("n_levels must be >= 1")
+
+    # Reference Gauss-Legendre nodes and weights on [-1, 1]
+    x_ref, w_ref = leggauss(n_per_panel)
+
+    # Build panel endpoints on [0, 1/2], dyadically refined towards 0:
+    #   0, 2^{-n_levels}, 2^{-(n_levels-1)}, ..., 2^{-1} = 1/2
+    breakpoints_left = [0.0] + [2.0**(-k) for k in range(n_levels, 0, -1)]
+
+    nodes_list = []
+    weights_list = []
+
+    # Left-half panels: [0, 1/2]
+    for i in range(len(breakpoints_left) - 1):
+        a = breakpoints_left[i]
+        b = breakpoints_left[i + 1]
+        half_len = 0.5 * (b - a)
+        mid = 0.5 * (a + b)
+        nodes_list.append(mid + half_len * x_ref)
+        weights_list.append(half_len * w_ref)
+
+    # Right-half panels: mirror of [0, 1/2] about 1/2, i.e. [1/2, 1]
+    for i in range(len(breakpoints_left) - 1):
+        a = breakpoints_left[i]
+        b = breakpoints_left[i + 1]
+        # Mirror: [1-b, 1-a]
+        a_r = 1.0 - b
+        b_r = 1.0 - a
+        half_len = 0.5 * (b_r - a_r)
+        mid = 0.5 * (a_r + b_r)
+        nodes_list.append(mid + half_len * x_ref)
+        weights_list.append(half_len * w_ref)
+
+    nodes = np.concatenate(nodes_list)
+    weights = np.concatenate(weights_list)
+
+    # Sort by node position
+    order = np.argsort(nodes)
+    return nodes[order], weights[order]
+
+
+def exp_quadrature(omega_max, n_per_panel=12):
+    """Build a dyadic panel Gauss-Legendre quadrature on [0, 1] suitable for
+    integrating sums of the kernel K(tau, omega) = exp(-tau*omega) /
+    (1 + exp(-omega)) for |omega| <= omega_max.
+
+    The number of refinement levels is chosen automatically from omega_max.
+
+    Parameters
+    ----------
+    omega_max : float
+        Maximum absolute frequency.  Controls the number of dyadic refinement
+        levels.
+    n_per_panel : int, optional
+        Number of Gauss-Legendre nodes per panel (default 12).
+
+    Returns
+    -------
+    nodes : ndarray
+        Quadrature nodes in (0, 1).
+    weights : ndarray
+        Corresponding quadrature weights.
+    """
+    n_levels = max(int(np.ceil(np.log(omega_max) / np.log(2.0))) - 2, 1)
+    return dyadic_panel_quadrature(n_per_panel, n_levels)
