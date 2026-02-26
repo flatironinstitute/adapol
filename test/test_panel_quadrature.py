@@ -62,7 +62,7 @@ def test_panel_quadrature_individual_kernels():
         K_vals = kernel(nodes, omega_arr).flatten()
 
         numerical = np.dot(weights, K_vals)
-        exact = analytic_integral(omega)[0] if np.ndim(analytic_integral(omega)) > 0 else float(analytic_integral(omega))
+        exact = float(analytic_integral(omega))
 
         rel_error = np.abs(numerical - exact) / max(np.abs(exact), 1e-300)
         print(f"  omega = {omega:8.1f}: {len(nodes):4d} nodes, rel error = {rel_error:.2e}")
