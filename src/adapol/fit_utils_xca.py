@@ -83,55 +83,41 @@ def kernel_L2_error_dlr(pol_combined):
                 K[i,j] *= v2[i] * v2[j]
     return K, v1, v2
 
-def erroreval_dlr(pol, weights, w_dlr,Delta_dlr,beta ):
+
+def erroreval_dlr(pol, weights, w_dlr,Delta_dlr,beta, tau_nodes=None, tau_weights=None):
     # assuming the input dlr is using the kernel with the minus sign
     pol_combined = np.concatenate([pol * beta, w_dlr])
     weights_combined = np.concatenate([weights, Delta_dlr], axis=0)
 
+    if tau_nodes is None or tau_weights is None:
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol_combined)), 1.0))
+    M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
+    M2 = M * (-tau_nodes[:, None]) + M * kernel(np.array([0.0]), -pol_combined)
+    # breakpoint()
+    weights_reshape = weights_combined.reshape((weights_combined.shape[0], weights_combined.shape[1]*weights_combined.shape[2]))
+    residue = M@weights_reshape
 
-    K, v1, v2 = kernel_L2_error_dlr(pol_combined)
-    K11 = K[:len(pol), :len(pol)]
-    K12 = K[:len(pol), len(pol):]
+    error =  np.linalg.norm(residue, axis=0) 
 
-    Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
+    grad = np.real((M2.T @ residue) * weights_reshape.conj()) / error[ None,:]
+    grad[np.isnan(grad)] = 0.0
+
+    return np.sum(error), np.sum(grad, axis=1)[0:len(pol)]
     
-    weights_reshape = np.linalg.lstsq(K11, K12 @ Delta_dlr_reshape, rcond=None)[0]
-    weights = weights_reshape.reshape((len(pol), Delta_dlr.shape[1], Delta_dlr.shape[2]))
-
-    pol_matrix = pol_combined[:, None] + pol_combined[None, :]
-    grad1 = K * v2[:, None]
-    grad2 = v2[:, None] * v2[None, :]/pol_matrix
-    grad3 = - K / pol_matrix
-    grad = beta * (grad1 + grad2 + grad3)
-    
-    
-    error_mat = np.sqrt(np.einsum('iab,ij,jab->ab', weights_combined.conj(), K, weights_combined))
-    gradient = np.zeros_like(pol, dtype=np.complex128)
-
-    for l1 in range(len(pol_combined)):
-        for l_prime in range(len(pol_combined)):
-            if l1 < len(pol):
-                gradient_l_mat = weights_combined[l1].conj() * weights_combined[l_prime]*grad[l1,l_prime] 
-                gradient[l1] += np.sum(gradient_l_mat /(2*error_mat))
-
-            if l_prime < len(pol):
-                gradient_l_prime_mat = weights_combined[l1].conj() * weights_combined[l_prime]*grad[l_prime,l1]
-                gradient[l_prime] += np.sum(gradient_l_prime_mat /(2*error_mat))
-   
 
 
-    return np.sum(error_mat).real, gradient.real
 
-def get_weight_dlr(pol, w_dlr, Delta_dlr, beta):
+def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None):
+    if tau_nodes is None or tau_weights is None:
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol)), 1.0))
     pol_combined = np.concatenate([pol * beta, w_dlr])
-    K, _, _ = kernel_L2_error_dlr(pol_combined)
-    K11 = K[:len(pol), :len(pol)]
-    K12 = K[:len(pol), len(pol):]
+    M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
 
     Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
-
-    weights_reshape = -scipy.linalg.lstsq(K11, K12 @ Delta_dlr_reshape, cond=None)[0]
+       
+    weights_reshape = -scipy.linalg.lstsq(M[:, :len(pol)], M[:, len(pol):] @ Delta_dlr_reshape, cond=None)[0]
     weights = weights_reshape.reshape((len(pol), Delta_dlr.shape[1], Delta_dlr.shape[2]))
+
     return weights
 
 def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  statistics="Fermion"):
@@ -148,17 +134,18 @@ def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  st
         
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
         pol = pol[np.abs(np.imag(pol))<1e-3]
- 
+
         pol = np.real(pol)
+        
         weight = get_weight_dlr(pol, w_dlr, Delta_dlr, beta)
         pol, weight = aaa_reduce(pol, weight,eps)
  
-        
-        error = erroreval_dlr(pol, weight, w_dlr, Delta_dlr, beta)[0]
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(np.concatenate([pol * beta, w_dlr]))), 1.0))
+        error = erroreval_dlr(pol, weight, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
  
         def fhere(pole):
-            return erroreval_dlr(pole, get_weight_dlr(pole, w_dlr, Delta_dlr, beta), w_dlr, Delta_dlr, beta) 
-
+            return erroreval_dlr(pole, get_weight_dlr(pole, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights), w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights) 
+        print("starting optimization with mmax =", mmax, "initial error =", error)
         if len(pol) > 0:
             res = scipy_minimize(
                 fhere, pol, method='L-BFGS-B', jac=True,
@@ -167,8 +154,8 @@ def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  st
         else:
             x = pol
         
-        weight  = get_weight_dlr(x, w_dlr, Delta_dlr, beta)
-        error = erroreval_dlr(x, weight, w_dlr, Delta_dlr, beta)[0]
+        weight  = get_weight_dlr(x, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)
+        error = erroreval_dlr(x, weight, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
 
         if Num_of_nonzero_entries > 0:
             error /= Num_of_nonzero_entries
