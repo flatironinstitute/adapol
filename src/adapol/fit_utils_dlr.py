@@ -1,0 +1,353 @@
+"""
+This module provides utility functions for fitting poles to DLR representations.
+
+One example applications in xca (github.com/TRIQS/xca).
+The main difference is here we evaluate the fitting error using the DLR coefficients.
+"""
+
+import numpy as np
+import scipy.linalg
+from numpy.polynomial.legendre import leggauss
+from scipy.optimize import minimize as scipy_minimize
+
+from .aaa import aaa_matrix_real
+
+
+def kernel(tau, omega):
+    """
+    Compute the kernel matrix for a given tau and omega parameters.
+    This function calculates a kernel matrix used in exponential decay calculations, handling positive and negative omega values separately for numerical stability and accuracy.
+    Parameters
+    ----------
+    tau : array-like
+        Time points or decay parameters, shape (n_tau,).
+    omega : array-like
+        Frequency or rate parameters, shape (n_omega,).
+    Returns
+    -------
+    kernel : ndarray
+        Kernel matrix of shape (n_tau, n_omega) where:
+        - For omega > 0: kernel[:, i] = exp(-tau * omega[i]) / (1 + exp(-omega[i]))
+        - For omega <= 0: kernel[:, i] = exp((1 - tau) * omega[i]) / (1 + exp(omega[i]))
+    Notes
+    -----
+    The kernel function is different from the kernel in standard DLR notation with a minus sign. 
+    Examples
+    --------
+    >>> tau = np.array([0, 0.5, 1.0])
+    >>> omega = np.array([-1, 0.5])
+    >>> K = kernel(tau, omega)
+    >>> K.shape
+    (3, 2)
+    """
+
+    kernel = np.empty((len(tau), len(omega)))
+
+    p, = np.where(omega > 0.)
+    m, = np.where(omega <= 0.)
+    w_p, w_m = omega[p].T, omega[m].T
+
+    tau = tau[:, None]
+
+    kernel[:, p] = np.exp(-tau*w_p) / (1 + np.exp(-w_p))
+    kernel[:, m] = np.exp((1. - tau)*w_m) / (1 + np.exp(w_m))
+
+    return kernel
+
+def dyadic_panel_quadrature(n_per_panel, n_levels):
+    """Build a composite Gauss-Legendre quadrature on [0, 1] with panels
+    dyadically refined towards both endpoints 0 and 1.
+
+    The panel structure is symmetric about the midpoint 1/2.  Starting from the
+    left endpoint, the panels are [0, 2^{-n_levels}], [2^{-n_levels},
+    2^{-(n_levels-1)}], ..., [1/4, 1/2], then mirrored for the right half.
+    Each panel uses ``n_per_panel`` Gauss-Legendre nodes.
+
+    Parameters
+    ----------
+    n_per_panel : int
+        Number of Gauss-Legendre nodes per panel.
+    n_levels : int
+        Number of levels of dyadic refinement (must be >= 1).
+
+    Returns
+    -------
+    nodes : ndarray, shape (N,)
+        Quadrature nodes in (0, 1).
+    weights : ndarray, shape (N,)
+        Corresponding quadrature weights (positive, summing to 1).
+    """
+    if n_levels < 1:
+        raise ValueError("n_levels must be >= 1")
+
+    # Reference Gauss-Legendre nodes and weights on [-1, 1]
+    x_ref, w_ref = leggauss(n_per_panel)
+
+    # Build panel endpoints on [0, 1/2], dyadically refined towards 0:
+    #   0, 2^{-n_levels}, 2^{-(n_levels-1)}, ..., 2^{-1} = 1/2
+    breakpoints_left = [0.0] + [2.0**(-k) for k in range(n_levels, 0, -1)]
+
+    nodes_list = []
+    weights_list = []
+
+    # Left-half panels: [0, 1/2]
+    for i in range(len(breakpoints_left) - 1):
+        a = breakpoints_left[i]
+        b = breakpoints_left[i + 1]
+        half_len = 0.5 * (b - a)
+        mid = 0.5 * (a + b)
+        nodes_list.append(mid + half_len * x_ref)
+        weights_list.append(half_len * w_ref)
+
+    # Right-half panels: mirror of [0, 1/2] about 1/2, i.e. [1/2, 1]
+    for i in range(len(breakpoints_left) - 1):
+        a = breakpoints_left[i]
+        b = breakpoints_left[i + 1]
+        # Mirror: [1-b, 1-a]
+        a_r = 1.0 - b
+        b_r = 1.0 - a
+        half_len = 0.5 * (b_r - a_r)
+        mid = 0.5 * (a_r + b_r)
+        nodes_list.append(mid + half_len * x_ref)
+        weights_list.append(half_len * w_ref)
+
+    nodes = np.concatenate(nodes_list)
+    weights = np.concatenate(weights_list)
+
+    # Sort by node position
+    order = np.argsort(nodes)
+    return nodes[order], weights[order]
+
+
+def exp_quadrature(omega_max, n_per_panel=12):
+    """Build a dyadic panel Gauss-Legendre quadrature on [0, 1] suitable for
+    integrating sums of the kernel K(tau, omega) = exp(-tau*omega) /
+    (1 + exp(-omega)) for |omega| <= omega_max.
+
+    The number of refinement levels is chosen automatically from omega_max.
+
+    Parameters
+    ----------
+    omega_max : float
+        Maximum absolute frequency.  Controls the number of dyadic refinement
+        levels.
+    n_per_panel : int, optional
+        Number of Gauss-Legendre nodes per panel (default 12).
+
+    Returns
+    -------
+    nodes : ndarray
+        Quadrature nodes in (0, 1).
+    weights : ndarray
+        Corresponding quadrature weights.
+    """
+    n_levels = max(int(np.ceil(np.log(omega_max) / np.log(2.0))) - 2, 1)
+    return dyadic_panel_quadrature(n_per_panel, n_levels)
+
+def erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=None, tau_nodes=None, tau_weights=None):
+    """
+    Evaluate the fitting error for a given set of poles and weights, comparing with the DLR representation. Also output the gradient with respect to the poles, which can be used for optimization.
+    The error is computed in the time domain using a kernel function and dyadic quadrature nodes/weights.
+
+    Parameters
+    ----------
+    pol : array-like, shape (n_poles,)
+        Array of poles. These are without the beta factor.
+    
+    w_dlr : array-like, shape (n_dlr,)
+        Array of DLR frequencies. These are with the beta factor included.
+    Delta_dlr : array-like, shape (n_dlr, N_orb, N_orb)
+        Array of DLR coefficients corresponding to the DLR frequencies. These Delta_dlr coefficients are for the kernel with the minus sign, i.e., K(tau, w_dlr) = - exp(-tau*w_dlr) / (1 + exp(-w_dlr)), which is automatically the output of DLR decomposition.
+    beta : float
+        Inverse temperature parameter used to scale the poles.
+
+    weights : array-like, shape (n_poles, N_orb, N_orb), optional
+        If None, it will be computed using least squares fitting to the DLR representation.
+        Array of weights corresponding to the poles. These weights are for the kernel without the minus sign, i.e., K(tau, pol) = exp(-tau*pol) / (1 + exp(-pol)).
+    tau_nodes : array-like, shape (n_tau,), optional
+        Quadrature nodes in the time domain. If None, they will be generated automatically based on the maximum absolute value of the poles and DLR frequencies.
+    tau_weights : array-like, shape (n_tau,), optional
+        Quadrature weights corresponding to the tau_nodes. If None, they will be generated automatically based on the maximum absolute value of the poles and DLR frequencies.
+
+    Returns
+    -------
+    error : float
+        The computed fitting error, which is the norm of the residue in the time domain.
+    grad : array-like, shape (n_poles,)
+        The gradient of the error with respect to the poles, which can be used for optimization.
+    """
+    pol_combined = np.concatenate([pol * beta, w_dlr])
+    # construct dyadic quadrature nodes and weights if not provided
+    if tau_nodes is None or tau_weights is None:
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol_combined)), 1.0))
+
+    
+    if weights is None:
+        # compute the weights using least squares fitting to the DLR representation
+        weights, M = get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)
+    else:
+        M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
+    # construct the kernel matrix's derivative with respect to the poles
+    M2 = M * (-tau_nodes[:, None]) + M * kernel(np.array([0.0]), -pol_combined)
+
+    # The input weights are for the kernel without the minus sign, while the DLR coefficients are for the kernel with the minus sign. Thus when combining them together, there is no need to change the sign of the weights.
+    weights_combined = np.concatenate([weights, Delta_dlr], axis=0)
+
+
+    # reshape the weights and compute the residue and error in the time domain, as well as the gradient with respect to the poles
+    weights_reshape = weights_combined.reshape((weights_combined.shape[0], weights_combined.shape[1]*weights_combined.shape[2]))
+    residue = M@weights_reshape
+
+    error =  np.linalg.norm(residue, axis=0) 
+
+    grad = np.real((M2.T @ residue) * weights_reshape.conj()) / error[ None,:]
+    grad[np.isnan(grad)] = 0.0
+
+    return np.sum(error), np.sum(grad, axis=1)[0:len(pol)]
+    
+
+
+
+def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None):
+    """
+    Compute the weights for the poles by fitting to the DLR representation using least squares. 
+
+    Parameters
+    ----------
+    pol : array-like, shape (n_poles,)
+        Array of poles. These are without the beta factor.
+    w_dlr : array-like, shape (n_dlr,)
+        Array of DLR frequencies. These are with the beta factor included.
+    Delta_dlr : array-like, shape (n_dlr, N_orb, N_orb)
+        Array of DLR coefficients corresponding to the DLR frequencies. These Delta_dlr coefficients are for the kernel with the minus sign, i.e., K(tau, w_dlr) = - exp(-tau*w_dlr) / (1 + exp(-w_dlr)), which is automatically the output of DLR decomposition.
+    beta : float
+        Inverse temperature parameter used to scale the poles.
+    tau_nodes : array-like, shape (n_tau,), optional
+        Quadrature nodes in the time domain. If None, they will be generated automatically based on the maximum absolute value of the poles and DLR frequencies.
+    tau_weights : array-like, shape (n_tau,), optional
+        Quadrature weights corresponding to the tau_nodes. If None, they will be generated automatically based on the maximum absolute value of the poles and DLR frequencies.
+
+    Returns
+    -------
+    weights : array-like, shape (n_poles, N_orb, N_orb)
+        Array of weights corresponding to the poles, computed by least squares fitting to the DLR representation. These weights are for the kernel without the minus sign, i.e., K(tau, pol) = exp(-tau*pol) / (1 + exp(-pol)).
+    M : array-like, shape (n_tau, n_poles + n_dlr)
+        The combined kernel matrix for the poles and DLR frequencies, which can be used for error evaluation and gradient computation in the time domain.
+    """
+    if tau_nodes is None or tau_weights is None:
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol)), 1.0))
+    pol_combined = np.concatenate([pol * beta, w_dlr])
+    M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
+
+    Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
+       
+    weights_reshape = -scipy.linalg.lstsq(M[:, :len(pol)], M[:, len(pol):] @ Delta_dlr_reshape, cond=None)[0]
+    weights = weights_reshape.reshape((len(pol), Delta_dlr.shape[1], Delta_dlr.shape[2]))
+
+    return weights, M
+
+def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  statistics="Fermion", verbose=True):
+    
+    if statistics not in ["Fermion"]:
+        raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
+
+    Num_of_nonzero_entries = np.sum(np.max(np.abs(Delta_dlr), axis=0) > 1e-12)
+    error_best = np.inf
+    weight_best = None
+    pol_best = None
+                
+    for mmax in range(4,Np_max,2):
+        
+        pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
+        # discard poles with large imaginary part, which are likely to be spurious poles from the AAA algorithm
+        pol = pol[np.abs(np.imag(pol))<1e-3]
+
+        pol = np.real(pol)
+        pol = merge_degenerate_poles(pol)
+        
+        weight = get_weight_dlr(pol, w_dlr, Delta_dlr, beta)[0]
+ 
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(np.concatenate([pol * beta, w_dlr]))), 1.0))
+        
+ 
+        def fhere(pole):
+            return erroreval_dlr(pole, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights) 
+        if verbose:
+            error = erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=weight, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
+            print("starting optimization with number of poles =", len(pol), "initial error =", error / Num_of_nonzero_entries)
+        if len(pol) > 0:
+            res = scipy_minimize(
+                fhere, pol, method='L-BFGS-B', jac=True,
+                options=dict(disp=False, gtol=1e-14, ftol=1e-14))
+            x = res.x
+            if verbose:
+                print("                   Final optimization result:", res.fun / Num_of_nonzero_entries)
+        else:
+            x = pol
+        
+        weight  = get_weight_dlr(x, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
+        error = erroreval_dlr(x, w_dlr, Delta_dlr, beta, weights = weight, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
+
+        if Num_of_nonzero_entries > 0:
+            error /= Num_of_nonzero_entries
+
+        if error < eps:
+            print(f"Desired accuracy {eps} achieved with {len(x)} poles.")
+            return weight, x, error
+        elif error < error_best:
+            error_best = error.copy()
+            weight_best = weight.copy()
+            pol_best = x.copy() 
+    print("Failed to reach the desired accuracy", eps, "returning the best result found.")
+    print(f"Best error achieved: {error_best} with {len(pol_best)} poles.")
+        
+    return weight_best, pol_best, error_best
+        
+
+
+
+
+
+
+def merge_degenerate_poles(pol, rtol=1e-6):
+    """Merge near-degenerate poles from AAA into single poles.
+
+    The AAA algorithm (via find_pol) can produce exactly degenerate poles
+    from its generalized eigenvalue problem. When two poles coincide, the
+    downstream least-squares weight fitting becomes catastrophically
+    ill-conditioned (two identical columns in the kernel matrix), producing
+    weight matrices with ~1e8 norm that cause blow-up in diagram evaluation.
+    
+    Parameters
+    ----------
+    pol : ndarray
+        Pole positions (energy units).
+    rtol : float
+        Relative tolerance for merging. Poles are merged when
+        |pol_i - pol_j| < rtol * (max(|pol|) - min(|pol|) + 1).
+
+    Returns
+    -------
+    pol_merged : ndarray
+        Poles with degenerate groups replaced by their mean.
+    """
+    if len(pol) <= 1:
+        return pol
+
+    scale = np.ptp(np.abs(pol))  # range of |pol|
+    atol = rtol * (scale + 1.0)  # +1 avoids zero scale
+
+    order = np.argsort(pol)
+    pol_sorted = pol[order]
+
+    merged = []
+    i = 0
+    while i < len(pol_sorted):
+        group = [pol_sorted[i]]
+        while i + 1 < len(pol_sorted) and abs(pol_sorted[i + 1] - group[0]) < atol:
+            i += 1
+            group.append(pol_sorted[i])
+        merged.append(np.mean(group))
+        i += 1
+
+    return np.array(merged)
