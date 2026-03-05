@@ -3,7 +3,7 @@ sums of the kernel K(tau, omega) = exp(-tau*omega) / (1 + exp(-omega))
 on [0, 1] to near machine precision."""
 
 import numpy as np
-from adapol.fit_utils_xca import exp_quadrature, kernel
+from adapol.fit_utils_dlr import exp_quadrature, kernel, erroreval_dlr, get_weight_dlr
 
 
 def analytic_integral(omega):
@@ -68,3 +68,55 @@ def test_panel_quadrature_individual_kernels():
         print(f"  omega = {omega:8.1f}: {len(nodes):4d} nodes, rel error = {rel_error:.2e}")
 
         assert rel_error < 1e-14, f"omega={omega}: relative error {rel_error:.4e} exceeds tolerance"
+
+def test_erroreval_gradient():
+    """Test gradient computation in fit_utils_dlr.erroreval using finite difference validation."""
+    
+    N1 = 20
+    N2 = 10
+    pol = np.random.randn(N1) 
+
+    Norb = 3
+    weights = np.random.randn(N1, Norb, Norb) + 1j * np.random.randn(N1, Norb, Norb)
+    w_dlr = np.random.randn(N2)
+    Delta_dlr = np.random.randn(N2, Norb, Norb) + 1j * np.random.randn(N2, Norb, Norb)
+    for i in range(N2):
+        Delta_dlr[i] = Delta_dlr[i] @ Delta_dlr[i].conj().T
+    # Delta_dlr = Delta_dlr * 0.0
+    beta = 100.0
+    w_dlr = w_dlr / np.max(np.abs(w_dlr)) * 1.4 * beta
+
+    gradient1 = erroreval_dlr(pol,  w_dlr,Delta_dlr,   beta, weights=weights )[1]
+
+    # Finite difference validation of gradient
+    eps = 1e-6
+    grad_fd = np.zeros_like(pol)
+    for i in range(pol.size):
+        pol_p = pol.copy()
+        pol_m = pol.copy()
+        pol_p[i] += eps
+        pol_m[i] -= eps
+        err_p = erroreval_dlr(pol_p,  w_dlr,Delta_dlr,   beta, weights=weights)[0]
+        err_m = erroreval_dlr(pol_m,  w_dlr,Delta_dlr,   beta, weights=weights)[0]
+        grad_fd[i] = (err_p - err_m) / (2 * eps)
+
+    assert np.allclose(gradient1, grad_fd), f"Gradients do not match: {np.linalg.norm(gradient1 - grad_fd)}"
+
+def test_get_weight_dlr():
+    """Test that get_weight_dlr returns expected weights for a simple case."""
+    N1 = 20
+    N2 = 10
+    pol = np.random.randn(N1) 
+
+    Norb = 3
+    weights = np.random.randn(N1, Norb, Norb) + 1j * np.random.randn(N1, Norb, Norb)
+    w_dlr = np.random.randn(N2)
+    Delta_dlr = np.random.randn(N2, Norb, Norb) + 1j * np.random.randn(N2, Norb, Norb)
+    for i in range(N2):
+        Delta_dlr[i] = Delta_dlr[i] @ Delta_dlr[i].conj().T
+    # Delta_dlr = Delta_dlr * 0.0
+    beta = 100.0
+    w_dlr = w_dlr / np.max(np.abs(w_dlr)) * 1.4 * beta
+    # Check that weights are positive and of reasonable magnitude
+    weights_dlr = get_weight_dlr(w_dlr/beta, w_dlr, Delta_dlr, beta)[0]
+    assert np.allclose(erroreval_dlr(w_dlr/beta,  w_dlr,Delta_dlr,   beta, weights=weights_dlr)[0], 0), "Error should be close to zero"
