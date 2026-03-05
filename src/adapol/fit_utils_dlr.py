@@ -203,7 +203,7 @@ def erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=None, tau_nodes=None, tau
     grad = np.real((M2.T @ residue) * weights_reshape.conj()) / error[ None,:]
     grad[np.isnan(grad)] = 0.0
 
-    return np.sum(error), np.sum(grad, axis=1)[0:len(pol)]
+    return np.sum(error), np.sum(grad, axis=1)[0:len(pol)] * beta
     
 
 
@@ -234,9 +234,10 @@ def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None
     M : array-like, shape (n_tau, n_poles + n_dlr)
         The combined kernel matrix for the poles and DLR frequencies, which can be used for error evaluation and gradient computation in the time domain.
     """
-    if tau_nodes is None or tau_weights is None:
-        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol)), 1.0))
     pol_combined = np.concatenate([pol * beta, w_dlr])
+    if tau_nodes is None or tau_weights is None:
+        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol_combined)), 1.0))
+    
     M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
 
     Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
@@ -246,7 +247,7 @@ def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None
 
     return weights, M
 
-def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  statistics="Fermion", verbose=True):
+def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  statistics="Fermion", verbose=False):
     
     if statistics not in ["Fermion"]:
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
