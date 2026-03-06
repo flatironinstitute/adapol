@@ -207,7 +207,7 @@ def anacont_triqs(
         func_list, error_list, pol_list, weight_list = [], [], [], []
         for j, (block, delta_blk) in enumerate(Delta_triqs):
             func, fit_error, pol, weight = anacont_triqs(delta_blk, tol, Np, solver, maxiter, mmin,
-                                                         mmax, verbose, statistics=statistics)
+                                                         mmax, verbose, debug=debug, statistics=statistics)
             func_list.append(func)
             if debug:
                 error_list.append(fit_error)
