@@ -3,7 +3,7 @@ sums of the kernel K(tau, omega) = exp(-tau*omega) / (1 + exp(-omega))
 on [0, 1] to near machine precision."""
 
 import numpy as np
-from adapol.fit_utils_dlr import exp_quadrature, kernel, erroreval_dlr, get_weight_dlr
+from adapol.fit_utils_dlr import exp_quadrature, kernel, erroreval_dlr, get_weight_dlr, eval_tau_with_pole_rep
 
 
 def analytic_integral(omega):
@@ -68,6 +68,38 @@ def test_panel_quadrature_individual_kernels():
         print(f"  omega = {omega:8.1f}: {len(nodes):4d} nodes, rel error = {rel_error:.2e}")
 
         assert rel_error < 1e-14, f"omega={omega}: relative error {rel_error:.4e} exceeds tolerance"
+
+
+def test_erroreval_dlr():
+    """Test that the error evaluation in fit_utils_dlr.erroreval matches expected values"""
+    N1 = 20
+    N2 = 10
+    pol = np.random.randn(N1) 
+
+    Norb = 1
+    weights = np.random.randn(N1, Norb, Norb) + 1j * np.random.randn(N1, Norb, Norb)
+    w_dlr = np.random.randn(N2)
+    Delta_dlr = np.random.randn(N2, Norb, Norb) + 1j * np.random.randn(N2, Norb, Norb)
+    for i in range(N2):
+        Delta_dlr[i] = Delta_dlr[i] @ Delta_dlr[i].conj().T
+    # Delta_dlr = Delta_dlr * 0.0
+    beta = 100.0
+    w_dlr = w_dlr / np.max(np.abs(w_dlr)) * 1.4 * beta
+    pol_combined = np.concatenate([pol * beta, w_dlr])
+    # construct dyadic quadrature nodes and weights if not provided
+    tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(pol_combined)), 1.0))
+    error1 = erroreval_dlr(pol,  w_dlr,Delta_dlr,   beta, weights=weights , tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
+
+    
+
+    Delta1 = eval_tau_with_pole_rep(pol * beta, weights, tau_nodes)
+    Delta2 = eval_tau_with_pole_rep(w_dlr, Delta_dlr, tau_nodes)
+    error2_matrix = np.sum(np.abs(Delta1 + Delta2)**2 * tau_weights[:, None, None], axis=0)
+    error2 = np.sum(np.sqrt(error2_matrix))
+    assert np.isclose(error1, error2), f"Error evaluation mismatch: {error1} vs {error2}"
+
+    
+
 
 def test_erroreval_gradient():
     """Test gradient computation in fit_utils_dlr.erroreval using finite difference validation."""

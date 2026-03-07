@@ -1,6 +1,9 @@
 import numpy as np
 from .fit_utils import pole_fitting, eval_with_pole
-
+## TODO: make solver argument better explained, 
+## TODO: lstsq mode, output W's and. pols 
+## TODO: sdp mode, output v's and pols.
+## TODO: output form, optional.
 def hybfit(
     Delta,
     iwn_vec,

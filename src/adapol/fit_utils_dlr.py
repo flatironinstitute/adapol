@@ -5,6 +5,8 @@ One example applications in xca (github.com/TRIQS/xca).
 The main difference is here we evaluate the fitting error using the DLR coefficients.
 """
 
+from math import floor
+
 import numpy as np
 import scipy.linalg
 from numpy.polynomial.legendre import leggauss
@@ -12,6 +14,9 @@ from scipy.optimize import minimize as scipy_minimize
 
 from .aaa import aaa_matrix_real
 
+## TODO: change dlr name to pol_in 
+
+## TODO: hybfit_matsubara, hybfit_pole
 
 def kernel(tau, omega):
     """
@@ -144,6 +149,28 @@ def exp_quadrature(omega_max, n_per_panel=12):
     n_levels = max(int(np.ceil(np.log(omega_max) / np.log(2.0))) - 2, 1)
     return dyadic_panel_quadrature(n_per_panel, n_levels)
 
+def eval_tau_with_pole_rep(pol, weights, tau_nodes):
+    """
+    Evaluate the pole representation at given tau nodes.
+
+    Parameters
+    ----------
+    pol : array-like, shape (n_poles,)
+        Array of poles. These are without the beta factor.
+    weights : array-like, shape (n_poles, N_orb, N_orb)
+        Array of weights corresponding to the poles. These weights are for the kernel without the minus sign, i.e., K(tau, pol) = exp(-tau*pol) / (1 + exp(-pol)).
+    tau_nodes : array-like, shape (n_tau,)
+        Time points at which to evaluate the pole representation.
+
+    Returns
+    -------
+    Deltat : ndarray, shape (n_tau, N_orb, N_orb)
+        The evaluated pole representation at the given tau nodes.
+    """
+    K_pol = kernel(tau_nodes, pol )  # Shape: (n_tau, n_poles)
+    Deltat = np.einsum('ti,iab->tab', K_pol, weights)  # Shape: (n_tau, N_orb, N_orb)
+    return Deltat
+
 def erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=None, tau_nodes=None, tau_weights=None):
     """
     Evaluate the fitting error for a given set of poles and weights, comparing with the DLR representation. Also output the gradient with respect to the poles, which can be used for optimization.
@@ -179,14 +206,14 @@ def erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=None, tau_nodes=None, tau
     pol_combined = np.concatenate([pol * beta, w_dlr])
     # construct dyadic quadrature nodes and weights if not provided
     if tau_nodes is None or tau_weights is None:
-        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol_combined)), 1.0))
+        tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(pol_combined)), 1.0))
 
     
     if weights is None:
         # compute the weights using least squares fitting to the DLR representation
         weights, M = get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)
     else:
-        M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
+        M = -kernel(tau_nodes, pol_combined) * np.sqrt(tau_weights)[:, None]
     # construct the kernel matrix's derivative with respect to the poles
     M2 = M * (-tau_nodes[:, None]) + M * kernel(np.array([0.0]), -pol_combined)
 
@@ -236,9 +263,9 @@ def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None
     """
     pol_combined = np.concatenate([pol * beta, w_dlr])
     if tau_nodes is None or tau_weights is None:
-        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(pol_combined)), 1.0))
+        tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(pol_combined)), 1.0))
     
-    M = -kernel(tau_nodes, pol_combined) * tau_weights[:, None]
+    M = -kernel(tau_nodes, pol_combined) * np.sqrt(tau_weights)[:, None]
 
     Delta_dlr_reshape = Delta_dlr.reshape((Delta_dlr.shape[0], Delta_dlr.shape[1]*Delta_dlr.shape[2]))
        
@@ -247,28 +274,66 @@ def get_weight_dlr(pol, w_dlr, Delta_dlr, beta, tau_nodes=None, tau_weights=None
 
     return weights, M
 
-def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  statistics="Fermion", verbose=False):
-    
+def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = None,  statistics="Fermion", verbose=False):
+    """
+    Perform pole fitting with a given initial pole representation.
+
+    Parameters
+    ----------
+    Delta_dlr : array-like, shape (n_dlr, N_orb, N_orb)
+        Array of DLR coefficients corresponding to the DLR frequencies. These Delta_dlr coefficients are for the kernel with the minus sign, i.e., K(tau, w_dlr) = - exp(-tau*w_dlr) / (1 + exp(-w_dlr)), which is automatically the output of DLR decomposition.
+    w_dlr : array-like, shape (n_dlr,)
+        Array of DLR frequencies. These are with the beta factor included.
+    beta : float    Inverse temperature parameter used to scale the poles.      
+    Nw : int, optional
+        Number of Matsubara frequencies to use when constructing the frequency grid for fitting. If None, it will be automatically determined based on beta.
+    Np_max : int, optional
+        Maximum number of poles to consider in the fitting process (default 50).
+    eps : float, optional
+        Targeted accuracy for the fitting process.
+    Z : array-like, shape (n_freq,), optional
+        Custom Matsubara frequency grid to use for fitting. If None, it will be automatically generated based on Nw and beta.
+    statistics : "Fermion" or "Boson", optional
+        Specify the statistics of the system, which determines the form of the kernel and the Matsubara frequency grid. Currently only "Fermion" is supported for this version of pole fitting.
+    verbose : bool, optional
+        If True, print detailed information about the fitting process, including warnings about spurious poles and optimization results.
+    """
+ 
     if statistics not in ["Fermion"]:
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
-
+    if Z is None:
+        if Nw is None:
+            Nw = min(10000, beta * 1000)
+            print(f"Using Nw = {Nw} to construct the Matsubara frequency grid")
+            print(f"Consider providing a user-defined Nw to balance the accuracy and efficiency of the pole fitting, especially for large beta.")
+        else:
+            print(f"Using user-provided Nw = {Nw} to construct the Matsubara frequency grid." )
+        Z = np.arange(-2*Nw-1, 2*Nw+2, 2) * np.pi / beta * 1j
+ 
+    Deltaiw = np.einsum('ij,jab->iab', 1/(Z[:, None] - w_dlr), Delta_dlr)
     Num_of_nonzero_entries = np.sum(np.max(np.abs(Delta_dlr), axis=0) > 1e-12)
     error_best = np.inf
     weight_best = None
     pol_best = None
-                
+    Np_max = min(Np_max, len(w_dlr)+1)
+
     for mmax in range(4,Np_max,2):
         
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
         # discard poles with large imaginary part, which are likely to be spurious poles from the AAA algorithm
-        pol = pol[np.abs(np.imag(pol))<1e-3]
+        #TODO: print a warning here. 
+        #TODO: add comment that this is heuristic,
+        if len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)]) > 0:
+            if verbose:
+                print(f"Warning: when running AAA with {len(pol)} poles, found {len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)])} poles with imaginary part larger than {min(1000*eps, 1e-3)}, which are likely to be spurious poles from the AAA algorithm. These poles will be discarded in the following optimization.")
+            pol = pol[np.abs(np.imag(pol))< min(1000*eps, 1e-3)]
 
         pol = np.real(pol)
         pol = merge_degenerate_poles(pol)
         
         weight = get_weight_dlr(pol, w_dlr, Delta_dlr, beta)[0]
  
-        tau_nodes, tau_weights = exp_quadrature(max(np.max(np.abs(np.concatenate([pol * beta, w_dlr]))), 1.0))
+        tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(np.concatenate([pol * beta, w_dlr]))), 1.0))
         
  
         def fhere(pole):
@@ -292,8 +357,8 @@ def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  st
         if Num_of_nonzero_entries > 0:
             error /= Num_of_nonzero_entries
 
-        if error < eps:
-            print(f"Desired accuracy {eps} achieved with {len(x)} poles.")
+        if error < eps and len(x) <= len(w_dlr):
+            print(f"Desired accuracy {eps} achieved with {len(x)} poles, in comparison to {len(w_dlr)} original pole representation. Returning the result.")
             return weight, x, error
         elif error < error_best:
             error_best = error.copy()
@@ -301,6 +366,7 @@ def polefitting_dlr(Deltaiw, Z, Delta_dlr, w_dlr, beta, Np_max=50, eps=1e-5,  st
             pol_best = x.copy() 
     print("Failed to reach the desired accuracy", eps, "returning the best result found.")
     print(f"Best error achieved: {error_best} with {len(pol_best)} poles.")
+    print(f"Try adjusting the parameters such as Nw for the Matsubara frequency grid, or providing initial pole representation with better accuracy")
         
     return weight_best, pol_best, error_best
         
@@ -350,5 +416,7 @@ def merge_degenerate_poles(pol, rtol=1e-6):
             group.append(pol_sorted[i])
         merged.append(np.mean(group))
         i += 1
+    if len(merged) < len(pol):
+        print(f"Merged {len(pol) - len(merged)} near-degenerate poles into {len(merged)} poles.")
 
     return np.array(merged)
