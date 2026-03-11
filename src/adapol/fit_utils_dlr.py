@@ -303,7 +303,7 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
         raise Exception("Currently only Fermionic statistics is supported for this version of pole fitting. Consider use the algorithm in the frequency domain, which supports bosonic functions.")
     if Z is None:
         if Nw is None:
-            Nw = min(10000, beta * 1000)
+            Nw = max(1000, np.ceil(np.max(np.abs(w_dlr))/np.pi))
             print(f"Using Nw = {Nw} to construct the Matsubara frequency grid")
             print(f"Consider providing a user-defined Nw to balance the accuracy and efficiency of the pole fitting, especially for large beta.")
         else:
@@ -315,21 +315,23 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
     error_best = np.inf
     weight_best = None
     pol_best = None
-    Np_max = min(Np_max, len(w_dlr)+1)
+    # Np_max = min(Np_max, len(w_dlr)+1)
 
     for mmax in range(4,Np_max,2):
         
         pol, _, _, _ = aaa_matrix_real(Deltaiw, Z, mmax=mmax)
+ 
         # discard poles with large imaginary part, which are likely to be spurious poles from the AAA algorithm
         #TODO: print a warning here. 
         #TODO: add comment that this is heuristic,
         if len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)]) > 0:
             if verbose:
                 print(f"Warning: when running AAA with {len(pol)} poles, found {len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)])} poles with imaginary part larger than {min(1000*eps, 1e-3)}, which are likely to be spurious poles from the AAA algorithm. These poles will be discarded in the following optimization.")
-            pol = pol[np.abs(np.imag(pol))< min(1000*eps, 1e-3)]
-
+            # pol = pol[np.abs(np.imag(pol))< 1e-3]
+    
         pol = np.real(pol)
-        pol = merge_degenerate_poles(pol)
+        pol = merge_degenerate_poles(pol, verbose=verbose)
+ 
         
         weight = get_weight_dlr(pol, w_dlr, Delta_dlr, beta)[0]
  
@@ -353,6 +355,7 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
         
         weight  = get_weight_dlr(x, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
         error = erroreval_dlr(x, w_dlr, Delta_dlr, beta, weights = weight, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
+ 
 
         if Num_of_nonzero_entries > 0:
             error /= Num_of_nonzero_entries
@@ -360,12 +363,12 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
         if error < eps and len(x) <= len(w_dlr):
             print(f"Desired accuracy {eps} achieved with {len(x)} poles, in comparison to {len(w_dlr)} original pole representation. Returning the result.")
             return weight, x, error
-        elif error < error_best:
+        elif error < error_best and len(x) <= len(w_dlr):
             error_best = error.copy()
             weight_best = weight.copy()
             pol_best = x.copy() 
     print("Failed to reach the desired accuracy", eps, "returning the best result found.")
-    print(f"Best error achieved: {error_best} with {len(pol_best)} poles.")
+    print(f"Best error achieved: {error_best} with {len(pol_best)} poles. In comparison, the original pole representation has {len(w_dlr)} poles. ")
     print(f"Try adjusting the parameters such as Nw for the Matsubara frequency grid, or providing initial pole representation with better accuracy")
         
     return weight_best, pol_best, error_best
@@ -376,7 +379,7 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
 
 
 
-def merge_degenerate_poles(pol, rtol=1e-6):
+def merge_degenerate_poles(pol, rtol=1e-6, verbose=False):
     """Merge near-degenerate poles from AAA into single poles.
 
     The AAA algorithm (via find_pol) can produce exactly degenerate poles
@@ -416,7 +419,7 @@ def merge_degenerate_poles(pol, rtol=1e-6):
             group.append(pol_sorted[i])
         merged.append(np.mean(group))
         i += 1
-    if len(merged) < len(pol):
+    if len(merged) < len(pol) and verbose:
         print(f"Merged {len(pol) - len(merged)} near-degenerate poles into {len(merged)} poles.")
 
     return np.array(merged)
