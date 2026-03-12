@@ -349,7 +349,7 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
         if len(pol) > 0:
             res = scipy_minimize(
                 fhere, pol, method='L-BFGS-B', jac=True,
-                options=dict(disp=False, gtol=1e-14, ftol=1e-14))
+                options=dict(gtol=1e-14, ftol=1e-14))
             x = res.x
             if verbose:
                 print("                   Final optimization result:", res.fun / Num_of_nonzero_entries)
@@ -426,3 +426,93 @@ def merge_degenerate_poles(pol, rtol=1e-6, verbose=False):
         print(f"Merged {len(pol) - len(merged)} near-degenerate poles into {len(merged)} poles.")
 
     return np.array(merged)
+
+
+def polefitting_dlr_triqs(
+    Delta_triqs,
+    eps=1e-5,
+    Nw=None,
+    Np_max=50,
+    Z=None,
+    statistics="Fermion",
+    verbose=False,
+):
+    r"""
+    The triqs interface for DLR pole fitting.
+    The function requires triqs package in python.
+
+    Accepts a TRIQS Green's function container with a DLR-related mesh
+    (MeshDLR, MeshDLRImFreq, or MeshDLRImTime). For MeshDLRImFreq and
+    MeshDLRImTime inputs, the function converts to MeshDLR internally.
+
+    Examples:
+    ----------
+
+        -  Fitting with default tolerance:
+            :code:`polefitting_dlr_triqs(delta_triqs)`
+
+        - Fitting with custom tolerance:
+            :code:`polefitting_dlr_triqs(delta_triqs, eps=1e-6)`
+
+    Parameters:
+    ------------
+    :code:`Delta_triqs`: triqs Green's function container
+        The input function in DLR representation.
+        Accepted mesh types: MeshDLR, MeshDLRImFreq, MeshDLRImTime.
+
+    :code:`eps`, :code:`Nw`, :code:`Np_max`, :code:`Z`, :code:`statistics`, :code:`verbose`:
+        same as in polefitting_dlr
+
+    Returns:
+    ---------
+
+    :code:`weight`: np.array :math:`(N_p, N_{\mathrm{orb}}, N_{\mathrm{orb}})`
+        Weight matrices for the poles.
+
+    :code:`pol`: np.array :math:`(N_p,)`
+        Optimized pole positions.
+
+    :code:`error`: float
+        Final fitting error.
+
+    If input is BlockGf, returns lists of (weight, pol, error) for each block.
+    """
+    try:
+        from triqs.gf import Gf, BlockGf, MeshDLR, MeshDLRImFreq, MeshDLRImTime, make_gf_dlr
+    except ImportError:
+        raise ImportError("Failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
+                          "Please ensure it is installed.")
+
+    if isinstance(Delta_triqs, Gf):
+        if isinstance(Delta_triqs.mesh, (MeshDLRImFreq, MeshDLRImTime)):
+            Delta_triqs = make_gf_dlr(Delta_triqs)
+
+        if not isinstance(Delta_triqs.mesh, MeshDLR):
+            raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshDLR, MeshDLRImFreq, or MeshDLRImTime.")
+
+        Delta_dlr = Delta_triqs.data
+        w_dlr = np.array(list(Delta_triqs.mesh.values()))
+        beta = Delta_triqs.mesh.beta
+
+        weight, pol, error = polefitting_dlr(
+            Delta_dlr, w_dlr, beta, eps=eps, Nw=Nw, Np_max=Np_max,
+            Z=Z, statistics=statistics, verbose=verbose
+        )
+
+        return weight, pol, error
+
+    elif isinstance(Delta_triqs, BlockGf) and isinstance(Delta_triqs.mesh, (MeshDLR, MeshDLRImFreq, MeshDLRImTime)):
+        weight_list, pol_list, error_list = [], [], []
+        for block, delta_blk in Delta_triqs:
+            weight, pol, error = polefitting_dlr_triqs(
+                delta_blk, eps=eps, Nw=Nw, Np_max=Np_max,
+                Z=Z, statistics=statistics, verbose=verbose
+            )
+            weight_list.append(weight)
+            pol_list.append(pol)
+            error_list.append(error)
+
+        return weight_list, pol_list, error_list
+
+    else:
+        raise RuntimeError("Error: Delta_triqs must be a Gf or BlockGf with MeshDLR, MeshDLRImFreq, or MeshDLRImTime mesh.")
