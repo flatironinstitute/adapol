@@ -5,7 +5,7 @@ from adapol.fit_utils_dlr import polefitting_dlr
 def test_polefitting_dlr():
     """Test polefitting_dlr with random DLR inputs."""
     eps = 1e-6
-    N2 = 20
+    N2 = 60
     Norb = 3
     w_dlr = np.random.randn(N2)
     Delta_dlr = np.random.randn(N2, Norb, Norb) + 1j * np.random.randn(N2, Norb, Norb)
@@ -21,7 +21,11 @@ def test_polefitting_dlr():
     Deltaiw = np.einsum('ij,jab->iab', iw_z, Delta_dlr)
     
     weight, x, error = polefitting_dlr(  Delta_dlr, w_dlr, beta, Np_max=50, eps=eps, statistics="Fermion")
-    
-    assert error < eps, f"Error {error} exceeds tolerance {eps}"
+
+    Deltaiw_reconstruct = np.einsum('ij,jab->iab', 1 / (Z[:, None] - x), weight)
+    #evaluate error in Matsubara frequency space
+    error_iw =  np.linalg.norm(Deltaiw + Deltaiw_reconstruct, axis=0) /(beta**2)
+ 
+    assert np.sum(error_iw) < eps, f"Error {error} exceeds tolerance {eps}"
 
 

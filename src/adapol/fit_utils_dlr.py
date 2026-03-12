@@ -225,12 +225,15 @@ def erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=None, tau_nodes=None, tau
     weights_reshape = weights_combined.reshape((weights_combined.shape[0], weights_combined.shape[1]*weights_combined.shape[2]))
     residue = M@weights_reshape
 
-    error =  np.linalg.norm(residue, axis=0) 
-
+    
+    error = np.linalg.norm(residue, axis=0)  
     grad = np.real((M2.T @ residue) * weights_reshape.conj()) / error[ None,:]
+    # error =  np.linalg.norm(residue.flatten()) 
+    # grad =  np.real((M2.T @ residue) * weights_reshape.conj())  / error
     grad[np.isnan(grad)] = 0.0
-
+    
     return np.sum(error), np.sum(grad, axis=1)[0:len(pol)] * beta
+
     
 
 
