@@ -19,7 +19,7 @@ import numpy as np
 import scipy.linalg
 
 
-def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
+def aaa_matrix_real(F, Z, tol=1e-25, mmax=100):
     # only use input z that are on iR_+. Will map them to iR_- by taking conjugate of function value.
     half_index = np.imag(Z) > 0
     Z_half = Z[half_index]
@@ -91,6 +91,7 @@ def aaa_matrix_real(F, Z, tol=1e-13, mmax=100):
     f_interp = f_interp.reshape(n, Norb, Norb)
     z_interp = np.array(z_interp)
     pol = find_pol(z_interp, weight)
+    print(len(pol))
     return pol, z_interp, f_interp, weight
 
 
