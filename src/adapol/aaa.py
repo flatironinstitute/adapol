@@ -91,7 +91,6 @@ def aaa_matrix_real(F, Z, tol=1e-25, mmax=100):
     f_interp = f_interp.reshape(n, Norb, Norb)
     z_interp = np.array(z_interp)
     pol = find_pol(z_interp, weight)
-    print(len(pol))
     return pol, z_interp, f_interp, weight
 
 

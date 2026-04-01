@@ -307,10 +307,9 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
     if Z is None:
         if Nw is None:
             Nw = max(1000, np.ceil(np.max(np.abs(w_dlr))/np.pi))
-            print(f"Using Nw = {Nw} to construct the Matsubara frequency grid")
-            print(f"Consider providing a user-defined Nw to balance the accuracy and efficiency of the pole fitting, especially for large beta.")
+            if verbose: print(f"Adapol: Using {Nw} equidistant Matsubara frequencies")
         else:
-            print(f"Using user-provided Nw = {Nw} to construct the Matsubara frequency grid." )
+            if verbose: print(f"Adapol: Using user-provided Nw = {Nw} to construct the Matsubara frequency grid." )
         Z = np.arange(-2*Nw-1, 2*Nw+2, 2) * np.pi / beta * 1j
  
     Deltaiw = np.einsum('ij,jab->iab', 1/(Z[:, None] - w_dlr), Delta_dlr)
@@ -329,7 +328,10 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
         #TODO: add comment that this is heuristic,
         if len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)]) > 0:
             if verbose:
-                print(f"Warning: when running AAA with {len(pol)} poles, found {len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)])} poles with imaginary part larger than {min(1000*eps, 1e-3)}, which are likely to be spurious poles from the AAA algorithm. These poles will be discarded in the following optimization.")
+                Np = len(pol)
+                Np_imag = len(pol[np.abs(np.imag(pol))> min(1000*eps, 1e-3)])
+                p_eps = min(1000*eps, 1e-3)
+                print(f"Adapol: Warning! AAA with {Np} poles w_i, found {Np_imag} poles with Im[w_i] > {p_eps:2.2E}")
             # pol = pol[np.abs(np.imag(pol))< 1e-3]
     
         pol = np.real(pol)
@@ -345,14 +347,16 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
             return erroreval_dlr(pole, w_dlr, Delta_dlr, beta, tau_nodes=tau_nodes, tau_weights=tau_weights) 
         if verbose:
             error = erroreval_dlr(pol, w_dlr, Delta_dlr, beta, weights=weight, tau_nodes=tau_nodes, tau_weights=tau_weights)[0]
-            print("starting optimization with number of poles =", len(pol), "initial error =", error / Num_of_nonzero_entries)
+            error_pre_opt = error / Num_of_nonzero_entries
         if len(pol) > 0:
             res = scipy_minimize(
                 fhere, pol, method='L-BFGS-B', jac=True,
                 options=dict(gtol=1e-14, ftol=1e-14))
             x = res.x
             if verbose:
-                print("                   Final optimization result:", res.fun / Num_of_nonzero_entries)
+                error_post_opt = res.fun / Num_of_nonzero_entries
+                print(f"Adapol: Weight optimization, errors pre {error_pre_opt:+2.2E} post {error_post_opt:+2.2E}" + \
+                      f" ({len(pol)} poles)")
         else:
             x = pol
         
@@ -364,15 +368,15 @@ def polefitting_dlr( Delta_dlr, w_dlr, beta, eps=1e-5, Nw=None,  Np_max=50, Z = 
             error /= Num_of_nonzero_entries
 
         if error < eps and len(x) <= len(w_dlr):
-            print(f"Desired accuracy {eps} achieved with {len(x)} poles, in comparison to {len(w_dlr)} original pole representation. Returning the result.")
+            if verbose: print(f"Adapol: Desired accuracy {eps:2.2E} reached (error {error:2.2E} with {len(x)} poles)")
+            #, in comparison to {len(w_dlr)} original pole representation. Returning the result.")
             return weight, x, error
         elif error < error_best and len(x) <= len(w_dlr):
             error_best = error.copy()
             weight_best = weight.copy()
             pol_best = x.copy() 
-    print("Failed to reach the desired accuracy", eps, "returning the best result found.")
-    print(f"Best error achieved: {error_best} with {len(pol_best)} poles. In comparison, the original pole representation has {len(w_dlr)} poles. ")
-    print(f"Try adjusting the parameters such as Nw for the Matsubara frequency grid, or providing initial pole representation with better accuracy")
+
+    if verbose: print(f"Adapol: Warning! Fit error {error_best:2.2E} larger than tolerance {eps:2.2E}.")
         
     return weight_best, pol_best, error_best
         
@@ -423,7 +427,7 @@ def merge_degenerate_poles(pol, rtol=1e-6, verbose=False):
         merged.append(np.mean(group))
         i += 1
     if len(merged) < len(pol) and verbose:
-        print(f"Merged {len(pol) - len(merged)} near-degenerate poles into {len(merged)} poles.")
+        print(f"ADAPOL: Merging {len(pol) - len(merged)} poles of {len(pol)} into {len(merged)} poles.")
 
     return np.array(merged)
 
