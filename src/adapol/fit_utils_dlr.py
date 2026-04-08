@@ -427,7 +427,7 @@ def merge_degenerate_poles(pol, rtol=1e-6, verbose=False):
         merged.append(np.mean(group))
         i += 1
     if len(merged) < len(pol) and verbose:
-        print(f"ADAPOL: Merging {len(pol) - len(merged)} poles of {len(pol)} into {len(merged)} poles.")
+        print(f"Adapol: Merging {len(pol) - len(merged)} poles of {len(pol)} into {len(merged)} poles.")
 
     return np.array(merged)
 
@@ -495,6 +495,9 @@ def polefitting_dlr_triqs(
             raise RuntimeError("Error: Delta_triqs.mesh must be an instance of MeshDLR, MeshDLRImFreq, or MeshDLRImTime.")
 
         Delta_dlr = Delta_triqs.data
+        if len(Delta_dlr.shape) == 1:
+            Delta_dlr = Delta_dlr[:, None, None] # Handle scalar valued Triqs Green's functions by reshaping them to have shape (n_dlr, 1, 1) for compatibility with the fitting functions.
+
         w_dlr = np.array(list(Delta_triqs.mesh.values()))
         beta = Delta_triqs.mesh.beta
 
