@@ -201,7 +201,7 @@ def pole_fitting(
     if len(Delta.shape) == 1:
         Delta = Delta.reshape(Delta.shape[0], 1, 1)
 
-    for m in range(mmin, mmax + 1, 2):
+    for m in range(mmin, mmax + 1, 2): # if m reaches the end of the range, aaa_matrix_real crashes due to indexing 0 dim matrix from the svd
         pol, _, _, _ = aaa_matrix_real(Delta, 1j * Z, mmax=m)
         pol = np.real(pol)
         weight, _, residue = get_weight(
@@ -210,7 +210,9 @@ def pole_fitting(
         # print(np.max(np.abs(residue)))
         if tol is not None:
             if np.max(np.abs(residue)) > tol * 10:
-                continue
+                # If this happens for all m, no optimization result `res` exist and
+                # we get a hard error returning `res.x` below.
+                continue 
         if Ns is None:
             pol, weight = aaa_reduce(pol, weight, 1e-5)
         # print("Number of poles is ", len(pol))
