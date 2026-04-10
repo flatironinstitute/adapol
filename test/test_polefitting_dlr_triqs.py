@@ -144,3 +144,59 @@ def test_polefitting_dlr_triqs_blockgf():
         Delta_recon = np.einsum('ij,jab->iab', 1 / (Z[:, None] - pol), weight)
         recon_err = np.max(np.abs(Delta_exact + Delta_recon))
         assert recon_err < eps, f"Reconstruction error {recon_err} exceeds tolerance {eps}"
+
+
+@pytest.mark.triqs
+def test_polefitting_dlr_triqs_semi_circular_sweep_accuracy():
+    """Test polefitting_dlr_triqs with a Gf on MeshDLR."""
+    try:
+        from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
+    except ImportError:
+        raise ImportError(
+            "It seems like you are running tests with the triqs interface "
+            "but failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
+            "Please ensure that it is installed, or run \"pytest -m 'not triqs'\" to disable "
+            "the tests for triqs."
+        )
+
+    m = MeshDLRImFreq(beta=10.0, statistic='Fermion', eps=1e-12, w_max=4.0)
+    Delta_iw = Gf(mesh=m, target_shape=[1, 1])
+
+    Delta_iw << inverse(iOmega_n - SemiCircular(1.0))
+
+    for tol in 10.**(-np.arange(1, 10)):
+        print(f"Testing polefitting_dlr_triqs with tol = {tol:+2.2E}")
+        weights, poles, fit_error = polefitting_dlr_triqs(Delta_iw, eps=tol, verbose=True)
+        assert( tol > fit_error )
+        print(f'n_poles = {len(poles)}')
+
+
+@pytest.mark.triqs
+def test_polefitting_dlr_triqs_semi_circular_sweep_prefactor(tol=1e-6):
+    """Test polefitting_dlr_triqs with a Gf on MeshDLR."""
+    try:
+        from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
+    except ImportError:
+        raise ImportError(
+            "It seems like you are running tests with the triqs interface "
+            "but failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
+            "Please ensure that it is installed, or run \"pytest -m 'not triqs'\" to disable "
+            "the tests for triqs."
+        )
+
+    m = MeshDLRImFreq(beta=10.0, statistic='Fermion', eps=1e-12, w_max=4.0)
+    Delta_iw = Gf(mesh=m, target_shape=[])
+
+    Delta_iw << inverse(iOmega_n - SemiCircular(1.0))
+
+    for prefactor in 10.**np.arange(3, -4, -1):
+        print(f"Testing polefitting_dlr_triqs with prefactor = {prefactor:+2.2E}")
+        weights, poles, fit_error = polefitting_dlr_triqs(prefactor * Delta_iw, eps=tol, verbose=True, Np_max=100)
+        print(fit_error)
+        assert( tol > fit_error )
+        print(f'n_poles = {len(poles)}')
+
+
+if __name__ == "__main__":
+    test_polefitting_dlr_triqs_semi_circular_sweep_accuracy()
+    test_polefitting_dlr_triqs_semi_circular_sweep_prefactor()
