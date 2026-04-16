@@ -38,27 +38,26 @@ class TriqsDLRCompression:
 
         for step in range(1, max_upwind_steps+1):
 
-            poles, residues, aaa_steps = self.aaa_compress(tol=aaa_tol, max_steps=aaa_max_steps)
+            poles, residues, aaa_steps, aaa_err = self.aaa_compress(tol=aaa_tol, max_steps=aaa_max_steps)
             if self.nonlinear_optimize:
                 err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
             else:
                 err, residues = self.lstsq_weight_optimization(poles)
 
-            #assert err < tol, f'AAA compression did not achieve the desired accuracy {tol:2.2E}, but only {err:2.2E}.'
-            
             if err < tol:
                 break
 
-            print('='*72)
-            print(f'AAA: Step {step}/{max_upwind_steps}, AAA steps = {aaa_steps}, error = {err:2.2E} with tol = {aaa_tol}.')
-            print('='*72)
+            print('-'*72)
+            print(f'TDC: Step {step}/{max_upwind_steps}, AAA steps = {aaa_steps}, error = {err:2.2E} with tol = {aaa_tol}.')
+            print('-'*72)
 
-            #aaa_tol *= 0.1
             aaa_tol = None
             aaa_max_steps = aaa_steps + 1
 
+        print(f'TDC: Error {err:2.2E} for {aaa_steps} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
+
         if step == max_upwind_steps and err >= tol:
-            raise ValueError(f"AAA compression failed to achieve the desired accuracy {tol:2.2E} after {max_upwind_steps} steps, with final error {err:2.2E}. Consider increasing max_upwind_steps or relaxing tol.")
+            raise ValueError(f"TDC: Compression failed to achieve the desired accuracy {tol:2.2E} after {max_upwind_steps} steps, with final error {err:2.2E}. Consider increasing max_upwind_steps or relaxing tol.")
 
         n_not_converged = 0
         n_converged = aaa_steps
@@ -72,15 +71,17 @@ class TriqsDLRCompression:
         while(n_not_converged + 1 != n_converged):
 
             n_test = (n_not_converged + n_converged) // 2
-            print('='*72)
-            print(f"Testing AAA with max_steps = {n_test}, which is between {n_not_converged} and {n_converged}.")
-            print('='*72)
-            poles, residues, aaa_steps = self.aaa_compress(max_steps=n_test)
+            #print(f"TDC: Running AAA with max_steps = {n_test}, in interval [{n_not_converged}, {n_converged}].")
+            poles, residues, aaa_steps, aaa_err = self.aaa_compress(max_steps=n_test)
+
+            #print(f'TDC: AAA with max_steps = {n_test} gives error {aaa_err:2.2E}.')
 
             if self.nonlinear_optimize:
                 err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
             else:
                 err, residues = self.lstsq_weight_optimization(poles)
+
+            print(f'TDC: Error {err:2.2E} for {n_test} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
 
             if err < tol:
                 n_converged = n_test
@@ -91,10 +92,8 @@ class TriqsDLRCompression:
                 n_not_converged = n_test
                 err_not_conv = err
 
-            print('='*72)
-            print(f"Current best result with max_steps = {n_converged} has error {err_conv:2.2E}.")
-            print(f'Current not converged result with max_steps = {n_not_converged} has error {err_not_conv:2.2E}.')
-            print('='*72)
+            #print(f"TDC: aaa_max_steps = {n_converged:2d} is converged with error {err_conv:2.2E} < tol {tol:2.2E}.")
+            #print(f'TDC: aaa_max_steps = {n_not_converged:2d} is not converged, error {err_not_conv:2.2E} > tol {tol:2.2E}.')
 
         if self.nonlinear_post_optimize:
             """ Exploit that the non-linear optimization often can reduce the pole no by one.
@@ -105,7 +104,7 @@ class TriqsDLRCompression:
             n_tests = [n_converged - 1, n_converged] if n_converged > 1 else [n_converged]
 
             for n_test in n_tests:
-                poles, residues, _ = self.aaa_compress(max_steps=n_test)
+                poles, residues, _, _ = self.aaa_compress(max_steps=n_test)
                 err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
                 if err < tol:
                     n_converged = n_test
@@ -114,21 +113,21 @@ class TriqsDLRCompression:
                     err_conv = err
                     break
 
-        print('='*72)
-        print(f'AAA compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
-        print('='*72)
+        print(f'TDC: Compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
         self.poles, self.residues, self.aaa_steps, self.error = poles_conv, residues_conv, n_converged, err_conv
 
 
     def aaa_compress(self, tol=None, max_steps=None, cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4):
 
-        bra = aaa_bra(self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
-                           cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol)
+        bra = aaa_bra(
+            self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
+            cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
+            verbose=False)
 
         poles, residues = bra.poles_and_residues()
         poles = poles.real
 
-        return poles, residues, bra.aaa_steps
+        return poles, residues, bra.aaa_steps, bra.residual
 
 
     def imtime_l2_error(self, poles, residues):

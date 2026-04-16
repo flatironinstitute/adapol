@@ -32,87 +32,84 @@ class BarycentricRationalApproximation:
 
 
     def fast_eval(self, Z):
+        """ Evaluate the rational approximation at points Z.
+        Assuming that Z does not contain any support points. """
         wC = self.w[None, :] / (Z[:, None] - self.z[None, :])
-        n = np.sum((self.f[None, ...] * wC), axis=1)
+        n = np.einsum('j...,kj->k...', self.f, wC)
         d = np.sum(wC, axis=1)
-        return n / d
+        r = np.einsum('k...,k->k...', n, 1/d)
+        return r
 
 
     def __call__(self, Z):
+        """ Evaluate the rational approximation at points Z.
+        Also handle cases when Z is a support point, and
+        then return the corresponding f value. """
+
         ZZ = Z[:, None] - self.z[None, :]
 
-        idxs = np.nonzero(ZZ == 0.)
-        ZZ[idxs] = 1.
+        # Find evaluation points that are support points
+        idxs = np.nonzero(ZZ == 0.) 
+        ZZ[idxs] = 1. # Set zeros to unity before inversion
 
         wC = self.w[None, :] / ZZ
 
-        #print(f'ZZ = \n{ZZ}')
-        #print(f'idxs = {idxs}')
-
+        # For evaluation point in the support set
+        # only return the corresponding value
         ridxs = idxs[0]
         wC[ridxs, :] = 0.0
         wC[idxs] = 1.0
         
-        n = np.sum((self.f[None, ...] * wC), axis=1)
+        n = np.einsum('j...,kj->k...', self.f, wC)
         d = np.sum(wC, axis=1)
-
-        return n / d
+        r = np.einsum('k...,k->k...', n, 1/d)
+        return r
 
 
     def aaa_step(self, Z, F, R):
         
         # Find largest residual point
-        idx = np.argmax(np.abs(R))
-        residual = np.abs(R[idx])
+        if R.ndim == 1:
+            idx = np.argmax(np.abs(R))
+        else:
+            axis = tuple(range(1, R.ndim))
+            idx = np.argmax(np.max(np.abs(R), axis=axis))
+
+        residual = np.max(np.abs(R[idx]))
 
         # Use this point as new support point, and update the interpolation set
         z_new = Z[idx]
         f_new = F[idx]
 
         self.z = np.append(self.z, z_new)
-        self.f = np.append(self.f, f_new)
+        self.f = np.append(self.f, [f_new], axis=0)
 
-        print(f'AAA: Added support point z = {z_new:2.2E}, f = {f_new:2.2E}')
+        #print(f'AAA: Added support point z = {z_new:2.2E}')
 
         # Remove support point from fitting set
         Z = np.delete(Z, idx)
-        F = np.delete(F, idx)
+        F = np.delete(F, idx, axis=0)
 
         self.w = self.__fit_weights(Z, F)
         
-        # Recompute residual
-        R = F - self.fast_eval(Z)
-
-        #print(f'AAA: f = {self.f}, z = {self.z}, w = {self.w}')
+        R = F - self.fast_eval(Z) # Recompute residual
 
         return Z, F, R
 
 
     def __fit_weights(self, Z, F, scalar=False):
 
-        if scalar:
-            
-            C = 1.0 / (Z[:, None] - self.z[None, :]) # Cachy matrix, Eq. (3.7) in [1]
-            A = F[:, None] * C - C * self.f[None, :] # Build linear system, Eq. (3.9) in [1]
+        C = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
 
-            # Weights from right singular vector of smallest singular value
-            U, S, Vh = np.linalg.svd(A, full_matrices=False)
-            print(f'AAA: Smallest singular value {S[-1]:2.2E}')
-            assert( Vh.shape[0] > 0 )
-            w = Vh[-1, :].conjugate()
+        A = np.einsum('k...,jk->jk...', F, C) - \
+            np.einsum('jk,j...->jk...', C, self.f)
 
-        else:
-            # Tensor valued F & f case
+        A = A.reshape((A.shape[0], -1))
 
-            C = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
-            A = F[None, :, ...] * C - C * self.f[:, None, ...] # Build linear system, Eq. (3.9) in [1]
-
-            A = A.reshape((A.shape[0], -1))
-
-            U, S, Vh = np.linalg.svd(A, full_matrices=False)
-            print(f'AAA: Smallest singular value {S[-1]:2.2E}')
-            assert( U.shape[1] > 0 )
-            w = U[:, -1].conjugate()
+        U, S, Vh = np.linalg.svd(A, full_matrices=False)
+        #print(f'AAA: Smallest singular value {S[-1]:2.2E}')
+        assert( U.shape[1] > 0 )
+        w = U[:, -1].conjugate()
 
         return w
 
@@ -134,7 +131,10 @@ class BarycentricRationalApproximation:
         # Calculate residues by evaluating the function at points close to the poles
         dz = 1e-5 * np.exp(2j*np.pi*np.arange(1, 5)/4)
         Z = poles[:, None] + dz[None, :]
-        residues = self.fast_eval(Z.flatten()).reshape((len(poles), 4)) @ dz / 4
+        
+        shape = [len(poles), 4] + list(self.f.shape[1:])
+        residues = np.einsum(
+            'pf...,f->p...', self.fast_eval(Z.flatten()).reshape(shape), dz / 4)
 
         return poles, residues
         
@@ -145,24 +145,37 @@ class BarycentricRationalApproximation:
             tol = 1e-13
 
         poles, residues = self.poles_and_residues()
-        ridxs = np.argwhere(np.abs(residues) < tol).flatten()
+
+        if residues.ndim == 1:
+            ridxs = np.nonzero(np.abs(residues) < tol)
+        else:
+            axis = tuple(range(1, residues.ndim))
+            ridxs = np.nonzero(np.max(np.abs(residues), axis=axis) < tol)
+
+        if len(ridxs[0]) == 0:
+            #print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
+            return 0, Z, F
 
         print(f'AAA: removing residues {residues[ridxs]} with poles {poles[ridxs]}')
         print(f'AAA: Removing {len(ridxs)} Froissart doublets with residues smaller than {tol:2.2E}')
 
         dists = np.abs(self.z[:, None] - poles[None, ridxs])
-        pidxs = np.argmin(dists, axis=0)
+        pidxs = np.unique(np.argmin(dists, axis=0))
 
-        # Put points back to the fitting set? 
+        # Put points back to the fitting set
+        Z = np.concatenate((Z, self.z[pidxs]))
+        F = np.concatenate((F, self.f[pidxs]))
 
+        # Remove points in support set
         self.z = np.delete(self.z, pidxs)
-        self.f = np.delete(self.f, pidxs)
+        self.f = np.delete(self.f, pidxs, axis=0)
+
         self.w = self.__fit_weights(Z, F)
 
         # Recompute residual
         R = F - self.fast_eval(Z)
         residual = np.max(np.abs(R))
-        print(f'AAA: After removing Froissart doublets, residual is {residual:2.2E}')
+        print(f'AAA: After removing {len(pidxs)} support points the residual is {residual:2.2E}')
 
         return len(pidxs), Z, F
 
@@ -243,7 +256,8 @@ class ConjugatedBarycentricRationalApproximation:
         n = np.einsum('j...,kj->k...', self.f, wC) + \
             np.einsum('j...,kj->k...', f_bar, wCbar)
         d = np.sum(wC + wCbar, axis=1)
-        return n / d
+        r = np.einsum('k...,k->k...', n, 1/d)
+        return r
 
 
     def __fit_weights(self, Z, F, scalar=False):
@@ -278,8 +292,7 @@ class ConjugatedBarycentricRationalApproximation:
         #print(f'A.dtype = {A.dtype}, A.shape = {A.shape}')
 
         U, S, Vh = np.linalg.svd(A, full_matrices=False)
-        print(f'AAA: Smallest singular value {S[-1]:2.2E}')
-        #print(f'U.dtype = {U.dtype}, U.shape = {U.shape}')
+        #print(f'AAA: Smallest singular value {S[-1]:2.2E}')
         assert( U.shape[1] > 0 )
         x = U[:, -1]
         w = x @ K
@@ -289,8 +302,6 @@ class ConjugatedBarycentricRationalApproximation:
 
     def aaa_step(self, Z, F, R, tol_conj=1e-12):
         
-        #print(f'AAA: Z.shape = {Z.shape}, F.shape = {F.shape}, R.shape = {R.shape}')
-
         # Find largest residual point
         if R.ndim == 1:
             idx = np.argmax(np.abs(R))
@@ -299,25 +310,18 @@ class ConjugatedBarycentricRationalApproximation:
         else:
             raise NotImplementedError("Only scalar and matrix valued functions are supported for ConjugatedBarycentricRationalApproximation")
         
-        residual = np.max(np.abs(R[idx]))
+        self.residual = np.max(np.abs(R[idx]))
 
-        #print(f'AAA: Largest residual {residual:2.2E} at z = {Z[idx]:2.2E}, f = {F[idx]:2.2E}, idx = {idx}')
-        print(f'AAA: Largest residual {residual:2.2E} at z = {Z[idx]:2.2E}, idx = {idx}')
+        #print(f'AAA: Largest residual {residual:2.2E} at z = {Z[idx]:2.2E}, idx = {idx}')
 
         # Use this point as new support point, and update the interpolation set
         z_new = Z[idx]
         f_new = F[idx]
 
-        #print(f'z_new = {z_new}, f_new.shape = {f_new.shape}')
-        #print(f'z = {self.z}, f.shape = {self.f.shape}')
-
         self.z = np.append(self.z, z_new)
         self.f = np.append(self.f, [f_new], axis=0)
 
-        #print(f'z = {self.z}, f.shape = {self.f.shape}')
-
-        #print(f'AAA: Added support point z = {z_new:2.2E}, f = {f_new:2.2E}')
-        print(f'AAA: Added support point z = {z_new:2.2E}')
+        #print(f'AAA: Added support point z = {z_new:2.2E}')
 
         # Remove support point from fitting set
         Z = np.delete(Z, idx)
@@ -328,20 +332,14 @@ class ConjugatedBarycentricRationalApproximation:
         diff = np.abs(Z - z_conj)
         idx_conj = np.argmin(diff)
         if diff[idx_conj] < tol_conj:
-            #print(f'AAA: Removing conjugate point z = {Z[idx_conj]:2.2E}, f = {F[idx_conj]:2.2E}')
-            print(f'AAA: Removing conjugate point z = {Z[idx_conj]:2.2E}')
+            #print(f'AAA: Removing conjugate point z = {Z[idx_conj]:2.2E}')
             Z = np.delete(Z, idx_conj)
             F = np.delete(F, idx_conj, axis=0)
-
-
-        #print(f'AAA: Z.shape = {Z.shape}, F.shape = {F.shape}, R.shape = {R.shape}')
 
         self.w = self.__fit_weights(Z, F)
         
         # Recompute residual
         R = F - self.fast_eval(Z)
-
-        #print(f'AAA: f = {self.f}, z = {self.z}, w = {self.w}')
 
         return Z, F, R    
 
@@ -363,11 +361,13 @@ class ConjugatedBarycentricRationalApproximation:
 
         poles = poles[np.isfinite(poles)]
 
+        sidx = np.argsort(poles.real)
+        poles = poles[sidx]
+
         # Calculate residues by evaluating the function at points close to the poles
         dz = 1e-5 * np.exp(2j*np.pi*np.arange(1, 5)/4)
         Z = poles[:, None] + dz[None, :]
 
-        #residues = self.fast_eval(Z.flatten()).reshape((len(poles), 4)) @ dz / 4
         shape = [len(poles), 4] + list(self.f.shape[1:])
         residues = np.einsum(
             'pf...,f->p...', self.fast_eval(Z.flatten()).reshape(shape), dz / 4)
@@ -390,30 +390,26 @@ class ConjugatedBarycentricRationalApproximation:
         else:
             raise NotImplementedError("Only scalar and matrix valued functions are supported for ConjugatedBarycentricRationalApproximation")
 
-        #print(f'ridxs = {ridxs}')
-
         if imag_tol is not None:
             ridxs_im = np.nonzero(np.abs(poles.imag) > imag_tol)
-            #print(f'ridxs_im = {ridxs_im}')
             ridxs = (np.unique(np.concatenate((ridxs[0], ridxs_im[0]))),)
-            #print(f'ridxs = {ridxs}')
 
-        if len(ridxs[0]) == 0:
-            print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
+        if len(ridxs[0]) <= 1:
+            # Since the conjugated support points produce pole pairs, 
+            # do not remove a single pole with small residue.
+            # This is likely not a Froissart doublet.
+            
+            #print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
             return 0, Z, F
 
-        print(f'AAA: Found small residues \n{residues[ridxs]}\n < {tol} with poles\n{poles[ridxs]}')
-        print(f'AAA: Found {len(ridxs)} Froissart doublets with residues smaller than {tol:2.2E}')
-
-        #print(f'AAA: poles[ridxs] = {poles[ridxs]}')
-        #print(f'AAA: residues[ridxs] = {residues[ridxs]}')
+        print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
 
         zz = np.concatenate((self.z, self.z.conjugate()))
         dists = np.abs(zz[:, None] - poles[ridxs][None, :])
         pidxs = np.argmin(dists, axis=0)
         pidxs = np.unique(np.mod(pidxs, len(self.z)))
 
-        print(f'AAA: Corresponding support points to be removed are\nz = {self.z[pidxs]}\nf = {self.f[pidxs]}')
+        print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         assert( len(pidxs) > 0 )
 
@@ -429,41 +425,46 @@ class ConjugatedBarycentricRationalApproximation:
 
         # Recompute residual
         R = F - self.fast_eval(Z)
-        residual = np.max(np.abs(R))
-        print(f'AAA: After removing {len(pidxs)} support points the residual is {residual:2.2E}')
+        self.residual = np.max(np.abs(R))
+        print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
 
 
 def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False, 
-            cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4):
+            cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,
+            verbose=True):
 
     assert(len(Z) == len(F))
 
-    if max_steps is None: max_steps = len(Z) // 2 - 1
+    max_max_steps = len(Z) // 2 - 1 if constrained else len(Z) - 1
 
-    assert(max_steps <= len(Z))
+    if max_steps is None: 
+        max_steps = max_max_steps
+
+    assert(max_steps <= max_max_steps)
 
     Z = Z.copy()
     F = F.copy()
     R = F.copy()
 
+    # Empty value vector with the same shape as F (to enable appending)
     f0 = np.array([]).reshape([0] + list(F.shape[1:]))
 
     if constrained:
         bra = ConjugatedBarycentricRationalApproximation(f=f0)
-        assert(max_steps <= len(Z)//2)
     else:
         bra = BarycentricRationalApproximation(f=f0)
 
     for step in range(1, max_steps+1):
         Z, F, R = bra.aaa_step(Z, F, R)
-
         residual = np.max(np.abs(R))
-        print(f'AAA: Error {residual:2.2E} using {len(bra.z)} support points and {len(Z)} fitting points (step {step}/{max_steps})')
+        if verbose:
+            print(f'AAA: Error {residual:2.2E} using {len(bra.z)} support and {len(Z)} fitting points (step {step}/{max_steps})')
 
-        if tol is not None and np.abs(residual) <= tol:
-            print(f"AAA: Converged after {step} steps with error {residual:2.2E}.")
+        if tol is not None and residual <= tol:
+            if verbose:
+                print(f"AAA: Converged after {step} steps with error {residual:2.2E}.")
             break
 
     if cleanup:
@@ -475,7 +476,7 @@ def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False,
         while(n_removed > 0):
             n_removed, Z, F = bra.remove_froissart_doublets(Z, F, **opts)
 
-    if step == max_steps and tol is not None and np.abs(residual) > tol:
+    if step == max_steps and tol is not None and residual > tol:
         print(f"AAA: Warning! Failed to converge after {max_steps} steps. Final error {residual:2.2E} larger than tolerance {tol:2.2E}.")   
 
     bra.aaa_steps = step
