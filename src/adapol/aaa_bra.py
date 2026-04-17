@@ -1,6 +1,7 @@
 """ Implementation of the AAA algorithm for barycentric rational approximation.
 
-As well as a conjugate constrained version of the AAA algorithm, which is used for pole fitting in the imaginary time domain.
+As well as a conjugate constrained version of the AAA algorithm, 
+which is used for pole fitting of Matsubara frequency Green's functions.
 
 Author: Hugo U. R. Strand, 2026 
 """
@@ -10,11 +11,30 @@ import numpy as np
 
 from scipy.linalg import eigvals as scipy_eigvals
 
+
 class BarycentricRationalApproximation:
 
     """ Barycentric rational approximation with AAA algorithm.
 
-    YUJI NAKATSUKASA, OLIVIER SETE, AND LLOYD N. TREFETHEN
+    Parameters
+    ----------
+    z : array_like, shape (m,)
+        The support points.
+    f : array_like, shape (m, ...)
+        The function values at the support points.
+    w : array_like, shape (m,)
+        The weights of the rational approximation.
+
+    Notes
+    -----
+
+    Use the `aaa_bra` function to construct the rational approximation 
+    from a given set of points and function values using the AAA algorithm.
+    
+    References
+    ----------
+
+    [1] YUJI NAKATSUKASA, OLIVIER SETE, AND LLOYD N. TREFETHEN
     SIAM J. SCI. COMPUT. Vol. 40, No. 3, pp. A1494–A1522 (2018)
     DOI. 10.1137/16M1106122
 
@@ -34,7 +54,18 @@ class BarycentricRationalApproximation:
     def fast_eval(self, Z):
         """ Evaluate the rational approximation at points Z.
         Assuming that Z does not contain any support points. """
+
+        # Cauchy matrix, Eq. (3.7) in [1] multiplied by the weights w
         wC = self.w[None, :] / (Z[:, None] - self.z[None, :])
+
+        return self.__barycentric_eval(wC)
+
+
+    def __barycentric_eval(self, wC):
+        """ Internal helper function for barycentric formula evaluation.
+        Shared by fast_eval and __call__."""
+
+        # Evaluate the barycentric formula, Eq. (2.5) in [1]
         n = np.einsum('j...,kj->k...', self.f, wC)
         d = np.sum(wC, axis=1)
         r = np.einsum('k...,k->k...', n, 1/d)
@@ -46,36 +77,36 @@ class BarycentricRationalApproximation:
         Also handle cases when Z is a support point, and
         then return the corresponding f value. """
 
+        # Denominator of elements in the Cauchy matrix, Eq. (3.7) in [1]
         ZZ = Z[:, None] - self.z[None, :]
 
         # Find evaluation points that are support points
         idxs = np.nonzero(ZZ == 0.) 
         ZZ[idxs] = 1. # Set zeros to unity before inversion
 
+        # Cauchy matrix, Eq. (3.7) in [1] multiplied by the weights w
         wC = self.w[None, :] / ZZ
 
-        # For evaluation point in the support set
+        # For evaluation points in the support set
         # only return the corresponding value
         ridxs = idxs[0]
         wC[ridxs, :] = 0.0
         wC[idxs] = 1.0
         
-        n = np.einsum('j...,kj->k...', self.f, wC)
-        d = np.sum(wC, axis=1)
-        r = np.einsum('k...,k->k...', n, 1/d)
-        return r
+        return self.__barycentric_eval(wC)
 
 
     def aaa_step(self, Z, F, R):
-        
-        # Find largest residual point
+        """ Perform one step of the AAA algorithm. """
+
+        # Find index of largest residual
         if R.ndim == 1:
             idx = np.argmax(np.abs(R))
         else:
             axis = tuple(range(1, R.ndim))
             idx = np.argmax(np.max(np.abs(R), axis=axis))
 
-        residual = np.max(np.abs(R[idx]))
+        self.residual = np.max(np.abs(R[idx]))
 
         # Use this point as new support point, and update the interpolation set
         z_new = Z[idx]
@@ -91,23 +122,23 @@ class BarycentricRationalApproximation:
         F = np.delete(F, idx, axis=0)
 
         self.w = self.__fit_weights(Z, F)
-        
         R = F - self.fast_eval(Z) # Recompute residual
-
         return Z, F, R
 
 
     def __fit_weights(self, Z, F, scalar=False):
+        """ Fit the weights w of the rational approximation by an SVD. """
 
         C = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
 
+        # Construct Löwner matrix A Eq. (3.6) in [1], 
+        # such that min_w || A @ w ||_2 gives the optimal weights w
         A = np.einsum('k...,jk->jk...', F, C) - \
             np.einsum('jk,j...->jk...', C, self.f)
-
         A = A.reshape((A.shape[0], -1))
 
+        # Solve minimization problem using left singular vector with smallest singular value
         U, S, Vh = np.linalg.svd(A, full_matrices=False)
-        #print(f'AAA: Smallest singular value {S[-1]:2.2E}')
         assert( U.shape[1] > 0 )
         w = U[:, -1].conjugate()
 
@@ -115,8 +146,14 @@ class BarycentricRationalApproximation:
 
 
     def poles_and_residues(self):
+        """ Determine the poles and residues of the rational approximation,
+        by solving a generalized eigenvalue problem with an arrowhead matrix, 
+        and using the Laurent series residue relation. """
 
         n = len(self.z)
+
+        # Left hand (A) and right hand (B) matrices in Eq. (3.11) in [1]
+        # of the generalized eigenvalue problem, A@x = \lambda B@x
 
         A = np.block([
             [ np.zeros((1,1)), self.w[None, :] ],
@@ -124,11 +161,19 @@ class BarycentricRationalApproximation:
 
         B = np.diag(np.concatenate(([0.0], np.ones(n))))
 
+        # Obtain the poles as generalized eigenvalues of the pencil (A, B)
+        # NB! two eigenvalues are infinite, and needs to be discarded.
         poles = scipy_eigvals(A, B, overwrite_a=True)
-
-        poles = poles[np.isfinite(poles)]
+        poles = poles[np.isfinite(poles)] # Discard infinite eigenvalues
 
         # Calculate residues by evaluating the function at points close to the poles
+        # See the MATLAB code in Fig. 4.1 of Ref [1].
+
+        # Is this related to a Laurent series expansion of the rational function around the pole?
+        
+        # TODO: understand this better, and add more comments here.
+        # Q: How sensitive is this to the choice of dz?
+
         dz = 1e-5 * np.exp(2j*np.pi*np.arange(1, 5)/4)
         Z = poles[:, None] + dz[None, :]
         
@@ -140,12 +185,15 @@ class BarycentricRationalApproximation:
         
 
     def remove_froissart_doublets(self, Z, F, tol=None):
+        """ Remove Froissart doublets, i.e. poles with small residues, 
+        by putting the closest support point of each pole back to the fitting set. """
 
         if tol is None:
             tol = 1e-13
 
         poles, residues = self.poles_and_residues()
 
+        # Find indices of small residues
         if residues.ndim == 1:
             ridxs = np.nonzero(np.abs(residues) < tol)
         else:
@@ -156,11 +204,13 @@ class BarycentricRationalApproximation:
             #print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
             return 0, Z, F
 
-        print(f'AAA: removing residues {residues[ridxs]} with poles {poles[ridxs]}')
-        print(f'AAA: Removing {len(ridxs)} Froissart doublets with residues smaller than {tol:2.2E}')
+        print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
 
+        # Locate the closest support point to each pole with small residue
         dists = np.abs(self.z[:, None] - poles[None, ridxs])
         pidxs = np.unique(np.argmin(dists, axis=0))
+
+        print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         # Put points back to the fitting set
         Z = np.concatenate((Z, self.z[pidxs]))
@@ -171,22 +221,70 @@ class BarycentricRationalApproximation:
         self.f = np.delete(self.f, pidxs, axis=0)
 
         self.w = self.__fit_weights(Z, F)
+        R = F - self.fast_eval(Z) # Recompute residual
+        self.residual = np.max(np.abs(R))
 
-        # Recompute residual
-        R = F - self.fast_eval(Z)
-        residual = np.max(np.abs(R))
-        print(f'AAA: After removing {len(pidxs)} support points the residual is {residual:2.2E}')
+        print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
 
 
 class ConjugatedBarycentricRationalApproximation:
 
+    """ Conjugated Barycentric rational approximation with AAA algorithm.
+
+    Parameters
+    ----------
+    z : array_like, shape (m,)
+        The support points.
+    f : array_like, shape (m,) or (m, n, n)
+        The function values at the support points.
+    w : array_like, shape (m,)
+        The weights of the rational approximation.
+
+    Notes
+    -----
+
+    Use the `aaa_bra` function to construct the rational approximation 
+    from a given set of points and function values using the AAA algorithm.
+
+    This is a specialization of the standard Barycentric Rational Approximation formula,
+    to the case where all support points z, function values f, and weights w, are added in conjugate pairs
+
+    .. math:: 
+        r(z) = \\frac{n(z)}{d(z)} = 
+        \\left[ \\sum_{j=1}^m \\left(
+        \\frac{w_j f_j}{z - z_j} + \\frac{\\bar{w}_j f_j^\\dagger}{z - \\bar{z}_j}
+        \\right) \\right] 
+        \\Bigg/ 
+        \\left[ \\sum_{j=1}^m \\left( 
+        \\frac{w_j}{z - z_j} + \\frac{\\bar{w}_j^*}{z - \\bar{z}_j^*}
+        \\right) \\right]
+
+    This ensures that :math:`r(\\bar{z}) = r(z)^\\dagger`, 
+    which is a property of Green's functions in the Matsubara frequency domain.
+
+    The modified approximation formula was presented in Ref [2] and is a generalization of Ref. [1].
+
+    References
+    ----------
+
+    [1] YUJI NAKATSUKASA, OLIVIER SETE, AND LLOYD N. TREFETHEN
+    SIAM J. SCI. COMPUT. Vol. 40, No. 3, pp. A1494–A1522 (2018)
+    DOI. 10.1137/16M1106122
+
+    [2] Zhen Huang, Denis Golež, Hugo U. R. Strand, Jason Kaye
+    SciPost Phys. 19, 121 (2025) doi: 10.21468/SciPostPhys.19.5.121
+
+    Author: Hugo U. R. Strand, 2026
+    """
+
     def __init__(self, z=np.array([]), f=np.array([]), w=np.array([])):
         
         assert(len(z) == len(w))
         assert(len(z) == f.shape[0])
-        assert(f.ndim == 1 or f.ndim == 3) # Only support scalar and matrix valued f (with known hermitian conjugation relation)
+        # Only support scalar and matrix valued f (with known hermitian conjugation relation)
+        assert(f.ndim == 1 or f.ndim == 3) 
 
         self.z = z
         self.f = f
@@ -194,121 +292,79 @@ class ConjugatedBarycentricRationalApproximation:
 
 
     def fast_eval(self, Z):
+        """ Evaluate the conjugate paired rational approximation points Z.
+        Assuming that Z does not contain any support points. """
 
-        wC = self.w[None, :] / (Z[:, None] - self.z[None, :])
-        wCbar = self.w[None, :].conjugate() / (Z[:, None] - self.z[None, :].conjugate())
+        Zz    = Z[:, None] - self.z[None, :]
+        Zzbar = Z[:, None] - self.z[None, :].conjugate()
 
-        if self.f.ndim == 1:
-            f_bar = self.f.conjugate()
-        elif self.f.ndim == 3:
-            f_bar = np.transpose(self.f, (0, 2, 1)).conjugate()
-        else:
-            raise NotImplementedError("Only scalar and matrix valued f are supported for ConjugatedBarycentricRationalApproximation")
+        wC    = self.w[None, :] / Zz
+        wCbar = self.w[None, :].conjugate() / Zzbar
 
-        #n = np.sum((self.f[None, ...] * wC + f_bar[None, ...] * wCbar   ), axis=1)
+        return self.__barycentric_eval(wC, wCbar)
+    
+
+    def __barycentric_eval(self, wC, wCbar):
+        """ Internal helper function for barycentric formula evaluation.
+        Shared by fast_eval and __call__."""
+
         n = np.einsum('j...,kj->k...', self.f, wC) + \
-            np.einsum('j...,kj->k...', f_bar, wCbar)
+            np.einsum('j...,kj->k...', self.__fbar(), wCbar)
         d = np.sum(wC + wCbar, axis=1)
         r = np.einsum('k...,k->k...', n, 1/d)
         return r
 
 
+    def __fbar(self):
+        """ Return the conjugate paired values of f, using the known hermitian conjugation relation."""
+        if self.f.ndim == 1: return self.f.conjugate()
+        elif self.f.ndim == 3: return np.transpose(self.f, (0, 2, 1)).conjugate()
+        else: raise NotImplementedError("Only scalar and matrix valued f are supported.")
+
+
     def __call__(self, Z):
+        """ Evaluate the conjugate paired rational approximation at points Z.
+        Also handle cases when Z is a support point, and
+        then return the corresponding f value. """
         
-        ZZ    = Z[:, None] - self.z[None, :]
-        ZZbar = Z[:, None] - self.z[None, :].conjugate()
+        Zz    = Z[:, None] - self.z[None, :] # Cachy matrix, Eq. (3.7) in [1]
+        Zzbar = Z[:, None] - self.z[None, :].conjugate()
 
-        idxs = np.nonzero(ZZ == 0.)
-        idxs_bar = np.nonzero(ZZbar == 0.)
+        # Find evaluation points that are support points
+        idxs = np.nonzero(Zz == 0.)
+        idxs_bar = np.nonzero(Zzbar == 0.)
 
-        ZZ[idxs] = 1.
-        ZZbar[idxs_bar] = 1.
+        # Set zeros to unity before inversion
+        Zz[idxs] = 1.
+        Zzbar[idxs_bar] = 1.
 
-        #C    = 1.0 / (Z[:, None] - self.z[None, :]) # Cachy matrix, Eq. (3.7) in [1]
-        #Cbar = 1.0 / (Z[:, None] - self.z[None, :].conjugate())
+        wC = self.w[None, :] / Zz
+        wCbar = self.w[None, :].conjugate() / Zzbar
 
-        C    = 1.0 / ZZ # Cachy matrix, Eq. (3.7) in [1]
-        Cbar = 1.0 / ZZbar
+        # For evaluation points in the support set
+        # only return the corresponding value
 
-        wC = self.w[None, :] * C
-        wCbar = self.w[None, :].conjugate() * Cbar
-
-        #ridxs = idxs[:, 0]
         ridxs = idxs[0]
         wC[ridxs, :] = 0.0
         wCbar[ridxs, :] = 0.0
         wC[idxs] = 1.0
 
-        #ridxs_bar = idxs_bar[:, 0]
         ridxs_bar = idxs_bar[0]
         wC[ridxs_bar, :] = 0.0
         wCbar[ridxs_bar, :] = 0.0
         wCbar[idxs_bar] = 1.0
 
-        if self.f.ndim == 1:
-            f_bar = self.f.conjugate()
-        elif self.f.ndim == 3:
-            f_bar = np.transpose(self.f, (0, 2, 1)).conjugate()
-        else:
-            raise NotImplementedError("Only scalar and matrix valued f are supported for ConjugatedBarycentricRationalApproximation")
-
-        #n = np.sum((self.f[None, ...] * wC + f_bar[None, ...] * wCbar), axis=1)
-        n = np.einsum('j...,kj->k...', self.f, wC) + \
-            np.einsum('j...,kj->k...', f_bar, wCbar)
-        d = np.sum(wC + wCbar, axis=1)
-        r = np.einsum('k...,k->k...', n, 1/d)
-        return r
-
-
-    def __fit_weights(self, Z, F, scalar=False):
-
-        # Tensor valued F & f case
-
-        C    = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
-        Cbar = 1.0 / (Z[None, :] - self.z[:, None].conjugate())
-
-        I = np.eye(len(self.z))
-
-        K    = np.vstack((I, +1j*I))
-        Kbar = np.vstack((I, -1j*I))
-
-        #print(f'I.shape = {I.shape}, C.shape = {C.shape}, K.shape = {K.shape}, F.shape = {F.shape}')
-        #print(f'z.shape = {self.z.shape}, f.shape = {self.f.shape}, w.shape = {self.w.shape}')
-
-        if self.f.ndim == 1:
-            fbar = self.f.conjugate()
-        elif self.f.ndim == 3:
-            fbar = np.transpose(self.f, (0, 2, 1)).conjugate()
-        else:
-            raise NotImplementedError("Only scalar and matrix valued f are supported for ConjugatedBarycentricRationalApproximation")
-
-        A = np.einsum('xk,k...->xk...', (K @ C + Kbar @ Cbar), F) + \
-            - np.einsum('xj,j...,jk->xk...', K, self.f, C) \
-            - np.einsum('xj,j...,jk->xk...', Kbar, fbar, Cbar) \
-
-        A = A.reshape((A.shape[0], -1))
-        A = np.hstack((A.real, A.imag))
-
-        #print(f'A.dtype = {A.dtype}, A.shape = {A.shape}')
-
-        U, S, Vh = np.linalg.svd(A, full_matrices=False)
-        #print(f'AAA: Smallest singular value {S[-1]:2.2E}')
-        assert( U.shape[1] > 0 )
-        x = U[:, -1]
-        w = x @ K
-
-        return w
+        return self.__barycentric_eval(wC, wCbar)
 
 
     def aaa_step(self, Z, F, R, tol_conj=1e-12):
+        """ Perform one step of the AAA algorithm,
+        with the additional constraint that support points are added in conjugate pairs. """
         
-        # Find largest residual point
-        if R.ndim == 1:
-            idx = np.argmax(np.abs(R))
-        elif R.ndim == 3:
-            idx = np.argmax(np.max(np.abs(R), axis=(1, 2)))
-        else:
-            raise NotImplementedError("Only scalar and matrix valued functions are supported for ConjugatedBarycentricRationalApproximation")
+        # Find index of largest residual
+        if R.ndim == 1: idx = np.argmax(np.abs(R))
+        elif R.ndim == 3: idx = np.argmax(np.max(np.abs(R), axis=(1, 2)))
+        else: raise NotImplementedError("Only scalar and matrix valued functions are supported.")
         
         self.residual = np.max(np.abs(R[idx]))
 
@@ -337,19 +393,52 @@ class ConjugatedBarycentricRationalApproximation:
             F = np.delete(F, idx_conj, axis=0)
 
         self.w = self.__fit_weights(Z, F)
-        
-        # Recompute residual
-        R = F - self.fast_eval(Z)
-
+        R = F - self.fast_eval(Z) # Recompute residual
         return Z, F, R    
 
 
+    def __fit_weights(self, Z, F, scalar=False):
+        """ Fit the weights w of the conjugate paired rational approximation by an SVD. """
+
+        C    = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
+        Cbar = 1.0 / (Z[None, :] - self.z[:, None].conjugate())
+
+        # Transform matrices K, Kbar 
+        # from vector with separated real and imaginary parts x = [w.real, w.imag] 
+        # to complex valued vector w = x @ K, w.conjugate = x @ Kbar
+        I = np.eye(len(self.z))
+        K    = np.vstack((I, +1j*I))
+        Kbar = np.vstack((I, -1j*I))
+
+        # Construct fitting matrix A, such that min_x || A @ x ||_2 gives the optimal weights w = x @ K
+        A = np.einsum('xk,k...->xk...', (K @ C + Kbar @ Cbar), F) + \
+            - np.einsum('xj,j...,jk->xk...', K, self.f, C) \
+            - np.einsum('xj,j...,jk->xk...', Kbar, self.__fbar(), Cbar) \
+
+        A = A.reshape((A.shape[0], -1))
+        A = np.hstack((A.real, A.imag))
+
+        # Solve minimization problem using left singular vector with smallest singular value
+        U, S, Vh = np.linalg.svd(A, full_matrices=False)
+        assert( U.shape[1] > 0 )
+        x = U[:, -1]
+        w = x @ K
+
+        return w
+
+
     def poles_and_residues(self):
+        """ Determine the poles and residues of the rational approximation,
+        by solving a generalized eigenvalue problem with an arrowhead matrix, 
+        and using the Laurent series residue relation. """
 
         ww = np.concatenate((self.w, self.w.conjugate()))
         zz = np.concatenate((self.z, self.z.conjugate()))
 
         n = len(zz)
+
+        # Left hand (A) and right hand (B) matrices in Eq. (3.11) in [1]
+        # of the generalized eigenvalue problem, A@x = \lambda B@x
 
         A = np.block([
             [ np.zeros((1,1)), ww[None, :] ],
@@ -357,14 +446,19 @@ class ConjugatedBarycentricRationalApproximation:
 
         B = np.diag(np.concatenate(([0.0], np.ones(n))))
 
+        # Obtain the poles as generalized eigenvalues of the pencil (A, B)
+        # NB! two eigenvalues are infinite, and needs to be discarded.
         poles = scipy_eigvals(A, B, overwrite_a=True)
-
         poles = poles[np.isfinite(poles)]
 
+        # Sort poles by real part, to enable simpler testing...
         sidx = np.argsort(poles.real)
         poles = poles[sidx]
 
         # Calculate residues by evaluating the function at points close to the poles
+        # See the MATLAB code in Fig. 4.1 of Ref [1], 
+        # and comment in BarycentricRationalApproximation.poles_and_residues().
+
         dz = 1e-5 * np.exp(2j*np.pi*np.arange(1, 5)/4)
         Z = poles[:, None] + dz[None, :]
 
@@ -376,20 +470,24 @@ class ConjugatedBarycentricRationalApproximation:
 
 
     def remove_froissart_doublets(self, Z, F, tol=None, imag_tol=1e-4):
+        """ Remove Froissart doublets, i.e. poles with small residues, 
+        by putting the closest support point of each pole back to the fitting set.
+         
+        Optionally, locate poles with imaginary part > imag_tol, 
+        and also remove their adjacent support points. """
 
         if tol is None:
             tol = 1e-13
 
         poles, residues = self.poles_and_residues()
 
-        # Find small residues
-        if residues.ndim == 1:
-            ridxs = np.nonzero(np.abs(residues) < tol)
-        elif residues.ndim == 3:
-            ridxs = np.nonzero(np.max(np.abs(residues), axis=(1, 2)) < tol)
-        else:
-            raise NotImplementedError("Only scalar and matrix valued functions are supported for ConjugatedBarycentricRationalApproximation")
+        # Find indices of small residues
+        if residues.ndim == 1: ridxs = np.nonzero(np.abs(residues) < tol)
+        elif residues.ndim == 3: ridxs = np.nonzero(np.max(np.abs(residues), axis=(1, 2)) < tol)
+        else: raise NotImplementedError("Only scalar and matrix valued functions are supported.")
 
+        # Optionally locate poles with non-negligible imaginary part.
+        # In infinite arithmetic, the constrained AAA algorithm only should produce real poles.
         if imag_tol is not None:
             ridxs_im = np.nonzero(np.abs(poles.imag) > imag_tol)
             ridxs = (np.unique(np.concatenate((ridxs[0], ridxs_im[0]))),)
@@ -404,6 +502,7 @@ class ConjugatedBarycentricRationalApproximation:
 
         print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
 
+        # Locate the closest support point to each pole with small residue
         zz = np.concatenate((self.z, self.z.conjugate()))
         dists = np.abs(zz[:, None] - poles[ridxs][None, :])
         pidxs = np.argmin(dists, axis=0)
@@ -413,7 +512,7 @@ class ConjugatedBarycentricRationalApproximation:
 
         assert( len(pidxs) > 0 )
 
-        # Put points back to the fitting set
+        # Put support points back to the fitting set
         Z = np.concatenate((Z, self.z[pidxs]))
         F = np.concatenate((F, self.f[pidxs]))
 
@@ -422,10 +521,9 @@ class ConjugatedBarycentricRationalApproximation:
         self.f = np.delete(self.f, pidxs, axis=0)
 
         self.w = self.__fit_weights(Z, F)
-
-        # Recompute residual
-        R = F - self.fast_eval(Z)
+        R = F - self.fast_eval(Z) # Recompute residual
         self.residual = np.max(np.abs(R))
+
         print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
@@ -434,6 +532,35 @@ class ConjugatedBarycentricRationalApproximation:
 def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False, 
             cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,
             verbose=True):
+
+    """ Implementation of the AAA algorithm for barycentric rational approximation. 
+    
+    Parameters
+    ----------
+    Z : array_like, shape (n,)
+        The support points.
+    F : array_like, shape (n, ...)
+        The function values at the support points.
+    tol : float, optional
+        The tolerance for convergence.
+    max_steps : int, optional
+        The maximum number of AAA steps.
+    constrained : bool, optional
+        Whether to use the conjugate pair constrained version of the algorithm.
+    cleanup : bool, optional
+        Whether to remove Froissart doublets.
+    cleanup_residue_tol : float, optional
+        The tolerance for identifying small residues.
+    cleanup_imag_tol : float, optional
+        The tolerance for identifying poles with non-negligible imaginary part.
+    verbose : bool, optional
+        Whether to print progress information.
+
+    Returns
+    -------
+    bra : BarycentricRationalApproximation, ConjugatedBarycentricRationalApproximation
+        The approximating function.
+    """
 
     assert(len(Z) == len(F))
 
