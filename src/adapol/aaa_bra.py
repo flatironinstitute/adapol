@@ -398,7 +398,50 @@ class ConjugatedBarycentricRationalApproximation:
 
 
     def __fit_weights(self, Z, F, scalar=False):
-        """ Fit the weights w of the conjugate paired rational approximation by an SVD. """
+        """ Fit the weights w of the conjugate paired rational approximation by an SVD.
+
+        Note
+        ----
+
+        From the barycentric interpolation formula assuming conjugated support point pairs
+
+        .. math::
+            r(z) = \\frac{n(z)}{d(z)} =
+            \\left[ \\sum_j \\frac{f_j w_j}{z - z_j} + \\frac{f^\dagger_j \\bar{w}_j}{z - \\bar{z}_j} \\right]
+            \\Bigg/
+            \\left[ \\sum_j \\frac{w_j}{z - z_j} + \\frac{\bar{w}_j}{z - \\bar{z}_j} \\right]
+
+        The residual vector :math:`R_k` of the weight minimization as
+
+        .. math::
+            R_k \\equiv f(Z_k) d(Z_k) - n(Z_k) =
+            f(Z_k) \\sum_j \\left[ \\frac{w_j}{z - z_j} + \\frac{\\bar{w}_j}{z - \\bar{z}_j} \\right]
+            -
+            \\sum_j \\left[ \\frac{f_j w_j}{z - z_j} + \\frac{f^\\dagger_j \\bar{w}_j}{z - \\bar{z}_j} \\right]
+            =
+            \\sum_j \\left[ w_j C_{jk} f(Z_k) - \\bar{w}_j \\bar{C}_{jk} f(Z_k)
+            - w_j f_j C_{jk} - \\bar{w}_j f^\\dagger_j \\bar{C}_{jk} \\right]
+            =
+            \\mathbf{x} \\left( K C S_k + \\bar{K} \\bar{C} S_k
+            - K S_j C - \\bar{K} S_j^{(\\dagger)} \\bar{C} \\right)
+            = \mathbf{x} A
+
+        where we have introduced the diagonal matrices :math:`S_k = \\textrm{diag}[f(Z_k)]`,
+        :math:`S_j = \\textrm{diag}[f_j]`, and :math:`S^{(\\dagger)}_j = \\textrm{diag}[f^\\dagger_j]`.
+        The matrices :math:`K = [ \\mathbf{1} | i\\mathbf{1} ]^T` and
+        :math:`\bar{K} = [ \\mathbf{1} | -i\\mathbf{1} ]^T`  are transforms from the real-valued vector
+        :math:`\\mathbf{x}` to the complex weights :math:`w`,
+        i.e. $w_i = \\mathbf{x} K$ and $\\bar{w}_i = \\mathbf{x} \\bar{K}$.
+
+        Finally the matrices :math:`C` and :math:`\\bar{C}` are the two Cauchy matrices
+
+        .. math::
+            C_{jk} \\equiv \\frac{1}{Z_k - z_j} \\, , \\quad \\bar{C}_{jk} \\equiv \\frac{1}{Z_k - \\bar{z}_j} \\, .
+
+        The optimal weights :math:`w` are obtained as the left singular vector :math:`\\mathbf{u}` of
+        :math:`A` with the smallest singular value, :math:`w = \\mathbf{u} K`.
+
+        """
 
         C    = 1.0 / (Z[None, :] - self.z[:, None]) # Cachy matrix, Eq. (3.7) in [1]
         Cbar = 1.0 / (Z[None, :] - self.z[:, None].conjugate())
