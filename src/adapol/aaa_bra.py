@@ -407,7 +407,7 @@ class ConjugatedBarycentricRationalApproximation:
 
         .. math::
             r(z) = \\frac{n(z)}{d(z)} =
-            \\left[ \\sum_j \\frac{f_j w_j}{z - z_j} + \\frac{f^\dagger_j \\bar{w}_j}{z - \\bar{z}_j} \\right]
+            \\left[ \\sum_j \\frac{f_j w_j}{z - z_j} + \\frac{f^\\dagger_j \\bar{w}_j}{z - \\bar{z}_j} \\right]
             \\Bigg/
             \\left[ \\sum_j \\frac{w_j}{z - z_j} + \\frac{\bar{w}_j}{z - \\bar{z}_j} \\right]
 
@@ -424,7 +424,7 @@ class ConjugatedBarycentricRationalApproximation:
             =
             \\mathbf{x} \\left( K C S_k + \\bar{K} \\bar{C} S_k
             - K S_j C - \\bar{K} S_j^{(\\dagger)} \\bar{C} \\right)
-            = \mathbf{x} A
+            = \\mathbf{x} A
 
         where we have introduced the diagonal matrices :math:`S_k = \\textrm{diag}[f(Z_k)]`,
         :math:`S_j = \\textrm{diag}[f_j]`, and :math:`S^{(\\dagger)}_j = \\textrm{diag}[f^\\dagger_j]`.
@@ -470,39 +470,98 @@ class ConjugatedBarycentricRationalApproximation:
         return w
 
 
-    def poles_and_residues(self):
+    def poles_and_residues(self, residue_dz=1e-5, scale_and_balance=False):
         """ Determine the poles and residues of the rational approximation,
         by solving a generalized eigenvalue problem with an arrowhead matrix, 
         and using the Laurent series residue relation. """
 
-        ww = np.concatenate((self.w, self.w.conjugate()))
-        zz = np.concatenate((self.z, self.z.conjugate()))
+        #wwbar = np.concatenate((self.w, self.w.conjugate()))
+        #zzbar = np.concatenate((self.z, self.z.conjugate()))
 
-        n = len(zz)
+        wwbar = self.__interleave_first_axis(self.w, self.w.conjugate())
+        zzbar = self.__interleave_first_axis(self.z, self.z.conjugate())
+
+        n = len(zzbar)
 
         # Left hand (A) and right hand (B) matrices in Eq. (3.11) in [1]
         # of the generalized eigenvalue problem, A@x = \lambda B@x
 
         A = np.block([
-            [ np.zeros((1,1)), ww[None, :] ],
-            [ np.ones((n, 1)), np.diag(zz) ]] )
+            [ np.zeros((1,1)), wwbar[None, :] ],
+            [ np.ones((n, 1)), np.diag(zzbar) ]] )
 
         B = np.diag(np.concatenate(([0.0], np.ones(n))))
+
+        if scale_and_balance:
+            print(f'A =\n{A}\nB =\n{B}')
+
+            s = np.concatenate(([1.], np.sqrt(wwbar)))
+            print(f's = {s}')
+
+            SAS = (1./s)[:, None] * A * s[None, :]
+            print(f'SAS =\n{SAS}')
+
+
+            r_norm_sas = np.linalg.norm(SAS[0, :])
+            c_norm_sas = np.linalg.norm(SAS[:, 0])
+
+            sl = np.concatenate(([r_norm_sas], np.ones(n)))
+            sr = np.concatenate(([c_norm_sas], np.ones(n)))
+
+            SSASS = (1./sl)[:, None] * SAS * (1./sr)[None, :]
+
+            r_norm_ssass = np.linalg.norm(SSASS[0, :])
+            c_norm_ssass = np.linalg.norm(SSASS[:, 0])
+
+            print(f'SAS r_norm_sas = {r_norm_sas:2.2E}, c_norm_sas = {c_norm_sas:2.2E}')
+            print(f'SAS r_norm_ssass = {r_norm_ssass:2.2E}, c_norm_ssass = {c_norm_ssass:2.2E}')
+
+            r_norm = np.linalg.norm(A[0, :])
+            c_norm = np.linalg.norm(A[:, 0])
+            print(f'A   r_norm = {r_norm:2.2E}, c_norm = {c_norm:2.2E}')
+
+            #poles_sas = scipy_eigvals(SAS, B, overwrite_a=True)
+            poles_ssass = scipy_eigvals(SSASS, B, overwrite_a=True)
 
         # Obtain the poles as generalized eigenvalues of the pencil (A, B)
         # NB! two eigenvalues are infinite, and needs to be discarded.
         poles = scipy_eigvals(A, B, overwrite_a=True)
+
+        if scale_and_balance:
+            print(f'Poles from SAS   = {poles_sas}')
+            print(f'Poles from SSASS = {poles_ssass}')
+            print(f'Poles from A     = {poles}')
+            poles = poles_ssass
+
         poles = poles[np.isfinite(poles)]
 
         # Sort poles by real part, to enable simpler testing...
         sidx = np.argsort(poles.real)
         poles = poles[sidx]
 
+        if False:
+            """ Test the accuracy of the poles by evaluation of the 
+            denominator of the rational function at the poles, which should be zero."""
+
+            def eval_denominator(Z):
+                Zz    = Z[:, None] - self.z[None, :]
+                Zzbar = Z[:, None] - self.z[None, :].conjugate()
+
+                wC    = self.w[None, :] / Zz
+                wCbar = self.w[None, :].conjugate() / Zzbar
+
+                d = np.sum(wC + wCbar, axis=1)
+                return d
+            
+            zeros = eval_denominator(poles)
+            print(f'zeros = {zeros}')
+            #exit()
+
         # Calculate residues by evaluating the function at points close to the poles
         # See the MATLAB code in Fig. 4.1 of Ref [1], 
         # and comment in BarycentricRationalApproximation.poles_and_residues().
 
-        dz = 1e-5 * np.exp(2j*np.pi*np.arange(1, 5)/4)
+        dz = residue_dz * np.exp(2j*np.pi*np.arange(1, 5)/4)
         Z = poles[:, None] + dz[None, :]
 
         shape = [len(poles), 4] + list(self.f.shape[1:])
@@ -571,6 +630,34 @@ class ConjugatedBarycentricRationalApproximation:
 
         return len(pidxs), Z, F
 
+
+    def __interleave_first_axis(self, A, B):
+        """ Interleave the first axis of two arrays A and B, i.e. [A0, B0, A1, B1, ...]. """
+        assert(A.shape == B.shape)
+        shape = list(A.shape)
+        shape[0] *= 2
+        C = np.empty(shape, dtype=A.dtype)
+        C[0::2] = A
+        C[1::2] = B
+        return C
+
+
+    def barycentric_rational_interpolant(self):
+        """ Return the conjugated barycentric rational interpolant 
+        as a standard BarycentricRationalApproximation object, 
+        with support points and values interleaved in conjugate pairs."""
+
+        zzbar = self.__interleave_first_axis(self.z, self.z.conjugate())
+        ffbar = self.__interleave_first_axis(self.f, self.__fbar())
+        wwbar = self.__interleave_first_axis(self.w, self.w.conjugate())
+
+        if zzbar[0].imag < 0:
+            zzbar = zzbar.conjugate()
+            ffbar = ffbar.conjugate()
+            wwbar = wwbar.conjugate()
+
+        return BarycentricRationalApproximation(zzbar, ffbar, wwbar)
+        
 
 def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False, 
             cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,

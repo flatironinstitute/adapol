@@ -15,7 +15,7 @@ from adapol.aaa_bra import aaa_bra
 
 class TriqsDLRCompression:
 
-    def __init__(self, G, tol=1e-14, nonlinear_optimize=False, nonlinear_post_optimize=False, max_upwind_steps=4):
+    def __init__(self, G, tol=1e-14, nonlinear_optimize=False, nonlinear_post_optimize=False, max_upwind_steps=10):
 
         self.G = G
         self.tol = tol
