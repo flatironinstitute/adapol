@@ -15,12 +15,15 @@ from adapol.aaa_bra import aaa_bra
 
 class TriqsDLRCompression:
 
-    def __init__(self, G, tol=1e-14, nonlinear_optimize=False, nonlinear_post_optimize=False, max_upwind_steps=10):
+    def __init__(self, G, tol=1e-14, 
+                 nonlinear_optimize=False, nonlinear_post_optimize=False, 
+                 max_upwind_steps=4, verbose=True):
 
         self.G = G
         self.tol = tol
         self.nonlinear_optimize = nonlinear_optimize
         self.nonlinear_post_optimize = nonlinear_post_optimize
+        self.verbose = verbose
 
         self.G_dlr = G if type(G.mesh) == MeshDLR else make_gf_dlr(G)
         self.dlr_freq = np.array([float(w) for w in self.G_dlr.mesh])
@@ -47,14 +50,16 @@ class TriqsDLRCompression:
             if err < tol:
                 break
 
-            print('-'*72)
-            print(f'TDC: Step {step}/{max_upwind_steps}, AAA steps = {aaa_steps}, error = {err:2.2E} with tol = {aaa_tol}.')
-            print('-'*72)
+            if verbose:
+                print('-'*72)
+                print(f'TDC: Step {step}/{max_upwind_steps}, AAA steps = {aaa_steps}, error = {err:2.2E} with tol = {aaa_tol}.')
+                print('-'*72)
 
             aaa_tol = None
             aaa_max_steps = aaa_steps + 1
 
-        print(f'TDC: Error {err:2.2E} for {aaa_steps} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
+        if verbose:
+            print(f'TDC: Error {err:2.2E} for {aaa_steps} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
 
         if step == max_upwind_steps and err >= tol:
             raise ValueError(f"TDC: Compression failed to achieve the desired accuracy {tol:2.2E} after {max_upwind_steps} steps, with final error {err:2.2E}. Consider increasing max_upwind_steps or relaxing tol.")
@@ -81,7 +86,8 @@ class TriqsDLRCompression:
             else:
                 err, residues = self.lstsq_weight_optimization(poles)
 
-            print(f'TDC: Error {err:2.2E} for {n_test} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
+            if verbose:
+                print(f'TDC: Error {err:2.2E} for {n_test} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
 
             if err < tol:
                 n_converged = n_test
@@ -113,7 +119,8 @@ class TriqsDLRCompression:
                     err_conv = err
                     break
 
-        print(f'TDC: Compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
+        if verbose:
+            print(f'TDC: Compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
         self.poles, self.residues, self.aaa_steps, self.error = poles_conv, residues_conv, n_converged, err_conv
 
 
@@ -122,7 +129,7 @@ class TriqsDLRCompression:
         bra = aaa_bra(
             self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
             cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
-            verbose=False)
+            verbose=self.verbose)
 
         poles, residues = bra.poles_and_residues()
         poles = poles.real

@@ -7,6 +7,8 @@ Author: Hugo U. R. Strand, 2026
 """
 
 
+from tabnanny import verbose
+
 import numpy as np
 
 from scipy.linalg import eigvals as scipy_eigvals
@@ -571,7 +573,7 @@ class ConjugatedBarycentricRationalApproximation:
         return poles, residues
 
 
-    def remove_froissart_doublets(self, Z, F, tol=None, imag_tol=1e-4):
+    def remove_froissart_doublets(self, Z, F, tol=None, imag_tol=1e-4, verbose=True):
         """ Remove Froissart doublets, i.e. poles with small residues, 
         by putting the closest support point of each pole back to the fitting set.
          
@@ -602,7 +604,8 @@ class ConjugatedBarycentricRationalApproximation:
             #print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
             return 0, Z, F
 
-        print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
+        if verbose:
+            print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
 
         # Locate the closest support point to each pole with small residue
         zz = np.concatenate((self.z, self.z.conjugate()))
@@ -610,7 +613,8 @@ class ConjugatedBarycentricRationalApproximation:
         pidxs = np.argmin(dists, axis=0)
         pidxs = np.unique(np.mod(pidxs, len(self.z)))
 
-        print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
+        if verbose:
+            print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         assert( len(pidxs) > 0 )
 
@@ -626,7 +630,8 @@ class ConjugatedBarycentricRationalApproximation:
         R = F - self.fast_eval(Z) # Recompute residual
         self.residual = np.max(np.abs(R))
 
-        print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
+        if verbose:
+            print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
 
@@ -694,7 +699,8 @@ def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False,
 
     assert(len(Z) == len(F))
 
-    max_max_steps = len(Z) // 2 - 1 if constrained else len(Z) - 1
+    #max_max_steps = len(Z) // 2 - 1 if constrained else len(Z) - 1 # For data with conjugated data points.
+    max_max_steps = len(Z) - 1
 
     if max_steps is None: 
         max_steps = max_max_steps
@@ -725,7 +731,7 @@ def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False,
             break
 
     if cleanup:
-        opts = dict(tol=cleanup_residue_tol)
+        opts = dict(tol=cleanup_residue_tol, verbose=verbose)
         if constrained:
             opts['imag_tol'] = cleanup_imag_tol
 
