@@ -5,7 +5,8 @@ from adapol.fit_utils_dlr import get_weight_dlr, merge_degenerate_poles
 import numpy as np
 
 # Import barycentric interpolation and pole fitting functions
-from adapol.aaa_bra import BarycentricRationalApproximation, aaa_bra
+from adapol.bra import BarycentricRationalApproximation
+from adapol.aaa import aaa
 from adapol.aaa import aaa_matrix_real
 
 from triqs.gf import Gf, MeshImFreq, MeshDLR, MeshDLRImFreq, inverse, iOmega_n, SemiCircular, make_gf_dlr, make_gf_imtime
@@ -73,7 +74,7 @@ def plot_pole_evolution(max_steps=20, aaa_tol=1e-19):
 
     for max_steps in np.arange(2, max_steps + 1):
 
-        cbra = aaa_bra(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
+        cbra = aaa(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
         cpoles, cresidues = cbra.poles_and_residues(residue_dz=residue_dz)
         cresidues_opt, _ = get_weight_dlr(cpoles.real, dlr_freq, G_dlr_coeff, m.beta)
         cresidues_opt *= -1.
@@ -87,7 +88,7 @@ def plot_pole_evolution(max_steps=20, aaa_tol=1e-19):
         R_c = np.max(np.abs(F - cbra(Z)))
         R_cssp = np.max(np.abs(F - cssp(Z)))
 
-        cbra_clean = aaa_bra(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=True)
+        cbra_clean = aaa(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=True)
         cpoles_clean, cresidues_clean = cbra_clean.poles_and_residues(residue_dz=residue_dz)
         cresidues_clean_opt, _ = get_weight_dlr(cpoles_clean.real, dlr_freq, G_dlr_coeff, m.beta)
         cresidues_clean_opt *= -1.
@@ -192,12 +193,12 @@ def plot_poles_aaa(aaa_tol=1e-13, max_steps=None):
         max_steps = len(Z) // 2 - 1
 
     # Unconstrained AAA
-    #bra = aaa_bra(Z, F, max_steps=2*max_steps, tol=tol)
+    #bra = aaa(Z, F, max_steps=2*max_steps, tol=tol)
     #poles, residues = bra.poles_and_residues()
     #f = bra(z)
 
     # Constrained AAA (running without Froissart doubles cleanup)
-    cbra = aaa_bra(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
+    cbra = aaa(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
     bra = cbra.barycentric_rational_interpolant()
 
     cpoles, cresidues = cbra.poles_and_residues()
@@ -331,12 +332,12 @@ def plot_poles_aaa_and_optimization(aaa_tol=1e-13):
     max_steps = len(Z) // 2 - 1
 
     # Unconstrained AAA
-    #bra = aaa_bra(Z, F, max_steps=2*max_steps, tol=tol)
+    #bra = aaa(Z, F, max_steps=2*max_steps, tol=tol)
     #poles, residues = bra.poles_and_residues()
     #f = bra(z)
 
     # Constrained AAA (running without Froissart doubles cleanup)
-    cbra = aaa_bra(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
+    cbra = aaa(Z, F, max_steps=max_steps, tol=aaa_tol, constrained=True, cleanup=False)
     cpoles, cresidues = cbra.poles_and_residues()
     fc = cbra(z)
     Fc = cbra(Z)

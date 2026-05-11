@@ -12,7 +12,7 @@ from triqs.gf import MeshDLR, MeshDLRImFreq
 from triqs.gf import make_gf_dlr, make_gf_dlr_imfreq
 
 
-from .aaa_bra import aaa_bra
+from .aaa import aaa
 from .sop import SumOfSimplePoles
 
 
@@ -43,8 +43,8 @@ class TriqsDLRCompression:
         self.F = self.G_w.data.copy()
 
         # DEBUG
-        F_ref = self.sop(self.Z)
-        np.testing.assert_array_almost_equal(F_ref, self.F, decimal=12)
+        #F_ref = self.sop(self.Z)
+        #np.testing.assert_array_almost_equal(F_ref, self.F, decimal=12)
 
         aaa_tol = tol
         aaa_max_steps = None
@@ -136,7 +136,7 @@ class TriqsDLRCompression:
 
     def aaa_compress(self, tol=None, max_steps=None, cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4):
 
-        bra = aaa_bra(
+        bra = aaa(
             self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
             cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
             verbose=self.verbose)

@@ -1,106 +1,98 @@
+""" Implementation of the AAA algorithm for barycentric rational approximation.
+
+As well as a conjugate constrained version of the AAA algorithm, 
+which is used for pole fitting of Matsubara frequency Green's functions.
+
+Author: Hugo U. R. Strand, 2026 
 """
-This code implements a specific variant of the AAA algorithm.
 
-The major modifications compared to the original AAA algorithm are:
-1. The input functions are matrix-valued; 
-2. The interpolation points are on the imaginary axis, i.e., Z = i * R_+;
-3. An symmetry is imposed on the interpolation points, whichh is used to obtain real-valued poles.
-
-The implementation follows the convention in the original AAA paper [1], as well as its matlab [2] and python [3] implementations.
-
-References:
-
-    1. The AAA Algorithm for Rational Approximation, Yuji Nakatsukasa, Olivier Sete, and Lloyd N. Trefethen, SIAM Journal on Scientific Computing 2018 40:3, A1494-A1522https://doi.org/10.1137/16M1106122
-    2. http://www.chebfun.org
-    3. https://github.com/c-f-h/baryrat/blob/master/baryrat.py
-"""
 
 import numpy as np
-import scipy.linalg
 
 
-def aaa_matrix_real(F, Z, tol=1e-25, mmax=100):
-    # only use input z that are on iR_+. Will map them to iR_- by taking conjugate of function value.
-    half_index = np.imag(Z) > 0
-    Z_half = Z[half_index]
-    F_half = F[half_index, :, :]
-    N_half = len(Z_half)
+from .bra import BarycentricRationalApproximation
+from .bra import ConjugatedBarycentricRationalApproximation
 
-    Z = np.append(Z_half, np.conjugate(Z_half))
 
-    Norb = F.shape[1]
-    F_other_half = np.zeros_like(F_half)
-    for i in range(N_half):
-        F_other_half[i, :, :] = np.conjugate(np.transpose(F_half[i, :, :]))
-    F = np.concatenate((F_half, F_other_half), axis=0)
+def aaa(Z, F, tol=None, max_steps=None, constrained=False, 
+        cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,
+        verbose=True):
 
-    N = N_half * 2
-
-    F_mat = np.reshape(F, (N, Norb * Norb))
-
-    Ilist = [i for i in range(N)]
-    z_interp = []
-    f_interp = np.empty((0, Norb * Norb), dtype=F.dtype)
-
-    F_mat_fit = np.sum(F_mat) * np.ones((N, Norb * Norb), dtype=F_mat.dtype) / (N * Norb * Norb)
+    """ Implementation of the AAA algorithm for barycentric rational approximation. 
     
-    for n in  range(2, mmax + 1, 2):
-        jj = np.argmax(np.sum(abs(F_mat - F_mat_fit) ** 2, 1))
-        z_interp.append(Z[jj])
-        f_interp = np.concatenate((f_interp, F_mat[jj : jj + 1, :]), axis=0)
-        Ilist.remove(jj)
+    Parameters
+    ----------
+    Z : array_like, shape (n,)
+        The support points.
+    F : array_like, shape (n, ...)
+        The function values at the support points.
+    tol : float, optional
+        The tolerance for convergence.
+    max_steps : int, optional
+        The maximum number of AAA steps.
+    constrained : bool, optional
+        Whether to use the conjugate pair constrained version of the algorithm.
+    cleanup : bool, optional
+        Whether to remove Froissart doublets.
+    cleanup_residue_tol : float, optional
+        The tolerance for identifying small residues.
+    cleanup_imag_tol : float, optional
+        The tolerance for identifying poles with non-negligible imaginary part.
+    verbose : bool, optional
+        Whether to print progress information.
 
-        jj2 = (jj + N_half) % N
-        z_interp.append(Z[jj2])
-        f_interp = np.concatenate((f_interp, F_mat[jj2 : jj2 + 1, :]), axis=0)
+    Returns
+    -------
+    bra : BarycentricRationalApproximation, ConjugatedBarycentricRationalApproximation
+        The approximating function.
+    """
 
-        Ilist.remove(jj2)
+    assert(len(Z) == len(F))
 
-        Cauchy_mat = 1.0 / (Z[Ilist, None] - np.array(z_interp)[None, :])
+    #max_max_steps = len(Z) // 2 - 1 if constrained else len(Z) - 1 # For data with conjugated data points.
+    max_max_steps = len(Z) - 1
 
-        Apart = np.zeros(((N - n) * Norb * Norb, n), dtype=F.dtype)
-        for i in range(Norb * Norb):
-            Fhere = F_mat[:, i]
-            fhere = f_interp[:, i]
+    if max_steps is None: 
+        max_steps = max_max_steps
 
-            Apart[range(0 + i, i + (N - n) * Norb * Norb, Norb * Norb), :] = (Fhere[Ilist, None] - fhere[None, :]) * Cauchy_mat
+    assert(max_steps <= max_max_steps)
 
-        Apart_l = Apart[:, range(0, n, 2)]
-        Apart_r = Apart[:, range(1, n, 2)]
-        Anew = np.concatenate((Apart_l + Apart_r, (Apart_l - Apart_r) * 1j), axis=1)
-        Anew = np.concatenate((np.real(Anew), np.imag(Anew)), axis=0)
+    Z = Z.copy()
+    F = F.copy()
+    R = F.copy()
 
-        _, _, Vh = scipy.linalg.svd(Anew, full_matrices=False)
+    # Empty value vector with the same shape as F (to enable appending)
+    f0 = np.array([]).reshape([0] + list(F.shape[1:]))
 
-        w_r = Vh[-1, :]
+    if constrained:
+        bra = ConjugatedBarycentricRationalApproximation(f=f0)
+    else:
+        bra = BarycentricRationalApproximation(f=f0)
 
-        w_r = np.reshape(w_r, (2, int(n / 2)))
-        w_c = np.zeros((2, int(n / 2)), dtype=np.complex128)
-        w_c[0, :] = w_r[0, :] + 1j * w_r[1, :]
-        w_c[1, :] = w_r[0, :] - 1j * w_r[1, :]
+    for step in range(1, max_steps+1):
+        Z, F, R = bra.aaa_step(Z, F, R)
+        residual = np.max(np.abs(R))
+        if verbose:
+            print(f'AAA: Error {residual:2.2E} using {len(bra.z)} support and {len(Z)} fitting points (step {step}/{max_steps})')
 
-        weight = w_c.T.flatten()
-        F_mat_fit = F_mat * 1.0
-
-        for i in range(Norb * Norb):
-            F_mat_fit[Ilist, i] = (Cauchy_mat @ (weight * f_interp[:, i])) / (Cauchy_mat @ weight)
-
-        if np.max(np.abs(F_mat_fit - F_mat)) <= tol:
+        if tol is not None and residual <= tol:
+            if verbose:
+                print(f"AAA: Converged after {step} steps with error {residual:2.2E}.")
             break
 
-    f_interp = f_interp.reshape(n, Norb, Norb)
-    z_interp = np.array(z_interp)
-    pol = find_pol(z_interp, weight)
-    return pol, z_interp, f_interp, weight
+    if cleanup:
+        opts = dict(tol=cleanup_residue_tol, verbose=verbose)
+        if constrained:
+            opts['imag_tol'] = cleanup_imag_tol
 
+        n_removed = 1
+        while(n_removed > 0):
+            n_removed, Z, F = bra.remove_froissart_doublets(Z, F, **opts)
 
-def find_pol(z, w):
-    m = len(w)
-    mat1, mat2 = np.zeros((m + 1, m + 1), dtype=np.complex128), np.zeros((m + 1, m + 1), dtype=np.complex128)
-    for i in range(m):
-        mat2[0, i + 1] = w[i]
-        mat2[i + 1, 0] = 1.0
-        mat2[i + 1, i + 1] = z[i]
-        mat1[i + 1, i + 1] = 1.0
-    pol = scipy.linalg.eigvals(mat2, mat1)
-    return np.real_if_close(pol[np.isfinite(pol)])
+    if step == max_steps and tol is not None and residual > tol:
+        print(f"AAA: Warning! Failed to converge after {max_steps} steps. Final error {residual:2.2E} larger than tolerance {tol:2.2E}.")   
+
+    bra.aaa_steps = step
+
+    return bra
+

@@ -37,7 +37,7 @@ from triqs.gf import make_gf_imfreq, make_gf_imtime
 from triqs.gf import make_gf_dlr_imtime, make_gf_dlr, make_gf_dlr_imfreq
 from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
 
-from adapol.aaa_bra_triqs import TriqsDLRCompression
+from adapol.triqs_xca import TriqsDLRCompression
 
 
 def solve_ipt_and_adapol(

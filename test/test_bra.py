@@ -4,8 +4,8 @@ import itertools
 import numpy as np
 
 # Import barycentric interpolation and pole fitting functions
-from adapol.aaa_bra import BarycentricRationalApproximation, aaa_bra
-from adapol.aaa import aaa_matrix_real
+from adapol.bra import BarycentricRationalApproximation
+from adapol.aaa import aaa
 
 from triqs.gf import Gf, MeshImFreq, MeshDLR, MeshDLRImFreq, inverse, iOmega_n, SemiCircular, make_gf_dlr, make_gf_imtime
 
@@ -38,7 +38,7 @@ def aaa_bra_runner(target_shape):
     F = G_w.data.copy()
 
     tol = 1e-12
-    bra = aaa_bra(Z, F, tol=tol)
+    bra = aaa(Z, F, tol=tol)
 
     F_bra = bra(Z)
     residual = np.max(np.abs(F - F_bra))
@@ -95,7 +95,7 @@ def aaa_bra_constrained_runner(target_shape, npoles):
     F = G_w.data.copy()
 
     tol = 1e-12
-    bra = aaa_bra(Z, F, tol=tol, constrained=True)
+    bra = aaa(Z, F, tol=tol, constrained=True)
 
     F_bra = bra(Z)
     residual = np.max(np.abs(F - F_bra))

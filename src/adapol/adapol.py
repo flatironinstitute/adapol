@@ -11,7 +11,7 @@ Author: Hugo U. R. Strand (2026)
 import numpy as np
 
 
-from .aaa_bra import aaa_bra
+from .aaa import aaa
 from .sop import SumOfSimplePoles
 
 
@@ -143,7 +143,7 @@ def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
 
     max_steps = _max_steps_from_max_n_poles(max_n_poles)
 
-    bra = aaa_bra(
+    bra = aaa(
         Z, F, tol=tol, max_steps=max_steps, constrained=True,
         cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
         verbose=verbose)
@@ -171,7 +171,7 @@ def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose
     max_steps = _max_steps_from_max_n_poles(max_n_poles)
 
     # Run AAA
-    bra = aaa_bra(
+    bra = aaa(
         Z, F, tol=tol, max_steps=max_steps, constrained=True,
         cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
         verbose=verbose)
