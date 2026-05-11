@@ -1,12 +1,14 @@
+""" Test the convergence of the TriqsDLRCompression class 
+as a function of the tolerance parameter.
 
+Author: Hugo U. R. Strand (2026)"""
 
 import time
 import numpy as np
 
 from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
 
-from adapol.aaa_bra_triqs import TriqsDLRCompression
-from adapol.fit_utils_dlr import polefitting_dlr_triqs
+from adapol.triqs_xca import TriqsDLRCompression
 
 
 class Dummy():
@@ -20,7 +22,6 @@ class ListDummy():
 
 def test_convergence(beta=1.0):
 
-    pdts = []
     tdcs = []
 
     tols = 10.**(-np.arange(1, 14))
@@ -33,24 +34,14 @@ def test_convergence(beta=1.0):
     for tol in tols:
         print(f"Testing convergence with tol = {tol:+2.2E}")
 
-        pdt = Dummy()
-        t_pdt = time.time()
-        pdt.weights, pdt.poles, pdt.error = polefitting_dlr_triqs(G_w, eps=tol, verbose=True, Np_max=100)
-        pdt.runtime = time.time() - t_pdt
-        pdt.n_poles = len(pdt.poles)
-        pdts.append(pdt)
-
         t_tdc = time.time()
         tdc = TriqsDLRCompression(G_w, tol=tol, nonlinear_post_optimize=False)
         tdc.runtime = time.time() - t_tdc
         tdc.n_poles = len(tdc.poles)
         tdcs.append(tdc)
 
-    pdts = ListDummy(pdts)
     tdcs = ListDummy(tdcs)
 
-    print(f'pdts.error = {pdts.error}')
-    print(f'pdts.runtime = {pdts.runtime}')
     print(f'tdcs.error = {tdcs.error}')
     print(f'tdcs.runtime = {tdcs.runtime}')
 
@@ -61,7 +52,6 @@ def test_convergence(beta=1.0):
 
     ax = plt.subplot(*subp); subp[-1] += 1
     plt.title(r'$\beta = '+ f'{m.beta}$')
-    plt.plot(tols, pdts.error, 'o-', label='polefitting_dlr_triqs')
     plt.plot(tols, tdcs.error, 's-', label='TriqsDLRCompression')
     plt.plot(tols, tols, 'k-')
     plt.loglog()
@@ -71,7 +61,6 @@ def test_convergence(beta=1.0):
     plt.ylabel('L2 Error (imtime)')
 
     plt.subplot(*subp, sharex=ax); subp[-1] += 1
-    plt.plot(tols, pdts.n_poles, 'o-', label='polefitting_dlr_triqs')
     plt.plot(tols, tdcs.n_poles, 's-', label='TriqsDLRCompression')
     plt.semilogx()
     plt.grid(True)
@@ -80,7 +69,6 @@ def test_convergence(beta=1.0):
     plt.legend(loc='best', fontsize=9)
 
     plt.subplot(*subp, sharex=ax); subp[-1] += 1
-    plt.plot(tols, pdts.runtime, 'o-', label='polefitting_dlr_triqs')
     plt.plot(tols, tdcs.runtime, 's-', label='TriqsDLRCompression')
     plt.loglog()
     plt.grid(True)
