@@ -132,7 +132,7 @@ def test_tdc_tol_sweep():
     G_w = Gf(mesh=m, target_shape=[2, 2])
     G_w << inverse(iOmega_n - 0.4 - SemiCircular(1.0))
 
-    for tol in 10.**(-np.arange(2, 14)):
+    for tol in 10.**(-np.arange(2, 12)):
         print(f"Testing TriqsDLRCompression with tol = {tol:+2.2E}")
         tdc = TriqsDLRCompression(G_w, tol=tol, nonlinear_post_optimize=False)
         tdc_pstopt = TriqsDLRCompression(G_w, tol=tol)

@@ -238,7 +238,7 @@ class ImTimeQuadrature:
         return np.sqrt(np.sum(self.integrate(np.abs(f(self.tau_i))**2)))
 
 
-    def best_l2_norm_approximation_using_poles(self, f, poles):
+    def best_l2_norm_approximation_using_poles(self, func, poles, full_return=False):
         """ Compute the best sum-of-poles approximation of the function :math:`f(\\tau)` 
         using given poles :math:`z_p`, by determining the residues :math:`R_p` 
         that minimizes the imaginary time L2 norm error. 
@@ -261,26 +261,35 @@ class ImTimeQuadrature:
         with :math:`A_{ip} = \\sqrt{w_i} K(\\tau_i, z_p)` and :math:`b_i = \\sqrt{w_i} f(\\tau_i)`.
         """
 
-        F_iX = f(self.tau_i)
+        f_iX = func(self.tau_i)
 
-        if F_iX.ndim > 1:
-            shape_F_i = (len(self.tau_i), -1)
-            shape_residues = [len(poles)] + list(F_iX.shape[1:])
+        if f_iX.ndim > 1:
+            shape_f_i = (len(self.tau_i), -1)
+            shape_residues = [len(poles)] + list(f_iX.shape[1:])
         else:
-            shape_F_i = (len(self.tau_i), 1)
+            shape_f_i = (len(self.tau_i), 1)
             shape_residues = (len(poles),)
 
-        F_i = F_iX.reshape(shape_F_i)
+        f_i = f_iX.reshape(shape_f_i)
 
         K_ip = self.kernel_matrix(poles)
 
-        A_ip = self.sqrt_w_i[:, None] * K_ip
-        b_i = self.sqrt_w_i[:, None] * F_i
+        wK_ip = self.sqrt_w_i[:, None] * K_ip
+        wf_i = self.sqrt_w_i[:, None] * f_i
 
-        residues, _, _, _ = np.linalg.lstsq(A_ip, b_i, rcond=None)
+        residues, sum_sq_err, _, _ = np.linalg.lstsq(wK_ip, wf_i, rcond=None)
+
+        if full_return:
+            wr_i = wK_ip @ residues - wf_i
+            wr_iX = wr_i.reshape(f_iX.shape)
+
         residues = residues.reshape(shape_residues)
 
-        return residues
+        if full_return:
+            #return residues, wK_ip, wf_i.reshape(f_iX.shape), sum_sq_err
+            return residues, wK_ip, wr_iX, sum_sq_err
+        else:
+            return residues
     
 
     def best_l2_norm_approximation(self, sop, poles, verbose=False):
@@ -305,7 +314,7 @@ class ImTimeQuadrature:
 
         """
 
-        func = lambda poles : self.l2_norm_gradient_with_respect_to_poles(sop, poles)
+        func = lambda poles : self.l2_norm_gradient_with_respect_to_poles_opt(sop, poles)
 
         res = scipy_minimize(
             func, poles, 
@@ -322,6 +331,7 @@ class ImTimeQuadrature:
 
         from .sop import SumOfSimplePoles
         sop_opt = SumOfSimplePoles(poles=poles_opt, residues=residues_opt)
+        sop_opt.err = res.fun
 
         return sop_opt
 
@@ -427,30 +437,74 @@ class ImTimeQuadrature:
 
         f_tau = sop.imtime_function(self.beta)
         weights = self.best_l2_norm_approximation_using_poles(f_tau, poles)
+
         from .sop import SumOfSimplePoles
         sop_approx = SumOfSimplePoles(poles=poles, residues=weights)
 
-        # Compute error and gradient with respect to the poles
-        if False:
-            sop_diff = sop - sop_approx
-            M_ip = self.sqrt_w_i[:, None] * self.kernel_matrix(sop_diff.p)
-            K_0mp = kernel(np.zeros(1), -sop_diff.p) # missing beta factor?
-            M2_ip = M_ip * (self.tau_i[:, None] + K_0mp)
-            df_i = M_ip @ sop_diff.R
-            error = np.sqrt(self.beta) *np.linalg.norm(df_i, axis=0)
-            grad = np.real(M2_ip.T @ df_i) * sop_diff.R.conj() / error[None, :] # contrived usage of transpose, cleanup?
-            grad[np.isnan(grad)] = 0.0
-            return np.sum(error), np.sum(grad, axis=1)[:len(poles)] * self.beta
+        sop_diff = sop_approx - sop
 
-        else:
-            sop_diff = sop_approx - sop
-            r_i = sop_diff.eval_imtime(self.tau_i, self.beta)
-            N = self.l2_norm(sop_diff.imtime_function(self.beta))
-            dKdz_ip = self.dkernel_matrix_dpoles(sop_approx.p)
-            jac = self.beta / N * np.einsum(
-                'i,i...,ip,p...->p...', self.w_i, r_i.conj(), dKdz_ip, sop_approx.R).real 
-            
-            # If f is tensor valued, sum all tensor indices
-            if jac.ndim > 1: jac = np.sum(jac, axis=tuple(range(1, jac.ndim)))
+        r_tau = sop_diff.imtime_function(self.beta)
+        N = self.l2_norm(r_tau)
+        r_i = r_tau(self.tau_i)
 
-            return N, jac
+        dKdz_ip = self.dkernel_matrix_dpoles(sop_approx.p)
+
+        jac = self.beta / N * np.einsum(
+            'i,i...,ip,p...->p...', self.w_i, r_i.conj(), dKdz_ip, sop_approx.R).real 
+        
+        # If f is tensor valued, sum all tensor indices
+        if jac.ndim > 1: jac = np.sum(jac, axis=tuple(range(1, jac.ndim)))
+
+        return N, jac
+
+
+    def l2_norm_gradient_with_respect_to_poles_opt(self, sop, poles):
+        """Compute the gradient of the imaginary time L2 norm error with respect to the poles, 
+        for a given sum-of-simple-poles representation `sop` and a set of poles `poles` to optimize.
+
+        Todo: write down the mathematical expression for the gradient in the docstring, 
+        and verify it with numerical differentiation.
+
+        .. math::
+            \\frac{\\partial N}{\\partial z_p} = 
+                =
+                \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}
+                =
+                \\{1}{2N} \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}^2
+                =
+                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial r}{\\partial z_p} d\\tau \\right)
+                =
+                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial \\tilde{f}}{\\partial z_p} d\\tau \\right)
+                =
+                \\frac{1}{N} \\Re \\left[ \\int_0^\\beta  
+                    \\bar{r(\\tau)} R_p \\frac{\\partial K(\\tau, z_p)}{\\partial z_p} 
+                d\\tau \\right] 
+                =
+                \\frac{\\beta}{N} \\Re \\left[ \\sum_i w_i 
+                \\bar{r(\\tau_i)} R_p \\frac{\\partial K(\\tau_i, z_p)}{\\partial z_p} \\right] 
+
+        where :math:`N` is the L2 norm error, :math:`r(\\tau) = \\tilde{f}(\\tau) - f(\\tau)` 
+        is the residual function, and the analytic derivative of the kernel is given by
+
+        .. math::
+            \\frac{\\partial K(\\tau, z)}{\\partial z} =
+                -K(\\tau, z) \\left( \\tau + K(0, -z) \\right)
+        
+        """
+
+        f_tau = sop.imtime_function(self.beta)
+
+        R_p, wK_ip, wr_i, sum_sq_err = \
+            self.best_l2_norm_approximation_using_poles(f_tau, poles, full_return=True)
+
+        N = np.sqrt(self.beta * np.sum(sum_sq_err))
+
+        K_0mp = kernel(np.zeros(1), -poles * self.beta)
+        dwK_dpoles_ip = -wK_ip * (self.tau_i[:, None] + self.beta * K_0mp)
+
+        wr_iX = wr_i.reshape(wr_i.shape[0], -1)
+        R_pX = R_p.reshape(R_p.shape[0], -1)
+
+        jac = (self.beta / N) * np.sum((dwK_dpoles_ip.T @ wr_iX.conj()) * R_pX, axis=1).real
+
+        return N, jac

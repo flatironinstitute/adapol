@@ -10,8 +10,11 @@ from scipy.optimize import minimize as scipy_minimize
 from triqs.gf import MeshDLR, MeshDLRImFreq
 from triqs.gf import make_gf_dlr, make_gf_dlr_imfreq
 
-from adapol.fit_utils_dlr import erroreval_dlr, get_weight_dlr, exp_quadrature
-from adapol.aaa_bra import aaa_bra
+from .fit_utils_dlr import erroreval_dlr, get_weight_dlr, exp_quadrature
+
+from .aaa_bra import aaa_bra
+from .sop import SumOfSimplePoles
+
 
 class TriqsDLRCompression:
 
@@ -28,6 +31,9 @@ class TriqsDLRCompression:
         self.G_dlr = G if type(G.mesh) == MeshDLR else make_gf_dlr(G)
         self.dlr_freq = np.array([float(w) for w in self.G_dlr.mesh])
         self.G_dlr_coeff = self.G_dlr.data.copy()
+        self.beta = self.G_dlr.mesh.beta
+
+        self.sop = SumOfSimplePoles(poles=self.dlr_freq/self.beta, residues=self.G_dlr_coeff)
 
         if self.G_dlr_coeff.ndim == 1:
             self.G_dlr_coeff = self.G_dlr_coeff.reshape(-1, 1, 1)
@@ -35,6 +41,10 @@ class TriqsDLRCompression:
         self.G_w = G if type(G.mesh) == MeshDLRImFreq else make_gf_dlr_imfreq(G)
         self.Z = np.array([complex(w) for w in self.G_w.mesh])
         self.F = self.G_w.data.copy()
+
+        # DEBUG
+        F_ref = self.sop(self.Z)
+        np.testing.assert_array_almost_equal(F_ref, self.F, decimal=12)
 
         aaa_tol = tol
         aaa_max_steps = None
@@ -137,40 +147,60 @@ class TriqsDLRCompression:
         return poles, residues, bra.aaa_steps, bra.residual
 
 
-    def imtime_l2_error(self, poles, residues):
-        err, _ =  erroreval_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta, weights=-residues)
-        return err
+    #def imtime_l2_error(self, poles, residues):
+    #    err, _ =  erroreval_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta, weights=-residues)
+    #    return err
 
 
     def lstsq_weight_optimization(self, poles):
-        residues, _ = get_weight_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta)
-        residues *= -1.
-        err, _ =  erroreval_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta, weights=-residues)
+        #residues, _ = get_weight_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta)
+        #residues *= -1.
+        #err, _ =  erroreval_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta, weights=-residues)
+        #return err, residues
+
+        sop_opt = self.sop.best_imtime_lstsq_l2_norm_approximation_using_poles(poles, self.beta)
+        residues = sop_opt.R
+        err = (sop_opt - self.sop).imtime_l2_norm(self.beta)
         return err, residues
     
 
     def nonlinear_optimization_of_poles_and_weights(self, poles, residues):
 
-        tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(np.concatenate(
-            [poles * self.G.mesh.beta, self.dlr_freq]))), 1.0))
-        
-        def func(poles):
-            err, jac = erroreval_dlr(
-                poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta,
-                tau_nodes=tau_nodes, tau_weights=tau_weights) 
-            return err, jac
+        if False:
+            tau_nodes, tau_weights = exp_quadrature(max(2 * np.max(np.abs(np.concatenate(
+                [poles * self.G.mesh.beta, self.dlr_freq]))), 1.0))
+            
+            #timer = Timer()
+            timer = None
 
-        res = scipy_minimize(
-            func, poles, 
-            method='L-BFGS-B', 
-            jac=True,
-            tol=1e-14,
-            )
-        
-        poles = res.x
-        err = res.fun
+            def func(poles):
+                err, jac = erroreval_dlr(
+                    poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta,
+                    tau_nodes=tau_nodes, tau_weights=tau_weights, timer=timer) 
+                return err, jac
 
-        residues, _ = get_weight_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta)
-        residues *= -1.
+            res = scipy_minimize(
+                func, poles, 
+                method='L-BFGS-B', 
+                jac=True,
+                tol=1e-14,
+                )
+            
+            poles = res.x
+            err = res.fun
+
+            residues, _ = get_weight_dlr(poles, self.dlr_freq, self.G_dlr_coeff, self.G.mesh.beta)
+            residues *= -1.
+
+            timer.write()
+
+        else:
+            sop_opt = self.sop.best_imtime_non_linear_lstsq_l2_norm_approximation_using_pole_guess(
+                    poles=poles, beta=self.beta, verbose=False)
+            
+            err = sop_opt.err
+            poles = sop_opt.p
+            residues = sop_opt.R
+
 
         return err, poles, residues
