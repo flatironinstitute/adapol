@@ -14,6 +14,9 @@ import numpy as np
 from scipy.linalg import eigvals as scipy_eigvals
 
 
+from .adapol.sop import SumOfSimplePoles
+
+
 class BarycentricRationalApproximation:
 
     """ Barycentric rational approximation with AAA algorithm.
@@ -232,6 +235,14 @@ class BarycentricRationalApproximation:
             print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
+    
+
+    def get_sop(self):
+        """ Return the rational approximation as a sum of simple poles. """
+
+        poles, residues = self.poles_and_residues()
+        sop = SumOfSimplePoles(poles=poles, residues=residues)
+        return sop
 
 
 class ConjugatedBarycentricRationalApproximation:
@@ -666,6 +677,14 @@ class ConjugatedBarycentricRationalApproximation:
 
         return BarycentricRationalApproximation(zzbar, ffbar, wwbar)
         
+
+    def get_sop(self):
+        """ Return the rational approximation as a sum of simple poles. """
+
+        poles, residues = self.poles_and_residues()
+        sop = SumOfSimplePoles(poles=poles, residues=residues)
+        return sop
+
 
 def aaa_bra(Z, F, tol=None, max_steps=None, constrained=False, 
             cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,

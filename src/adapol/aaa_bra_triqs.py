@@ -7,10 +7,10 @@ import numpy as np
 
 from scipy.optimize import minimize as scipy_minimize
 
+
 from triqs.gf import MeshDLR, MeshDLRImFreq
 from triqs.gf import make_gf_dlr, make_gf_dlr_imfreq
 
-from .fit_utils_dlr import erroreval_dlr, get_weight_dlr, exp_quadrature
 
 from .aaa_bra import aaa_bra
 from .sop import SumOfSimplePoles

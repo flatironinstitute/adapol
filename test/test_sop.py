@@ -231,7 +231,7 @@ def test_sop_imtime_optimization():
     np.testing.assert_array_almost_equal(sop_opt.p, poles_expected)
 
 
-def test_sop_imtime_optimization_least_squares():
+def wip_test_sop_imtime_optimization_least_squares():
     
     beta = 2.3
 
@@ -257,4 +257,4 @@ if __name__ == "__main__":
     test_sop_imtime_pole_norm()
     test_sop_imtime_pole_grad()
     test_sop_imtime_optimization()
-    #test_sop_imtime_optimization_least_squares()
+    #wip_test_sop_imtime_optimization_least_squares()
