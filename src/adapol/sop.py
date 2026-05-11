@@ -64,6 +64,13 @@ class SumOfSimplePoles:
         return sop_opt
 
 
+    def best_imtime_non_linear_lstsq_l2_norm_approximation_using_pole_guess_and_least_squares(
+            self, poles, beta, verbose=False):
+        itq = self.get_imtime_quadrature(beta)
+        sop_opt = itq.best_l2_norm_approximation_non_linear_least_squares(self, poles, verbose=verbose)
+        return sop_opt
+
+
     def get_imtime_quadrature(self, beta):
         w_max = 2 * np.max(np.abs(self.p))
         itq = ImTimeQuadrature(lamb=w_max*beta, beta=beta)

@@ -231,9 +231,30 @@ def test_sop_imtime_optimization():
     np.testing.assert_array_almost_equal(sop_opt.p, poles_expected)
 
 
+def test_sop_imtime_optimization_least_squares():
+    
+    beta = 2.3
+
+    # -- Try reformulated optimization problem using least squares solver
+
+    poles = np.array([-1.])
+    residues = np.array([[0.5]])
+
+    poles_guess = np.array([-0.9])
+
+    sop = SumOfSimplePoles(poles=poles, residues=residues)
+
+    sop_opt = sop.best_imtime_non_linear_lstsq_l2_norm_approximation_using_pole_guess_and_least_squares(
+        poles=poles_guess, beta=beta, verbose=True)
+
+    print(f'sop_opt.p = {sop_opt.p}, poles_expected = {poles}')
+    print(f'sop_opt.R = {sop_opt.R.flatten()}, res_expected = {residues.flatten()}')
+
+
 if __name__ == "__main__":
     test_sop()
     test_sop_imtime()
     test_sop_imtime_pole_norm()
     test_sop_imtime_pole_grad()
     test_sop_imtime_optimization()
+    #test_sop_imtime_optimization_least_squares()

@@ -179,15 +179,29 @@ class ImTimeQuadrature:
         """Compute the kernel matrix K(tau_i, poles_j) for the quadrature nodes and given poles, where
         
         .. math::
-            K(\\tau, \\z) = -\\frac{e^{-\\tau \\z}}{1 + e^{-\\z}}
+            K(\\tau / \\beta, z \\beta) = -\\frac{e^{-\\tau \\z}}{1 + e^{-\\beta z}}
 
         Note
         ----
         The range of :math:`\\tau` is :math:`\\tau \\in [0, \\beta]` and :math:`\\z` is in units of energy. 
         (While the primitive kernel `imtime.kernel` is defined for :math:`t = \\tau / \\beta` and :math:`w = z \\beta`.)
         """
-        K_ip = kernel(self.t_i, poles * self.beta)
+        K_ip = kernel(self.tau_i / self.beta, poles * self.beta)
         return K_ip
+    
+
+    def dkernel_matrix_dpoles(self, poles):
+        """Compute the derivative of the kernel matrix with respect to the poles, i.e. 
+        
+        .. math::
+            \frac{\\partial K(\\tau_i / \\beta, z_p \\beta)}{\\partial z_p} =
+            -K(\\tau_i / \\beta, z_p \\beta) \\left( \\tau_i + \\beta K(0, -z_p \\beta) \\right)
+
+        """
+        K_ip = self.kernel_matrix(poles)
+        K_0mp = kernel(np.zeros(1), -poles * self.beta)
+        dK_dpoles_ip = -K_ip * (self.tau_i[:, None] + self.beta * K_0mp)
+        return dK_dpoles_ip
     
 
     def integrate(self, f_i):
@@ -221,7 +235,6 @@ class ImTimeQuadrature:
 
         
         """
-        #return np.sqrt(self.integrate(np.abs(f(self.tau_i))**2))
         return np.sqrt(np.sum(self.integrate(np.abs(f(self.tau_i))**2)))
 
 
@@ -313,6 +326,71 @@ class ImTimeQuadrature:
         return sop_opt
 
 
+    def best_l2_norm_approximation_non_linear_least_squares(self, sop, poles, verbose=False):
+
+        print(f'--> best_l2_norm_approximation_non_linear_least_squares')
+        print(f'type(sop) = {type(sop)}, type(poles) = {type(poles)}')
+
+        
+        def get_sop_opt(poles, sop):
+            f_tau = sop.imtime_function(self.beta)
+            weights = self.best_l2_norm_approximation_using_poles(f_tau, poles)
+            from .sop import SumOfSimplePoles
+            sop_approx = SumOfSimplePoles(poles=poles, residues=weights)
+            return sop_approx
+        
+
+        def func(poles, sop):
+            sop_opt = get_sop_opt(poles, sop)
+            sop_diff = sop_opt - sop
+            r_iX = sop_diff.eval_imtime(self.tau_i, self.beta)
+            wr_iX = np.sqrt(self.beta) * np.einsum('i,i...->i...', self.sqrt_w_i, r_iX)
+            wr_A = wr_iX.flatten()
+            return wr_A
+        
+
+        def jac(poles, sop):
+            sop_opt = get_sop_opt(poles, sop)
+            sop_diff = sop_opt - sop
+            dKdz_ip = self.dkernel_matrix_dpoles(sop_opt.p)
+            J_iXp = np.einsum('i,p...,ip->i...p', 
+                np.sqrt(self.beta) * self.sqrt_w_i, sop_opt.R, dKdz_ip).real 
+            J_Ap = J_iXp.reshape(-1, len(poles))
+            return J_Ap
+        
+
+        # Test func using norm
+
+        f = func(poles, sop)
+        norm = np.linalg.norm(f)
+
+        sop_opt = get_sop_opt(poles, sop)
+        sop_diff = sop_opt - sop
+        norm_ref = self.l2_norm(sop_diff.imtime_function(self.beta))
+        print(f'norm = {norm}, norm_ref = {norm_ref}')
+        assert( np.isclose(norm, norm_ref) )
+
+        # Test jac
+
+        j = jac(poles, sop)
+        print(f'j = {j}')
+
+        from scipy.optimize import check_grad
+
+        grad_err = check_grad(func, jac, poles, sop)
+        print(f'grad_err = {grad_err}')
+
+        assert( grad_err < 1e-6 )
+
+
+        from scipy.optimize import least_squares
+
+        res = least_squares(func, poles, jac=jac, method='lm', xtol=1e-14, ftol=1e-14, args=(sop,))
+
+        print('--> least squares')
+        print(res)
+
+
     def l2_norm_gradient_with_respect_to_poles(self, sop, poles):
         """Compute the gradient of the imaginary time L2 norm error with respect to the poles, 
         for a given sum-of-simple-poles representation `sop` and a set of poles `poles` to optimize.
@@ -366,23 +444,13 @@ class ImTimeQuadrature:
 
         else:
             sop_diff = sop_approx - sop
-            
             r_i = sop_diff.eval_imtime(self.tau_i, self.beta)
             N = self.l2_norm(sop_diff.imtime_function(self.beta))
-            #N = sop_diff.imtime_l2_norm(self.beta)
-
-            z_p = sop_approx.p
-
-            M_ip = self.kernel_matrix(z_p)
-            K_0mp = kernel(np.zeros(1), -z_p * self.beta)
-
-            M2_ip = -M_ip * (self.tau_i[:, None] + K_0mp)
-
+            dKdz_ip = self.dkernel_matrix_dpoles(sop_approx.p)
             jac = self.beta / N * np.einsum(
-                'i,i...,ip,p...->p...', self.w_i, r_i.conj(), M2_ip, sop_approx.R).real 
+                'i,i...,ip,p...->p...', self.w_i, r_i.conj(), dKdz_ip, sop_approx.R).real 
             
             # If f is tensor valued, sum all tensor indices
-            if jac.ndim > 1:
-                jac = np.sum(jac, axis=tuple(range(1, jac.ndim)))
+            if jac.ndim > 1: jac = np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
             return N, jac
