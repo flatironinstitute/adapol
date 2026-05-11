@@ -138,11 +138,11 @@ def test_sop_imtime_pole_grad():
     # -- Norm and gradient calc
 
     def grad_func(poles):
-        _, grad = itq.l2_norm_gradient_with_respect_to_poles(sop, poles)
+        _, grad = itq.l2_norm_gradient_with_respect_to_poles_opt(sop, poles)
         return grad
 
     def func(poles):
-        norm, _ = itq.l2_norm_gradient_with_respect_to_poles(sop, poles)
+        norm, _ = itq.l2_norm_gradient_with_respect_to_poles_opt(sop, poles)
         return norm
 
     sop_diff = sop - sop_approx
