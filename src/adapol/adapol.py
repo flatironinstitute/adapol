@@ -7,6 +7,9 @@ Author: Hugo U. R. Strand (2026)
 """
 
 
+import numpy as np
+
+
 from .aaa_bra import aaa_bra
 from .sop import SumOfSimplePoles
 
@@ -42,7 +45,7 @@ def _frequency_data_driver(F, Z, n_poles, tol, verbose=False,
     # Fixme: tol is only controlling AAA
 
     bra = aaa_bra(
-        Z, F, tol=None, max_steps=n_poles, constrained=True,
+        Z, F, tol=tol, max_steps=n_poles, constrained=True,
         cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
         verbose=verbose)
 
@@ -58,7 +61,7 @@ def _sum_of_simple_poles_driver(poles, residues, n_poles, tol, beta, verbose=Fal
     # Frequency grid
     w_max = np.abs(poles).max() * 2
     n_max = int(2 * beta * w_max / np.pi) + 1
-    Z = np.pi / beta * np.arange(-n_max, n_max + 1)
+    Z = 1.j * np.pi / beta * np.arange(-n_max, n_max + 1)
 
     # Eval sop
     sop = SumOfSimplePoles(poles=poles, residues=residues)

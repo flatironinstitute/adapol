@@ -14,7 +14,7 @@ import numpy as np
 from scipy.linalg import eigvals as scipy_eigvals
 
 
-from .adapol.sop import SumOfSimplePoles
+from .sop import SumOfSimplePoles
 
 
 class BarycentricRationalApproximation:
@@ -678,10 +678,14 @@ class ConjugatedBarycentricRationalApproximation:
         return BarycentricRationalApproximation(zzbar, ffbar, wwbar)
         
 
-    def get_sop(self):
+    def get_sop(self, real_poles=True):
         """ Return the rational approximation as a sum of simple poles. """
 
         poles, residues = self.poles_and_residues()
+
+        if real_poles:
+            poles = poles.real
+
         sop = SumOfSimplePoles(poles=poles, residues=residues)
         return sop
 
