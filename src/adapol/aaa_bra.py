@@ -186,7 +186,7 @@ class BarycentricRationalApproximation:
         return poles, residues
         
 
-    def remove_froissart_doublets(self, Z, F, tol=None):
+    def remove_froissart_doublets(self, Z, F, tol=None, verbose=False):
         """ Remove Froissart doublets, i.e. poles with small residues, 
         by putting the closest support point of each pole back to the fitting set. """
 
@@ -206,13 +206,15 @@ class BarycentricRationalApproximation:
             #print(f'AAA: No Froissart doublets found with residues smaller than {tol:2.2E}')
             return 0, Z, F
 
-        print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
+        if verbose:
+            print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
 
         # Locate the closest support point to each pole with small residue
         dists = np.abs(self.z[:, None] - poles[None, ridxs])
         pidxs = np.unique(np.argmin(dists, axis=0))
 
-        print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
+        if verbose:
+            print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         # Put points back to the fitting set
         Z = np.concatenate((Z, self.z[pidxs]))
@@ -226,7 +228,8 @@ class BarycentricRationalApproximation:
         R = F - self.fast_eval(Z) # Recompute residual
         self.residual = np.max(np.abs(R))
 
-        print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
+        if verbose:
+            print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
 
