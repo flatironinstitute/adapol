@@ -91,7 +91,7 @@ class SumOfSimplePoles:
 
     def __mul__(self, other):
         if isinstance(other, (int, float, complex)):
-            return SumOfSimplePoles(poles=self.p, residues=other * self.R)
+            return SumOfSimplePoles(poles=self.p.copy(), residues=other * self.R.copy())
         else:
             raise NotImplementedError("Multiplication only implemented for scalars.")
 
