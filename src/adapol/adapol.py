@@ -136,7 +136,7 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
 
 
 def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
-    cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-8):
+    cleanup=True, cleanup_residue_tol=1e-12, cleanup_imag_tol=1e-8):
 
     # Fixme: max_steps != n_poles 
     # Fixme: tol is only controlling AAA
@@ -155,7 +155,7 @@ def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
 
 
 def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose=False,
-    cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-8, 
+    cleanup=True, cleanup_residue_tol=1e-12, cleanup_imag_tol=1e-8, 
     nonlinear_optimization=False, Z=None):
 
     if Z is None:
