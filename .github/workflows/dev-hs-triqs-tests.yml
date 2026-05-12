@@ -59,6 +59,14 @@ jobs:
         python3 -m venv --system-site-packages $HOME/.venv/triqs
         echo "$HOME/.venv/triqs/bin" >> $GITHUB_PATH
 
+    - name: Set CXX variable
+      run: |
+        echo "CXX=clang++-19" >> $GITHUB_ENV
+
+    - name: Add clang CXXFLAGS
+      run: |
+        echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
+
     - name: Build and install clair
       run: |
         git clone https://github.com/flatironinstitute/clair.git --branch unstable
