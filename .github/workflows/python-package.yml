@@ -24,8 +24,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-     - name: Install dependencies
-       run: |
+    - name: Install dependencies
+      run: |
         pip3 install pytest numpy scipy sphinx sphinx-rtd-theme nbsphinx ipython
     - name: Lint with Ruff
       run: |

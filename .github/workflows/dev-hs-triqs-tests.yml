@@ -18,22 +18,36 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          lsb-release \
+          wget \
+          software-properties-common \
           cmake \
           ninja-build \
+          clang-19 \
+          clang-tools-19 \
           g++ \
           gfortran \
           hdf5-tools \
           libboost-dev \
+          llvm-19-dev \
+          libclang-19-dev \
+          libomp-19-dev \
+          libc++-19-dev \
+          libc++abi-19-dev \
           libfftw3-dev \
           libgmp-dev \
           libhdf5-dev \
           libopenblas-dev \
           libopenmpi-dev \
           openmpi-bin \
+          openmpi-common \
+          openmpi-doc \
+          python3-clang-19 \
           python3-dev \
           python3-h5py \
           python3-ipython \
           python3-mako \
+          python3-matplotlib \
           python3-mpi4py \
           python3-numpy \
           python3-pip \
@@ -55,14 +69,16 @@ jobs:
         cmake -S triqs -B triqs/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
         cmake --build triqs/build --target install --verbose
 
-    - name: Install adapol
-      shell: bash
+    - name: Build and install clair
       run: |
-        source $HOME/install/share/triqs/triqsvars.sh
-        python3 -m pip install -e . --no-deps
+        git clone https://github.com/flatironinstitute/clair.git --branch unstable
+        cmake -S clair -B clair/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
+        cmake --build clair/build --target install --verbose
 
     - name: Run TRIQS-enabled test suite
       shell: bash
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         source $HOME/install/share/triqs/triqsvars.sh
         python3 -m pytest \

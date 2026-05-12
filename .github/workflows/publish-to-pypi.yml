@@ -16,8 +16,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.x"
-     - name: Install dependencies
-       run: |
+    - name: Install dependencies
+      run: |
         pip3 install build pytest numpy scipy
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
