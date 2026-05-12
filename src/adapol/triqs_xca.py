@@ -8,8 +8,8 @@ import numpy as np
 from scipy.optimize import minimize as scipy_minimize
 
 
-from triqs.gf import MeshDLR, MeshDLRImFreq
-from triqs.gf import make_gf_dlr, make_gf_dlr_imfreq
+from triqs.gfs import MeshDLR, MeshDLRImFreq
+from triqs.gfs import make_gf_dlr, make_gf_dlr_imfreq
 
 
 from .aaa import aaa

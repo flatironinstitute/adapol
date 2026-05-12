@@ -7,7 +7,7 @@ Author: Hugo U. R. Strand (2026)"""
 import numpy as np
 
 
-from triqs.gf import Gf, MeshImFreq, MeshDLRImFreq, inverse, iOmega_n, SemiCircular, make_gf_dlr
+from triqs.gfs import Gf, MeshImFreq, MeshDLRImFreq, inverse, iOmega_n, SemiCircular, make_gf_dlr
 
 
 from adapol.aaa import aaa

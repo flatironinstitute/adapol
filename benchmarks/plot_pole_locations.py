@@ -6,7 +6,7 @@ Author: Hugo U. R. Strand (2026)"""
 
 import numpy as np
 
-from triqs.gf import Gf, MeshImFreq, inverse, iOmega_n, SemiCircular
+from triqs.gfs import Gf, MeshImFreq, inverse, iOmega_n, SemiCircular
 
 from adapol.aaa import aaa
 

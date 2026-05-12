@@ -14,7 +14,7 @@ pytest.importorskip(
 import numpy as np
 
 
-from triqs.gf import Gf, MeshDLRImFreq, inverse, iOmega_n, SemiCircular
+from triqs.gfs import Gf, MeshDLRImFreq, inverse, iOmega_n, SemiCircular
 
 
 from adapol.triqs_xca import TriqsDLRCompression

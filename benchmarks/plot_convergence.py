@@ -6,7 +6,7 @@ Author: Hugo U. R. Strand (2026)"""
 import time
 import numpy as np
 
-from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
+from triqs.gfs import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
 
 from adapol.triqs_xca import TriqsDLRCompression
 

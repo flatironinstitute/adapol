@@ -32,10 +32,10 @@ Author: Hugo U. R. Strand, 2026
 import numpy as np
 
 import pydlr
-from triqs.gf import MeshReFreq
-from triqs.gf import make_gf_imfreq, make_gf_imtime
-from triqs.gf import make_gf_dlr_imtime, make_gf_dlr, make_gf_dlr_imfreq
-from triqs.gf import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
+from triqs.gfs import MeshReFreq
+from triqs.gfs import make_gf_imfreq, make_gf_imtime
+from triqs.gfs import make_gf_dlr_imtime, make_gf_dlr, make_gf_dlr_imfreq
+from triqs.gfs import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
 
 from adapol.triqs_xca import TriqsDLRCompression
 
