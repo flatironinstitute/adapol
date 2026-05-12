@@ -25,14 +25,14 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install numpy scipy pytest
+        python -m pip install --upgrade pip
+        python -m pip install numpy scipy pytest
 
     - name: Run core test suite
       env:
         PYTHONPATH: ${{ github.workspace }}/src
       run: |
-        python3 -m pytest \
+        python -m pytest \
           test/test_adapol.py \
           test/test_imtime.py \
           test/test_sop.py \

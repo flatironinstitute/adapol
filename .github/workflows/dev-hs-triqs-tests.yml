@@ -51,6 +51,7 @@ jobs:
           python3-mpi4py \
           python3-numpy \
           python3-pip \
+          python3-pytest \
           python3-scipy
 
     - name: Set up virtual environment
@@ -58,22 +59,17 @@ jobs:
         python3 -m venv --system-site-packages $HOME/.venv/triqs
         echo "$HOME/.venv/triqs/bin" >> $GITHUB_PATH
 
-    - name: Install Python dependencies
+    - name: Build and install clair
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install numpy scipy pytest
+        git clone https://github.com/flatironinstitute/clair.git --branch unstable
+        cmake -S clair -B clair/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
+        cmake --build clair/build --target install --verbose
 
     - name: Build and install TRIQS
       run: |
         git clone https://github.com/TRIQS/triqs.git --branch unstable
         cmake -S triqs -B triqs/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
         cmake --build triqs/build --target install --verbose
-
-    - name: Build and install clair
-      run: |
-        git clone https://github.com/flatironinstitute/clair.git --branch unstable
-        cmake -S clair -B clair/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
-        cmake --build clair/build --target install --verbose
 
     - name: Run TRIQS-enabled test suite
       shell: bash
