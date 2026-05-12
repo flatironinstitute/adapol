@@ -7,13 +7,14 @@ where = ["src"]
 
 [project]
 name = "adapol"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="Zhen Huang", email="hertz@berkeley.edu" },
   { name="Chia-Nan Yeh", email="cyeh@flatironinstitute.org"},
   { name="Nils Wentzell", email="nwentzell@flatironinstitute.org"},
   { name="Jason Kaye", email="jkaye@flatironinstitute.org"},
-  { name="Lin Lin", email="linlin@berkeley.edu"}
+  { name="Lin Lin", email="linlin@berkeley.edu"},
+  { name="Hugo U. R. Strand", email="hugo.strand@oru.se"}
 ]
 description = "Adaptive Pole Fitting for Quantum Many-Body Physics "
 readme = "README.md"
@@ -27,7 +28,6 @@ classifiers = [
 dependencies = [
     "numpy",
     "scipy",
-    "cvxpy"
 ]
 
 [project.urls]

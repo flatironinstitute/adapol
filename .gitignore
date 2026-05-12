@@ -1,5 +1,6 @@
 src/adapol.egg-info
 .DS_Store
-__pycache__/aaa.cpython-310.pyc
+__pycache__/*
 *.pyc
 doc/_build/
+*.pdf

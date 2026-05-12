@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('./src/adapol'))
 # -- Project information -----------------------------------------------------
 
 project = 'Adapol'
-copyright = '2024, Zhen Huang'
-author = 'Zhen Huang, Chia-nan Yeh, Jason Kaye, Nils Wentzell, Lin Lin'
+copyright = '2026, Zhen Huang & Hugo U. R. Strand'
+author = 'Zhen Huang, Chia-nan Yeh, Jason Kaye, Nils Wentzell, Lin Lin, Hugo U. R. Strand'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.2'
 
 
 # -- General configuration ---------------------------------------------------

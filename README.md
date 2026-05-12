@@ -1,5 +1,5 @@
 # adapol: Adaptive Pole Fitting for Quantum Many-Body Physics
-[`adapol`](https://github.com/Hertz4/Adapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form (in the fermionic case):
+[`adapol`](https://github.com/flatironinstitute/adapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form (in the fermionic case):
 ```math
 G(\mathrm i \omega_k) = \sum_l \frac{V_lV_l^{\dagger}}{\mathrm i\omega_k - E_l}.
 ```
