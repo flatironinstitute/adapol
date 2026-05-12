@@ -23,17 +23,17 @@ jobs:
           software-properties-common \
           cmake \
           ninja-build \
-          clang-19 \
-          clang-tools-19 \
+          clang-20 \
+          clang-tools-20 \
           g++ \
           gfortran \
           hdf5-tools \
           libboost-dev \
-          llvm-19-dev \
-          libclang-19-dev \
-          libomp-19-dev \
-          libc++-19-dev \
-          libc++abi-19-dev \
+          llvm-20-dev \
+          libclang-20-dev \
+          libomp-20-dev \
+          libc++-20-dev \
+          libc++abi-20-dev \
           libfftw3-dev \
           libgmp-dev \
           libhdf5-dev \
@@ -42,7 +42,7 @@ jobs:
           openmpi-bin \
           openmpi-common \
           openmpi-doc \
-          python3-clang-19 \
+          python3-clang-20 \
           python3-dev \
           python3-h5py \
           python3-ipython \
@@ -61,7 +61,7 @@ jobs:
 
     - name: Set CXX variable
       run: |
-        echo "CXX=clang++-19" >> $GITHUB_ENV
+        echo "CXX=clang++-20" >> $GITHUB_ENV
 
     - name: Add clang CXXFLAGS
       run: |
