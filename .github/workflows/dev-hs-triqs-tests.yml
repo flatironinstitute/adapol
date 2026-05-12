@@ -87,11 +87,4 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}/src
       run: |
         source $HOME/install/share/triqs/triqsvars.sh
-        python3 -m pytest \
-          test/test_adapol.py \
-          test/test_bra.py \
-          test/test_imtime.py \
-          test/test_sop.py \
-          test/test_triqs.py \
-          test/test_triqs_xca.py \
-          -q
+        python3 -m pytest -q

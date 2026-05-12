@@ -32,8 +32,4 @@ jobs:
       env:
         PYTHONPATH: ${{ github.workspace }}/src
       run: |
-        python -m pytest \
-          test/test_adapol.py \
-          test/test_imtime.py \
-          test/test_sop.py \
-          -q
+        python -m pytest -q

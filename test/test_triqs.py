@@ -4,6 +4,15 @@ Author: Hugo U. R. Strand (2026)"""
 
 import numpy as np
 
+try:
+    from triqs.gfs import Gf
+except ImportError:
+    print("Triqs is not installed. Skipping test_triqs.")
+    exit()
+
+from triqs.gfs import Gf, MeshImFreq, MeshDLRImFreq, inverse, \
+    iOmega_n, SemiCircular, make_gf_dlr
+
 
 from adapol.sop import SumOfSimplePoles
 
@@ -13,17 +22,6 @@ from adapol.triqs import approximate_gf_imfreq_with_fixed_error_tolerance
 
 from adapol.triqs import approximate_gf_dlr_with_max_n_poles
 from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance
-
-
-try:
-    from triqs.gfs import Gf, MeshImFreq, MeshDLRImFreq, inverse, iOmega_n, SemiCircular, \
-        make_gf_dlr
-except ImportError:
-    raise ImportError(
-        "It seems like you are running tests with the triqs interface "
-        "but failed to import the triqs package (https://triqs.github.io/triqs/latest/). "
-        "Please ensure that it is installed to run the entire test suite."
-    )
 
 
 def test_gf_imfreq_n_poles(max_n_poles=5):

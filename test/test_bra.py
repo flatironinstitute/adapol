@@ -5,12 +5,10 @@ Author: Hugo U. R. Strand (2026)"""
 
 import itertools
 import numpy as np
-from triqs.gf import Gf, MeshDLRImFreq, inverse, iOmega_n, SemiCircular
 
 
 from adapol.aaa import aaa
 from adapol.bra import BarycentricRationalApproximation
-
 
 
 def test_aaa_bra():
@@ -31,12 +29,16 @@ def aaa_bra_runner(target_shape):
     poles = np.array([-2.0 + 0.5j, 1.0 + 1.j])
     residues = np.array([1.0, 0.5])
 
-    m = MeshDLRImFreq(beta=beta, statistic='Fermion', eps=1e-14, w_max=10.0)
-    G_w = Gf(mesh=m, target_shape=target_shape)
-    G_w << sum([inverse(iOmega_n - pole) * residue for pole, residue in zip(poles, residues)])
+    N = 1000
+    Z = 1.j * np.pi / beta * (2 * np.arange(-N, N) + 1)
+    C_Zp = 1./(Z[:, None] - poles[None, :])
 
-    Z = np.array([complex(w) for w in m])
-    F = G_w.data.copy()
+    F = np.einsum('Zp,p->Z', C_Zp, residues)
+
+    if len(target_shape) == 2:
+        F = np.einsum('Z,...->Z...', F, np.eye(target_shape[0]))
+    else:
+        assert(target_shape == [])
 
     tol = 1e-12
     bra = aaa(Z, F, tol=tol)
@@ -88,12 +90,16 @@ def aaa_bra_constrained_runner(target_shape, npoles):
     else:
         raise NotImplementedError(f"test_aaa_bra_constrained is only implemented for npoles = 2 or 3, but got npoles = {npoles}.")
 
-    m = MeshDLRImFreq(beta=beta, statistic='Fermion', eps=1e-14, w_max=10.0)
-    G_w = Gf(mesh=m, target_shape=target_shape)
-    G_w << sum([inverse(iOmega_n - pole) * residue for pole, residue in zip(poles, residues)])
+    N = 1000
+    Z = 1.j * np.pi / beta * (2 * np.arange(-N, N) + 1)
+    C_Zp = 1./(Z[:, None] - poles[None, :])
 
-    Z = np.array([complex(w) for w in m])
-    F = G_w.data.copy()
+    F = np.einsum('Zp,p->Z', C_Zp, residues)
+
+    if len(target_shape) == 2:
+        F = np.einsum('Z,...->Z...', F, np.eye(target_shape[0]))
+    else:
+        assert(target_shape == [])
 
     tol = 1e-12
     bra = aaa(Z, F, tol=tol, constrained=True)

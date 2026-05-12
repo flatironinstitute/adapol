@@ -5,6 +5,11 @@ Author: Hugo U. R. Strand (2026)"""
 
 import numpy as np
 
+try:
+    from triqs.gfs import Gf
+except ImportError:
+    print("Triqs is not installed. Skipping test_triqs.")
+    exit()
 
 from triqs.gf import Gf, MeshDLRImFreq, inverse, iOmega_n, SemiCircular
 
