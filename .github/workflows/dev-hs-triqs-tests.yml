@@ -1,0 +1,75 @@
+name: dev_hs TRIQS tests
+
+on:
+  push:
+    branches: [ "dev_hs" ]
+  pull_request:
+    branches: [ "dev_hs" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Ubuntu dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          ninja-build \
+          g++ \
+          gfortran \
+          hdf5-tools \
+          libboost-dev \
+          libfftw3-dev \
+          libgmp-dev \
+          libhdf5-dev \
+          libopenblas-dev \
+          libopenmpi-dev \
+          openmpi-bin \
+          python3-dev \
+          python3-h5py \
+          python3-ipython \
+          python3-mako \
+          python3-mpi4py \
+          python3-numpy \
+          python3-pip \
+          python3-scipy
+
+    - name: Set up virtual environment
+      run: |
+        python3 -m venv --system-site-packages $HOME/.venv/triqs
+        echo "$HOME/.venv/triqs/bin" >> $GITHUB_PATH
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install numpy scipy pytest
+
+    - name: Build and install TRIQS
+      run: |
+        git clone https://github.com/TRIQS/triqs.git --branch unstable
+        cmake -S triqs -B triqs/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
+        cmake --build triqs/build --target install --verbose
+
+    - name: Install adapol
+      shell: bash
+      run: |
+        source $HOME/install/share/triqs/triqsvars.sh
+        python3 -m pip install -e . --no-deps
+
+    - name: Run TRIQS-enabled test suite
+      shell: bash
+      run: |
+        source $HOME/install/share/triqs/triqsvars.sh
+        python3 -m pytest \
+          test/test_adapol.py \
+          test/test_bra.py \
+          test/test_imtime.py \
+          test/test_sop.py \
+          test/test_triqs.py \
+          test/test_triqs_xca.py \
+          -q
