@@ -2,13 +2,17 @@
 
 Author: Hugo U. R. Strand (2026)"""
 
+import pytest
+
+pytest.importorskip(
+    "triqs",
+    reason="Triqs is not installed. Skipping test_triqs_xca. "
+           "Please ensure that it is installed to run the entire test suite."
+)
+
+
 import numpy as np
 
-try:
-    from triqs.gfs import Gf
-except ImportError:
-    print("Triqs is not installed. Skipping test_triqs.")
-    exit()
 
 from triqs.gfs import Gf, MeshImFreq, MeshDLRImFreq, inverse, \
     iOmega_n, SemiCircular, make_gf_dlr
