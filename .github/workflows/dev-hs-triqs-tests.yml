@@ -68,6 +68,8 @@ jobs:
         echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
 
     - name: Build and install clair
+      env:
+        CXXFLAGS: ""
       run: |
         git clone https://github.com/flatironinstitute/clair.git --branch unstable
         cmake -S clair -B clair/build -G Ninja -DBuild_Tests=OFF -DCMAKE_INSTALL_PREFIX=$HOME/install
