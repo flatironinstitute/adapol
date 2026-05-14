@@ -13,7 +13,12 @@ from adapol.adapol import approximate_sum_of_simple_poles_with_fixed_error_toler
 
 
 def test_freq_n_poles():
-    
+    """Test ``approximate_frequency_data_with_max_n_poles``.
+
+    Fits Matsubara samples generated from a known sum-of-simple-poles under
+    a maximum-pole budget and checks the fit reproduces the samples.
+    """
+
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
 
@@ -39,7 +44,12 @@ def test_freq_n_poles():
 
 
 def test_freq_tol():
-    
+    """Test ``approximate_frequency_data_with_fixed_error_tolerance``.
+
+    Fits Matsubara samples generated from a known sum-of-simple-poles under
+    a fixed error tolerance and checks the max sample-wise error meets it.
+    """
+
     poles = np.array([0.5, -1.2, -0.3])
     residues = np.array([1., 2., 3.])
 
@@ -66,6 +76,11 @@ def test_freq_tol():
 
 
 def test_sop_n_poles():
+    """Test ``approximate_sum_of_simple_poles_with_max_n_poles``.
+
+    Compresses an existing ``SumOfSimplePoles`` under a maximum-pole budget
+    and checks the imaginary-time L2 norm of the difference is small.
+    """
 
     beta = 2.3
     poles = np.array([0.5, -1.2])
@@ -84,6 +99,11 @@ def test_sop_n_poles():
 
 
 def test_sop_tol():
+    """Test ``approximate_sum_of_simple_poles_with_fixed_error_tolerance``.
+
+    Compresses an existing ``SumOfSimplePoles`` under a fixed error tolerance
+    and checks the imaginary-time L2 norm of the difference meets it.
+    """
 
     tol = 1e-12
     beta = 2.3
