@@ -27,7 +27,11 @@ def approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=False
     Z : array_like
         Sample points in (complex) frequency space, at which :math:`F` is sampled.
     max_n_poles : int
-        Maximum number of poles to use in the approximation.
+        Maximum number of poles to use in the approximation. Note that the actual
+        number of poles produced might be smaller than this, for two reasons:
+        (1) an odd number of poles is always produced, from symmetry
+        considerations, and (2) the AAA cleanup step might remove poles with
+        small residues.
     verbose : bool, optional
         If True, print verbose output during the approximation process.
     
@@ -79,7 +83,11 @@ def approximate_sum_of_simple_poles_with_max_n_poles(
     residues : array_like
         Residues of the original sum of simple poles to approximate.
     max_n_poles : int
-        Maximum number of poles to use in the approximation.
+        Maximum number of poles to use in the approximation. Note that the actual
+        number of poles produced might be smaller than this, for two reasons:
+        (1) an odd number of poles is always produced, from symmetry
+        considerations, and (2) the AAA cleanup step might remove poles with
+        small residues.
     beta : float
         Inverse temperature, used to define the L2 norm in imaginary time.
     verbose : bool, optional
