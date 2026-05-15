@@ -19,6 +19,15 @@ def test_freq_n_poles():
     a maximum-pole budget and checks the fit reproduces the samples.
     """
 
+    print()
+    print('=' * 72)
+    print('test_freq_n_poles')
+    print('-' * 72)
+    print('Fitting Matsubara samples from a known sum-of-simple-poles using a')
+    print('maximum-pole budget, and checking the fit reproduces the samples.')
+    print('=' * 72)
+    print()
+
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
 
@@ -49,6 +58,15 @@ def test_freq_tol():
     Fits Matsubara samples generated from a known sum-of-simple-poles under
     a fixed error tolerance and checks the max sample-wise error meets it.
     """
+
+    print()
+    print('=' * 72)
+    print('test_freq_tol')
+    print('-' * 72)
+    print('Fitting Matsubara samples from a known sum-of-simple-poles using a')
+    print('fixed error tolerance, and checking the max sample-wise error meets it.')
+    print('=' * 72)
+    print()
 
     poles = np.array([0.5, -1.2, -0.3])
     residues = np.array([1., 2., 3.])
@@ -82,6 +100,15 @@ def test_sop_n_poles():
     and checks the imaginary-time L2 norm of the difference is small.
     """
 
+    print()
+    print('=' * 72)
+    print('test_sop_n_poles')
+    print('-' * 72)
+    print('Compressing an existing SumOfSimplePoles using a maximum-pole budget,')
+    print('and checking the imaginary-time L2 norm of the difference is small.')
+    print('=' * 72)
+    print()
+
     beta = 2.3
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
@@ -104,6 +131,15 @@ def test_sop_tol():
     Compresses an existing ``SumOfSimplePoles`` under a fixed error tolerance
     and checks the imaginary-time L2 norm of the difference meets it.
     """
+
+    print()
+    print('=' * 72)
+    print('test_sop_tol')
+    print('-' * 72)
+    print('Compressing an existing SumOfSimplePoles using a fixed error tolerance,')
+    print('and checking the imaginary-time L2 norm of the difference meets it.')
+    print('=' * 72)
+    print()
 
     tol = 1e-12
     beta = 2.3
