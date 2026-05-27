@@ -32,6 +32,8 @@ def approximate_gf_imfreq_with_max_n_poles(G_w, max_n_poles, verbose=False):
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        Maximum absolute error of the approximation at the sample points.
     """
     Z, F = _gf_imfreq_to_data(G_w)
     return _frequency_data_driver(F, Z, max_n_poles=max_n_poles, tol=None, verbose=verbose)
@@ -57,6 +59,8 @@ def approximate_gf_imfreq_with_fixed_error_tolerance(G_w, tol, verbose=False):
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        Maximum absolute error of the approximation at the sample points.
     """
     Z, F = _gf_imfreq_to_data(G_w)
     return _frequency_data_driver(F, Z, max_n_poles=None, tol=tol, verbose=verbose)
@@ -77,6 +81,16 @@ def approximate_gf_dlr_with_max_n_poles(
         If True, print verbose output during the approximation process.
     nonlinear_optimization : bool, optional
         If True, perform nonlinear optimization of poles and residues after AAA compression.
+
+    Returns
+    -------
+    poles : ndarray
+        Poles of the approximating sum of simple poles.
+    residues : ndarray
+        Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles.
     """
     poles, residues, beta, Z = _gf_dlr_to_data(G_dlr)
     return _sum_of_simple_poles_driver(
@@ -105,7 +119,11 @@ def approximate_gf_dlr_with_fixed_error_tolerance(
     poles : ndarray
         Poles of the approximating sum of simple poles.
     residues : ndarray
-        Residues of the approximating sum of simple poles."""
+        Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles."""
+    
     poles, residues, beta, Z = _gf_dlr_to_data(G_dlr)
     return _sum_of_simple_poles_driver(
         poles, residues, max_n_poles=None, tol=tol, beta=beta, 
@@ -133,12 +151,15 @@ def approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
     poles : ndarray
         Poles of the approximating sum of simple poles.
     residues : ndarray
-        Residues of the approximating sum of simple poles."""
+        Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles."""
 
     comp = TriqsDLRCompression(
         G_dlr, tol=tol, nonlinear_optimize=nonlinear_optimization, 
         nonlinear_post_optimize=nonlinear_optimization, verbose=verbose)
-    return comp.poles, comp.residues
+    return comp.poles, comp.residues, comp.error
 
 
 def _gf_imfreq_to_data(G_w):

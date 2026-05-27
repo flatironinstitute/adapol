@@ -67,6 +67,8 @@ def approximate_frequency_data_with_fixed_error_tolerance(F, Z, tol, verbose=Fal
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        Maximum absolute error of the approximation at the sample points.
     """
     return _frequency_data_driver(F, Z, max_n_poles=None, tol=tol, verbose=verbose)
 
@@ -102,6 +104,9 @@ def approximate_sum_of_simple_poles_with_max_n_poles(
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles.
     """
     return _sum_of_simple_poles_driver(
         poles, residues, max_n_poles=max_n_poles, tol=None, beta=beta, 
@@ -136,6 +141,9 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles.
     """
 
     return _sum_of_simple_poles_driver(
@@ -171,6 +179,9 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original 
+        and approximating sum of simple poles.
     """
 
     from .sop_compr import SumOfPolesCompression
@@ -178,7 +189,7 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
         poles, residues, beta, tol=tol, 
         nonlinear_optimize=nonlinear_optimization, 
         nonlinear_post_optimize=nonlinear_optimization, verbose=verbose)
-    return sc.poles, sc.residues    
+    return sc.poles, sc.residues, sc.error    
 
 
 def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
@@ -197,7 +208,9 @@ def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
     sop = bra.get_sop()
     sop.fit_residues_to_freq_samples(Z, F)
 
-    return sop.p, sop.R
+    error = np.max(np.abs(sop(Z) - F))
+
+    return sop.p, sop.R, error
 
 
 def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose=False,
@@ -228,7 +241,9 @@ def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose
     else:
         sop_opt = sop.best_imtime_lstsq_l2_norm_approximation_using_poles(sop_aaa.p, beta)
 
-    return sop_opt.p, sop_opt.R
+    error = (sop - sop_opt).imtime_l2_norm(beta=beta)
+
+    return sop_opt.p, sop_opt.R, error
 
 
 def _max_steps_from_max_n_poles(max_n_poles):

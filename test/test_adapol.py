@@ -38,19 +38,16 @@ def test_freq_n_poles():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     max_n_poles = 4
-    poles, residues = approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=True)
+    poles, residues, max_abs_diff = approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=True)
 
-    sop = SumOfSimplePoles(poles=poles, residues=residues)
-    F_approx = sop(Z)
-
-    diff = np.max(np.abs(F - F_approx))
-    print(f'Max abs diff = {diff:2.2E}')
+    print(f'Max abs diff = {max_abs_diff:2.2E}')
 
     print(f'Poles = {poles}')
     print(f'Residues = {residues}')
     print(f'max_n_poles = {max_n_poles}, len(poles) = {len(poles)}')
 
-    np.testing.assert_array_almost_equal(F_approx, F)
+    assert( max_abs_diff < 1e-12 )
+    assert( len(poles) <= max_n_poles )
 
 
 def test_freq_tol():
@@ -78,20 +75,14 @@ def test_freq_tol():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     tol = 1e-12
-    poles, residues = approximate_frequency_data_with_fixed_error_tolerance(
+    poles, residues, max_abs_diff = approximate_frequency_data_with_fixed_error_tolerance(
         F, Z, tol, verbose=True)
-
-    sop = SumOfSimplePoles(poles=poles, residues=residues)
     
     print(f'Poles = {poles}')
     print(f'Residues = {residues}')
+    print(f'Max abs diff = {max_abs_diff:2.2E}')
 
-    F_approx = sop(Z)
-
-    diff = np.max(np.abs(F - F_approx))
-    print(f'Max abs diff = {diff:2.2E}')
-
-    assert( diff < tol )
+    assert( max_abs_diff < tol )
 
 
 def test_sop_n_poles():
@@ -114,13 +105,10 @@ def test_sop_n_poles():
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
 
-    poles_fit, residues_fit = approximate_sum_of_simple_poles_with_max_n_poles(
+    poles_fit, residues_fit, diff = \
+        approximate_sum_of_simple_poles_with_max_n_poles(
         poles, residues, max_n_poles=4, beta=beta, verbose=True)
 
-    sop = SumOfSimplePoles(poles=poles, residues=residues)    
-    sop_fit = SumOfSimplePoles(poles=poles_fit, residues=residues_fit)
-
-    diff = (sop - sop_fit).imtime_l2_norm(beta=beta)
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
 
     assert( diff < 1e-12 )
@@ -147,13 +135,10 @@ def test_sop_tol():
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
 
-    poles_fit, residues_fit = approximate_sum_of_simple_poles_with_fixed_error_tolerance(
+    poles_fit, residues_fit, diff = \
+        approximate_sum_of_simple_poles_with_fixed_error_tolerance(
         poles, residues, tol=tol, beta=beta, verbose=True)
 
-    sop = SumOfSimplePoles(poles=poles, residues=residues)    
-    sop_fit = SumOfSimplePoles(poles=poles_fit, residues=residues_fit)
-
-    diff = (sop - sop_fit).imtime_l2_norm(beta=beta)
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
 
     assert( diff < tol )
@@ -180,14 +165,10 @@ def test_sop_tol_imtime():
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
 
-    poles_fit, residues_fit = \
+    poles_fit, residues_fit, diff = \
         approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time(
         poles, residues, tol=tol, beta=beta, verbose=True)
 
-    sop = SumOfSimplePoles(poles=poles, residues=residues)    
-    sop_fit = SumOfSimplePoles(poles=poles_fit, residues=residues_fit)
-
-    diff = (sop - sop_fit).imtime_l2_norm(beta=beta)
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
 
     assert( diff < tol )
