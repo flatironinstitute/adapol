@@ -135,7 +135,6 @@ def approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
     residues : ndarray
         Residues of the approximating sum of simple poles."""
 
-    from .triqs_xca import TriqsDLRCompression
     comp = TriqsDLRCompression(
         G_dlr, tol=tol, nonlinear_optimize=nonlinear_optimization, 
         nonlinear_post_optimize=nonlinear_optimization, verbose=verbose)
