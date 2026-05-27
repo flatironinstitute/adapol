@@ -17,7 +17,7 @@ import numpy as np
 from triqs.gfs import Gf, MeshDLRImFreq, inverse, iOmega_n, SemiCircular
 
 
-from adapol.triqs_xca import TriqsDLRCompression
+from adapol.triqs import TriqsDLRCompression
 
 
 def test_tdc_tol_sweep():

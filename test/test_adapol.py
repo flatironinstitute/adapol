@@ -10,6 +10,7 @@ from adapol.adapol import approximate_frequency_data_with_fixed_error_tolerance
 
 from adapol.adapol import approximate_sum_of_simple_poles_with_max_n_poles
 from adapol.adapol import approximate_sum_of_simple_poles_with_fixed_error_tolerance
+from adapol.adapol import approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
 
 
 def test_freq_n_poles():
@@ -158,9 +159,44 @@ def test_sop_tol():
     assert( diff < tol )
 
 
+def test_sop_tol_imtime():
+    """Test ``approximate_sum_of_simple_poles_with_fixed_error_tolerance``.
+
+    Compresses an existing ``SumOfSimplePoles`` under a fixed (imtime) error tolerance
+    and checks the imaginary-time L2 norm of the difference meets it.
+    """
+
+    print()
+    print('=' * 72)
+    print('test_sop_tol_imtime')
+    print('-' * 72)
+    print('Compressing an existing SumOfSimplePoles using a fixed (imtime) error tolerance,')
+    print('and checking the imaginary-time L2 norm of the difference meets it.')
+    print('=' * 72)
+    print()
+
+    tol = 1e-12
+    beta = 2.3
+    poles = np.array([0.5, -1.2])
+    residues = np.array([1., 2.])
+
+    poles_fit, residues_fit = \
+        approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time(
+        poles, residues, tol=tol, beta=beta, verbose=True)
+
+    sop = SumOfSimplePoles(poles=poles, residues=residues)    
+    sop_fit = SumOfSimplePoles(poles=poles_fit, residues=residues_fit)
+
+    diff = (sop - sop_fit).imtime_l2_norm(beta=beta)
+    print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
+
+    assert( diff < tol )
+
+
 if __name__ == '__main__':
 
     test_freq_n_poles()
     test_freq_tol()
     test_sop_n_poles()
     test_sop_tol()
+    test_sop_tol_imtime()

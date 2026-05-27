@@ -143,6 +143,44 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
         verbose=verbose, nonlinear_optimization=nonlinear_optimization)
 
 
+def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time(
+        poles, residues, tol, beta, verbose=False, nonlinear_optimization=False):
+    """ Approximate a sum of simple poles defined by `poles` and `residues`
+    with a sum of simple poles with a fixed error tolerance `tol` in imaginary time, 
+    by running the AAA algorithm.
+
+    Parameters
+    ----------
+    poles : array_like
+        Poles of the original sum of simple poles to approximate.
+    residues : array_like
+        Residues of the original sum of simple poles to approximate.
+    tol : float
+        Fixed error tolerance for the approximation.
+    beta : float
+        Inverse temperature, used to define the L2 norm in imaginary time.
+    verbose : bool, optional
+        If True, print verbose output during the approximation process.
+    nonlinear_optimization : bool, optional
+        If True, perform a non-linear optimization of the poles after the AAA approximation, 
+        to further reduce the error.
+
+    Returns
+    -------
+    poles : ndarray
+        Poles of the approximating sum of simple poles.
+    residues : ndarray
+        Residues of the approximating sum of simple poles.
+    """
+
+    from .sop_compr import SumOfPolesCompression
+    sc = SumOfPolesCompression(
+        poles, residues, beta, tol=tol, 
+        nonlinear_optimize=nonlinear_optimization, 
+        nonlinear_post_optimize=nonlinear_optimization, verbose=verbose)
+    return sc.poles, sc.residues    
+
+
 def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
     cleanup=True, cleanup_residue_tol=1e-12, cleanup_imag_tol=1e-8):
 
@@ -167,10 +205,7 @@ def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose
     nonlinear_optimization=False, Z=None):
 
     if Z is None:
-        # Frequency grid
-        w_max = np.abs(poles).max() * 2
-        n_max = int(2 * beta * w_max / np.pi) + 1
-        Z = 1.j * np.pi / beta * np.arange(-n_max, n_max + 1)
+        Z = _equispaced_matsubara_frequecy_grid(poles, beta)
 
     # Eval sop
     sop = SumOfSimplePoles(poles=poles, residues=residues)
@@ -198,3 +233,9 @@ def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose
 
 def _max_steps_from_max_n_poles(max_n_poles):
     return (max_n_poles + 1) // 2 if max_n_poles is not None else None
+
+
+def _equispaced_matsubara_frequecy_grid(poles, beta):
+    w_max = np.abs(poles).max() * 2
+    n_max = int(2 * beta * w_max / np.pi) + 1
+    return 1.j * np.pi / beta * np.arange(-n_max, n_max + 1)
