@@ -1,7 +1,7 @@
 """
 Adapol: Adaptive Pole Approximation of Frequency Data
 
-User facing API for approximating frequency data 
+User-facing API for approximating frequency data
 with a sum of simple poles, using the AAA algorithm.
 
 Author: Hugo U. R. Strand (2026)
@@ -16,10 +16,10 @@ from .sop import SumOfSimplePoles
 
 
 def approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=False):
-    """ Approximate frequency data :math:`F` sampled at points :math:`Z` 
-    with a sum of simple poles, by running the AAA algorithm with a maximum 
+    """Approximate frequency data :math:`F` sampled at points :math:`Z`
+    with a sum of simple poles by running the AAA algorithm with a maximum
     number of poles :math:`max_n_poles`.
-     
+
     Parameters
     ----------
     F : array_like
@@ -34,22 +34,31 @@ def approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=False
         small residues.
     verbose : bool, optional
         If True, print verbose output during the approximation process.
-    
+
     Returns
     -------
     poles : ndarray
         Poles of the approximating sum of simple poles.
     residues : ndarray
         Residues of the approximating sum of simple poles.
+    error : float
+        Maximum absolute error of the approximation at the sample points.
     """
     return _frequency_data_driver(F, Z, max_n_poles=max_n_poles, tol=None, verbose=verbose)
 
 
 def approximate_frequency_data_with_fixed_error_tolerance(F, Z, tol, verbose=False):
-    """ Approximate frequency data :math:`F` sampled at points :math:`Z`
-    with a sum of simple poles, by running the AAA algorithm 
+    """Approximate frequency data :math:`F` sampled at points :math:`Z`
+    with a sum of simple poles by running the AAA algorithm
     with a fixed error tolerance `tol`.
-     
+
+    Note
+    ----
+    The function does **not** guarantee that the final `error` is below `tol`,
+    since the final error is not known until the residues have been determined.
+    The error tolerance `tol` controls only the AAA approximation,
+    not the subsequent residue fit (or non-linear optimization step).
+
     Parameters
     ----------
     F : array_like
@@ -75,7 +84,7 @@ def approximate_frequency_data_with_fixed_error_tolerance(F, Z, tol, verbose=Fal
 
 def approximate_sum_of_simple_poles_with_max_n_poles(
         poles, residues, max_n_poles, beta, verbose=False, nonlinear_optimization=False):
-    """ Approximate a sum of simple poles defined by `poles` and `residues`
+    """Approximate a sum of simple poles defined by `poles` and `residues`
     with a sum of simple poles with at most `max_n_poles` poles, by running the AAA algorithm.
 
     Parameters
@@ -95,7 +104,7 @@ def approximate_sum_of_simple_poles_with_max_n_poles(
     verbose : bool, optional
         If True, print verbose output during the approximation process.
     nonlinear_optimization : bool, optional
-        If True, perform a non-linear optimization of the poles after the AAA approximation, 
+        If True, perform a non-linear optimization of the poles after the AAA approximation,
         to further reduce the error.
 
     Returns
@@ -105,7 +114,7 @@ def approximate_sum_of_simple_poles_with_max_n_poles(
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
+        L2 norm of the difference in imaginary time between the original
         and approximating sum of simple poles.
     """
     return _sum_of_simple_poles_driver(
@@ -115,9 +124,16 @@ def approximate_sum_of_simple_poles_with_max_n_poles(
 
 def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
         poles, residues, tol, beta, verbose=False, nonlinear_optimization=False):
-    """ Approximate a sum of simple poles defined by `poles` and `residues`
-    with a sum of simple poles with a fixed error tolerance `tol`, 
+    """Approximate a sum of simple poles defined by `poles` and `residues`
+    with a sum of simple poles with a fixed error tolerance `tol`,
     by running the AAA algorithm.
+
+    Note
+    ----
+    The function does **not** guarantee that the final `error` is below `tol`,
+    since the final error is not known until the residues have been determined.
+    The error tolerance `tol` controls only the AAA approximation,
+    not the subsequent residue fit (or non-linear optimization step).
 
     Parameters
     ----------
@@ -132,7 +148,7 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
     verbose : bool, optional
         If True, print verbose output during the approximation process.
     nonlinear_optimization : bool, optional
-        If True, perform a non-linear optimization of the poles after the AAA approximation, 
+        If True, perform a non-linear optimization of the poles after the AAA approximation,
         to further reduce the error.
 
     Returns
@@ -142,7 +158,7 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
+        L2 norm of the difference in imaginary time between the original
         and approximating sum of simple poles.
     """
 
@@ -153,9 +169,20 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance(
 
 def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time(
         poles, residues, tol, beta, verbose=False, nonlinear_optimization=False):
-    """ Approximate a sum of simple poles defined by `poles` and `residues`
-    with a sum of simple poles with a fixed error tolerance `tol` in imaginary time, 
-    by running the AAA algorithm.
+    """Approximate a sum of simple poles defined by `poles` and `residues`
+    with a sum of simple poles with a fixed error tolerance `tol` in imaginary time.
+
+    Note
+    ----
+    Imposing the error tolerance in imaginary time cannot be achieved by the AAA algorithm alone,
+    since AAA is only used to determine pole locations. The pole weights (residues)
+    are determined by a least-squares fit to the frequency data
+    or by a non-linear optimization of both poles and residues.
+    Thus the final error tolerance is not known until the residues have been determined.
+
+    To still impose the error tolerance in imaginary time, we run AAA+residue optimization
+    multiple times to determine the smallest set of poles that achieves the
+    requested error tolerance `tol` in imaginary time.
 
     Parameters
     ----------
@@ -164,13 +191,13 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
     residues : array_like
         Residues of the original sum of simple poles to approximate.
     tol : float
-        Fixed error tolerance for the approximation.
+        Fixed error (imaginary time L2-norm) tolerance for the approximation.
     beta : float
         Inverse temperature, used to define the L2 norm in imaginary time.
     verbose : bool, optional
         If True, print verbose output during the approximation process.
     nonlinear_optimization : bool, optional
-        If True, perform a non-linear optimization of the poles after the AAA approximation, 
+        If True, perform a non-linear optimization of the poles after the AAA approximation,
         to further reduce the error.
 
     Returns
@@ -180,7 +207,7 @@ def approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
+        L2 norm of the difference in imaginary time between the original
         and approximating sum of simple poles.
     """
 
