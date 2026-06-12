@@ -8,7 +8,7 @@ import numpy as np
 
 from .aaa import aaa
 from .sop import SumOfSimplePoles
-from .adapol import _equispaced_matsubara_frequecy_grid
+from .adapol import _equispaced_imaginary_frequency_grid
 
 
 class SumOfPolesCompression:
@@ -26,7 +26,7 @@ class SumOfPolesCompression:
         self.sop = SumOfSimplePoles(poles=poles, residues=residues)
 
         if Z is None:
-            Z = _equispaced_matsubara_frequecy_grid(poles, beta)
+            Z = _equispaced_imaginary_frequency_grid(poles, beta)
 
         self.Z = Z
         self.F = self.sop(self.Z)

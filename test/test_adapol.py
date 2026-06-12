@@ -5,16 +5,13 @@ import numpy as np
 
 from adapol.sop import SumOfSimplePoles
 
-from adapol.adapol import approximate_frequency_data_with_max_n_poles
-from adapol.adapol import approximate_frequency_data_with_fixed_error_tolerance
-
-from adapol.adapol import approximate_sum_of_simple_poles_with_max_n_poles
-from adapol.adapol import approximate_sum_of_simple_poles_with_fixed_error_tolerance
-from adapol.adapol import approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time
+from adapol.adapol import approximate_freq_aaa
+from adapol.adapol import approximate_sop_fast
+from adapol.adapol import approximate_sop_tol
 
 
 def test_freq_n_poles():
-    """Test ``approximate_frequency_data_with_max_n_poles``.
+    """Test ``approximate_freq_aaa`` with a maximum-pole budget.
 
     Fits Matsubara samples generated from a known sum-of-simple-poles under
     a maximum-pole budget and checks the fit reproduces the samples.
@@ -38,7 +35,7 @@ def test_freq_n_poles():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     max_n_poles = 4
-    poles, residues, max_abs_diff = approximate_frequency_data_with_max_n_poles(F, Z, max_n_poles, verbose=True)
+    poles, residues, max_abs_diff = approximate_freq_aaa(F, Z, max_n_poles=max_n_poles, verbose=True)
 
     print(f'Max abs diff = {max_abs_diff:2.2E}')
 
@@ -51,7 +48,7 @@ def test_freq_n_poles():
 
 
 def test_freq_tol():
-    """Test ``approximate_frequency_data_with_fixed_error_tolerance``.
+    """Test ``approximate_freq_aaa`` with a fixed error tolerance.
 
     Fits Matsubara samples generated from a known sum-of-simple-poles under
     a fixed error tolerance and checks the max sample-wise error meets it.
@@ -75,8 +72,8 @@ def test_freq_tol():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     tol = 1e-12
-    poles, residues, max_abs_diff = approximate_frequency_data_with_fixed_error_tolerance(
-        F, Z, tol, verbose=True)
+    poles, residues, max_abs_diff = approximate_freq_aaa(
+        F, Z, aaa_tol=tol, verbose=True)
     
     print(f'Poles = {poles}')
     print(f'Residues = {residues}')
@@ -86,7 +83,7 @@ def test_freq_tol():
 
 
 def test_sop_n_poles():
-    """Test ``approximate_sum_of_simple_poles_with_max_n_poles``.
+    """Test ``approximate_sop_fast`` with a maximum-pole budget.
 
     Compresses an existing ``SumOfSimplePoles`` under a maximum-pole budget
     and checks the imaginary-time L2 norm of the difference is small.
@@ -106,7 +103,7 @@ def test_sop_n_poles():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sum_of_simple_poles_with_max_n_poles(
+        approximate_sop_fast(
         poles, residues, max_n_poles=4, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
@@ -115,7 +112,7 @@ def test_sop_n_poles():
 
 
 def test_sop_tol():
-    """Test ``approximate_sum_of_simple_poles_with_fixed_error_tolerance``.
+    """Test ``approximate_sop_fast`` with a fixed error tolerance.
 
     Compresses an existing ``SumOfSimplePoles`` under a fixed error tolerance
     and checks the imaginary-time L2 norm of the difference meets it.
@@ -136,8 +133,8 @@ def test_sop_tol():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sum_of_simple_poles_with_fixed_error_tolerance(
-        poles, residues, tol=tol, beta=beta, verbose=True)
+        approximate_sop_fast(
+        poles, residues, aaa_tol=tol, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
 
@@ -145,7 +142,7 @@ def test_sop_tol():
 
 
 def test_sop_tol_imtime():
-    """Test ``approximate_sum_of_simple_poles_with_fixed_error_tolerance``.
+    """Test ``approximate_sop_tol``.
 
     Compresses an existing ``SumOfSimplePoles`` under a fixed (imtime) error tolerance
     and checks the imaginary-time L2 norm of the difference meets it.
@@ -166,12 +163,98 @@ def test_sop_tol_imtime():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sum_of_simple_poles_with_fixed_error_tolerance_in_imaginary_time(
+        approximate_sop_tol(
         poles, residues, tol=tol, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
 
     assert( diff < tol )
+
+
+def test_freq_max_n_poles_and_tol():
+    """Test ``approximate_freq_aaa`` with both ``max_n_poles`` and ``tol`` set.
+
+    AAA should stop as soon as either the tolerance is reached or the maximum
+    pole budget is exhausted, whichever happens first.
+    """
+
+    print()
+    print('=' * 72)
+    print('test_freq_max_n_poles_and_tol')
+    print('-' * 72)
+    print('Fitting Matsubara samples with both a maximum-pole budget and a fixed')
+    print('error tolerance, checking AAA stops at whichever limit is hit first.')
+    print('=' * 72)
+    print()
+
+    poles = np.array([0.5, -1.2, -0.3])
+    residues = np.array([1., 2., 3.])
+
+    Z = 1.j * np.arange(-4.0, 4.0, 0.01)
+
+    C_zp = 1. / (Z[:, None] - poles[None, :])
+    F = np.sum(C_zp * residues[None, :], axis=1)
+
+    # tol is loose, so the max_n_poles budget should bind first.
+    max_n_poles = 2
+    tol = 1e-2
+    poles_fit, residues_fit, max_abs_diff = approximate_freq_aaa(
+        F, Z, max_n_poles=max_n_poles, aaa_tol=tol, verbose=True)
+
+    print(f'Poles = {poles_fit}')
+    print(f'Max abs diff = {max_abs_diff:2.2E}')
+
+    assert( len(poles_fit) <= max_n_poles )
+
+
+def test_sop_max_n_poles_and_tol():
+    """Test ``approximate_sop_fast`` with both ``max_n_poles`` and ``tol`` set.
+
+    AAA should stop as soon as either the tolerance is reached or the maximum
+    pole budget is exhausted, whichever happens first.
+    """
+
+    print()
+    print('=' * 72)
+    print('test_sop_max_n_poles_and_tol')
+    print('-' * 72)
+    print('Compressing a SumOfSimplePoles with both a maximum-pole budget and a')
+    print('fixed error tolerance, checking AAA stops at whichever limit is hit first.')
+    print('=' * 72)
+    print()
+
+    tol = 1e-12
+    beta = 2.3
+    poles = np.array([0.5, -1.2])
+    residues = np.array([1., 2.])
+
+    # tol is tight enough to be reached within the generous pole budget.
+    poles_fit, residues_fit, diff = approximate_sop_fast(
+        poles, residues, max_n_poles=8, aaa_tol=tol, beta=beta, verbose=True)
+
+    print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
+
+    assert( diff < tol )
+
+
+def test_sop_no_criterion_raises():
+    """``approximate_sop_fast`` requires at least one of ``max_n_poles``/``tol``."""
+
+    import pytest
+    poles = np.array([0.5, -1.2])
+    residues = np.array([1., 2.])
+    with pytest.raises(ValueError):
+        approximate_sop_fast(poles, residues, beta=2.3)
+
+
+def test_freq_no_criterion_raises():
+    """``approximate_freq_aaa`` requires at least one of ``max_n_poles``/``tol``."""
+
+    import pytest
+    Z = 1.j * np.array([0.1, 0.2, 0.3, 0.4])
+    F = 1. / (Z - 0.5)
+    with pytest.raises(ValueError):
+        approximate_freq_aaa(F, Z)
 
 
 if __name__ == '__main__':
@@ -181,3 +264,7 @@ if __name__ == '__main__':
     test_sop_n_poles()
     test_sop_tol()
     test_sop_tol_imtime()
+    test_freq_max_n_poles_and_tol()
+    test_sop_max_n_poles_and_tol()
+    test_sop_no_criterion_raises()
+    test_freq_no_criterion_raises()
