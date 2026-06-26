@@ -1,15 +1,22 @@
-Hybridization fitting
-=====================
+Python reference manual
+=======================
 
-.. autofunction:: adapol.hybfit.hybfit
+Frequency-data approximation
+----------------------------
 
-Analytic continuation
-=====================
+.. autofunction:: adapol.approximate_freq_aaa
 
-.. autofunction:: adapol.anacont.anacont
+Sum-of-poles compression
+------------------------
 
-TRIQS interface 
-=====================
+.. autofunction:: adapol.approximate_sop_fast
+.. autofunction:: adapol.approximate_sop_tol
 
-.. autofunction:: adapol.hybfit.hybfit_triqs
-.. autofunction:: adapol.anacont.anacont_triqs
+TRIQS interface
+---------------
+
+.. autofunction:: adapol.triqs.approximate_gf_imfreq_with_max_n_poles
+.. autofunction:: adapol.triqs.approximate_gf_imfreq_with_fixed_error_tolerance
+.. autofunction:: adapol.triqs.approximate_gf_dlr_with_max_n_poles
+.. autofunction:: adapol.triqs.approximate_gf_dlr_with_fixed_error_tolerance
+.. autofunction:: adapol.triqs.approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time
