@@ -19,6 +19,30 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     """Approximate frequency data :math:`F` sampled at points :math:`Z`
     with a sum of simple poles, by running the AAA algorithm.
 
+    Parameters
+    ----------
+    F : (N, ...) array_like
+        Frequency data to approximate, sampled at points :math:`Z`.
+    Z : (N,) array_like
+        Sample points in (complex) frequency space, at which :math:`F` is sampled.
+    max_n_poles : int, optional
+        Maximum number of poles to use in the approximation.
+    aaa_tol : float, optional
+        Error tolerance for the AAA algorithm.
+    verbose : bool, optional
+        If True, print verbose output during the approximation process.
+
+    Returns
+    -------
+    poles : (M,) ndarray
+        Poles of the approximating sum of simple poles (`M <= max_n_poles`).
+    residues : (M, ...) ndarray
+        Residues of the approximating sum of simple poles.
+    error : float
+        Maximum absolute error of the approximation at the sample points.
+
+    Notes
+    -----
     The approximation is built in two steps:
 
     1. **Pole step:** the AAA algorithm is run on the data :math:`(Z, F)` to
@@ -37,36 +61,17 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     Note
     ----
-    `aaa_tol` controls only the pole step (AAA); it does not directly bound the
+    The number of poles produced might be smaller than `max_n_poles`, for two reasons:
+
+    1. an odd number of poles is always produced, from symmetry considerations, and 
+    2. the AAA cleanup step might remove poles with small residues.
+
+    Note
+    ----
+    The error tolerance `aaa_tol` controls the maximum absolute error 
+    over the frequency-domain data :math:`F` at the sample points :math:`Z` 
+    in the AAA algorithm (pole step); it does **not** bound the
     final error, which also depends on the subsequent residue fit.
-
-    Parameters
-    ----------
-    F : (N, ...) array_like
-        Frequency data to approximate, sampled at points :math:`Z`.
-    Z : (N,) array_like
-        Sample points in (complex) frequency space, at which :math:`F` is sampled.
-    max_n_poles : int, optional
-        Maximum number of poles to use in the approximation. Note that the actual
-        number of poles produced might be smaller than this, for two reasons:
-        (1) an odd number of poles is always produced, from symmetry
-        considerations, and (2) the AAA cleanup step might remove poles with
-        small residues.
-    aaa_tol : float, optional
-        Error tolerance for the AAA algorithm. This is the maximum absolute
-        error over the frequency-domain data :math:`F` at the sample points
-        :math:`Z` used by the AAA algorithm.
-    verbose : bool, optional
-        If True, print verbose output during the approximation process.
-
-    Returns
-    -------
-    poles : (M,) ndarray
-        Poles of the approximating sum of simple poles.
-    residues : (M, ...) ndarray
-        Residues of the approximating sum of simple poles.
-    error : float
-        Maximum absolute error of the approximation at the sample points.
 
     Examples
     --------
@@ -122,14 +127,48 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
 def approximate_sop_fast(
         poles, residues, beta, max_n_poles=None, aaa_tol=None,
-        verbose=False, nonlinear_optimization=False):
+        nonlinear_optimization=False, verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
     with a sum of a (possibly) smaller number of simple poles, by running the
     AAA algorithm and, optionally, a non-linear optimization step.
 
+    Parameters
+    ----------
+    poles : (K,) array_like
+        Poles of the original sum of simple poles to approximate.
+    residues : (K, ...) array_like
+        Residues of the original sum of simple poles to approximate.
+    beta : float
+        Inverse temperature, used to define the L2 norm in imaginary time
+        and the imaginary-frequency grid on which the AAA data is sampled.
+    max_n_poles : int, optional
+        Maximum number of poles to use in the approximation.
+    aaa_tol : float, optional
+        Error tolerance for the AAA algorithm. This is the maximum absolute
+        error over the imaginary-frequency-domain data used by the AAA
+        algorithm (the original sum of simple poles evaluated on the grid
+        described below).
+    nonlinear_optimization : bool, optional
+        If True, run a non-linear optimization step after the AAA approximation,
+        using the AAA poles only as an initial guess.
+    verbose : bool, optional
+        If True, print verbose output during the approximation process.
+
+    Returns
+    -------
+    poles : (M,) ndarray
+        Poles of the approximating sum of simple poles.
+    residues : (M, ...) ndarray
+        Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original
+        and approximating sum of simple poles.
+
+    Notes
+    -----
     The original sum of simple poles is first evaluated on an equispaced grid
-    on the imaginary-frequency axis to produce the frequency-domain data used
-    by the AAA algorithm (see Note below for the grid definition).
+    on the imaginary-frequency axis (see below) to produce the frequency-domain data used
+    by the AAA algorithm.
 
     The approximation is then built in two steps:
 
@@ -139,8 +178,8 @@ def approximate_sop_fast(
        imaginary-time :math:`L^2(\\tau)` norm of the difference from the
        original sum of simple poles. By default this is a linear least-squares
        fit of the residues for the AAA poles; if `nonlinear_optimization` is
-       True, the pole locations and residues are instead jointly optimized
-       (see the `nonlinear_optimization` parameter below).
+       True, the pole locations and residues are instead jointly optimized,
+       for details see below.
 
     Note that, unlike `approximate_freq_aaa`, the residues here are fit in
     imaginary time, not in the frequency domain.
@@ -153,16 +192,7 @@ def approximate_sop_fast(
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
-    Note
-    ----
-    Setting `aaa_tol` does **not** guarantee that the final imaginary-time L2 norm
-    `error` is below `aaa_tol`; this is not possible to guarantee within the AAA
-    algorithm alone. However, this function returns the final imaginary-time L2
-    norm `error` of approximation (see Returns below).
-    
-    Note
-    ----
-    The frequency-domain data used by the AAA algorithm is obtained by
+    **Frequency grid:** The frequency-domain data used by the AAA algorithm is obtained by
     evaluating the original sum of simple poles on an equispaced
     imaginary-frequency grid :math:`Z_n = i \\pi n / \\beta`, with spacing
     :math:`\\pi / \\beta`, for integer :math:`n = -n_{max}, \\ldots, n_{max}`,
@@ -171,51 +201,29 @@ def approximate_sop_fast(
     This grid extends to roughly :math:`4 \\, \\omega_{max}` on the imaginary
     axis.
 
-    Parameters
-    ----------
-    poles : (K,) array_like
-        Poles of the original sum of simple poles to approximate.
-    residues : (K, ...) array_like
-        Residues of the original sum of simple poles to approximate.
-    beta : float
-        Inverse temperature, used to define the L2 norm in imaginary time
-        and the imaginary-frequency grid on which the AAA data is sampled.
-    max_n_poles : int, optional
-        Maximum number of poles to use in the approximation. Note that the actual
-        number of poles produced might be smaller than this, for two reasons:
-        (1) an odd number of poles is always produced, from symmetry
-        considerations, and (2) the AAA cleanup step might remove poles with
-        small residues.
-    aaa_tol : float, optional
-        Error tolerance for the AAA algorithm. This is the maximum absolute
-        error over the imaginary-frequency-domain data used by the AAA
-        algorithm (the original sum of simple poles evaluated on the grid
-        described above).
-    verbose : bool, optional
-        If True, print verbose output during the approximation process.
-    nonlinear_optimization : bool, optional
-        If True, run a non-linear optimization step after the AAA approximation,
-        using the AAA poles only as an initial guess. This optimization keeps
-        the number of poles fixed and jointly relocates the pole positions and
-        refits the residues to minimize the imaginary-time L2 norm error
-        between the original and approximating sum of simple poles. It is solved
-        with the L-BFGS-B method (using an analytic gradient) and is run to
-        optimizer convergence, i.e. to reduce the error as much as possible
-        rather than to meet a prescribed error tolerance.
+    **Non-linear optimization:** The optional non-linear optimization step keeps the number of poles fixed
+    and jointly relocates the pole positions and refits the residues to minimize
+    the imaginary-time L2 norm error between the original and approximating
+    sum of simple poles. It is solved with the L-BFGS-B method (using an analytic
+    gradient) and is run to optimizer convergence, i.e. to reduce the error as
+    much as possible rather than to meet a prescribed error tolerance.
 
-    Returns
-    -------
-    poles : (M,) ndarray
-        Poles of the approximating sum of simple poles.
-    residues : (M, ...) ndarray
-        Residues of the approximating sum of simple poles.
-    error : float
-        L2 norm of the difference in imaginary time between the original
-        and approximating sum of simple poles.
+    Note
+    ----
+    The number of poles produced might be smaller than `max_n_poles`, for two reasons:
+    
+    1. an odd number of poles is always produced, from symmetry considerations, and 
+    2. the AAA cleanup step might remove poles with small residues.
+
+    Note
+    ----
+    Setting `aaa_tol` does **not** guarantee that the final imaginary-time L2 norm
+    `error` is below `aaa_tol`; this is not possible to guarantee within the AAA
+    algorithm alone. However, this function returns the final imaginary-time L2
+    norm `error` of approximation (see Returns above).
 
     Examples
     --------
-
     Approximate a sum of three simple poles
     :math:`s(z) = 1/(z-1) + 0.5/(z+2) + 0.3/(z-0.5)`,
     specified by its poles and residues, using AAA. Here the input is already
@@ -268,15 +276,53 @@ def approximate_sop_fast(
 
     return _sum_of_simple_poles_driver(
         poles, residues, max_n_poles=max_n_poles, tol=aaa_tol, beta=beta,
-        verbose=verbose, nonlinear_optimization=nonlinear_optimization)
+        nonlinear_optimization=nonlinear_optimization, verbose=verbose)
 
 
 def approximate_sop_tol(
-        poles, residues, tol, beta, verbose=False, nonlinear_optimization=False):
+        poles, residues, tol, beta, nonlinear_optimization=False, verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
     with the smallest sum of simple poles whose imaginary-time
     :math:`L^2(\\tau)` error is below the tolerance `tol`.
 
+    Parameters
+    ----------
+    poles : (K,) array_like
+        Poles of the original sum of simple poles to approximate.
+    residues : (K, ...) array_like
+        Residues of the original sum of simple poles to approximate.
+    tol : float
+        Target tolerance on the final imaginary-time :math:`L^2(\\tau)` norm of
+        the difference between the original and approximating sum of simple
+        poles.
+    beta : float
+        Inverse temperature, used to define the L2 norm in imaginary time
+        and the imaginary-frequency grid on which the AAA data is sampled.
+    nonlinear_optimization : bool, optional
+        If True, the residue step jointly optimizes the pole locations and
+        residues (rather than fitting residues only) to minimize the
+        imaginary-time :math:`L^2(\tau)` error.
+    verbose : bool, optional
+        If True, print verbose output during the approximation process.
+
+    Returns
+    -------
+    poles : (M,) ndarray
+        Poles of the approximating sum of simple poles.
+    residues : (M, ...) ndarray
+        Residues of the approximating sum of simple poles.
+    error : float
+        L2 norm of the difference in imaginary time between the original
+        and approximating sum of simple poles.
+
+    Raises
+    ------
+    ValueError
+        If the target tolerance `tol` cannot be achieved within the internal
+        maximum number of search steps.
+
+    Notes
+    -----
     Unlike `approximate_sop_fast`, where the tolerance only controls the AAA
     pole step, here `tol` is imposed on the **final** imaginary-time error,
     i.e. after the residues have been fit. Since AAA only determines pole
@@ -301,45 +347,8 @@ def approximate_sop_tol(
     bisection on the number of AAA steps locates the smallest pole count that
     still meets `tol`.
 
-    Parameters
-    ----------
-    poles : (K,) array_like
-        Poles of the original sum of simple poles to approximate.
-    residues : (K, ...) array_like
-        Residues of the original sum of simple poles to approximate.
-    tol : float
-        Target tolerance on the final imaginary-time :math:`L^2(\\tau)` norm of
-        the difference between the original and approximating sum of simple
-        poles.
-    beta : float
-        Inverse temperature, used to define the L2 norm in imaginary time
-        and the imaginary-frequency grid on which the AAA data is sampled.
-    verbose : bool, optional
-        If True, print verbose output during the approximation process.
-    nonlinear_optimization : bool, optional
-        If True, the residue step jointly optimizes the pole locations and
-        residues (rather than fitting residues only) to minimize the
-        imaginary-time :math:`L^2(\tau)` error.
-
-    Returns
-    -------
-    poles : (M,) ndarray
-        Poles of the approximating sum of simple poles.
-    residues : (M, ...) ndarray
-        Residues of the approximating sum of simple poles.
-    error : float
-        L2 norm of the difference in imaginary time between the original
-        and approximating sum of simple poles.
-
-    Raises
-    ------
-    ValueError
-        If the target tolerance `tol` cannot be achieved within the internal
-        maximum number of search steps.
-
     Examples
     --------
-
     Compress a continuous spectral density into a small sum of simple poles.
     The density is first discretized as a sum of 200 simple poles on the real
     axis, which is then compressed to the smallest sum of poles whose
