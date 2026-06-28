@@ -135,9 +135,9 @@ def approximate_sop_fast(
     Parameters
     ----------
     poles : (K,) array_like
-        Poles of the original sum of simple poles to approximate.
+        Poles :math:`P_k` of the original sum of simple poles to approximate.
     residues : (K, ...) array_like
-        Residues of the original sum of simple poles to approximate.
+        Residues :math:`R_k` of the original sum of simple poles to approximate.
     beta : float
         Inverse temperature, used to define the L2 norm in imaginary time
         and the imaginary-frequency grid on which the AAA data is sampled.
@@ -166,14 +166,19 @@ def approximate_sop_fast(
 
     Notes
     -----
-    The original sum of simple poles is first evaluated on an equispaced grid
-    on the imaginary-frequency axis (see below) to produce the frequency-domain data used
-    by the AAA algorithm.
+    The original sum of simple poles
+
+    .. math::
+        F(Z) = \\sum_{k=1}^K \\frac{R_k}{Z - P_k}
+
+    is first evaluated on an equispaced grid :math:`Z_n` on the imaginary-frequency
+    axis (see below), to produce the frequency-domain data :math:`F_n = F(Z_n)`
+    used by the AAA algorithm.
 
     The approximation is then built in two steps:
 
-    1. **Pole step:** the AAA algorithm is run on this frequency-domain data to
-       determine the pole locations.
+    1. **Pole step:** the AAA algorithm is run on this frequency-domain data
+       :math:`(Z_n, F_n)` to determine the pole locations.
     2. **Residue step:** the residues are determined by minimizing the
        imaginary-time :math:`L^2(\\tau)` norm of the difference from the
        original sum of simple poles. By default this is a linear least-squares
