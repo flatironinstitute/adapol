@@ -37,7 +37,7 @@ from triqs.gfs import make_gf_imfreq, make_gf_imtime
 from triqs.gfs import make_gf_dlr_imtime, make_gf_dlr, make_gf_dlr_imfreq
 from triqs.gfs import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n
 
-from adapol.triqs_xca import TriqsDLRCompression
+from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time
 
 
 def solve_ipt_and_adapol(
@@ -87,8 +87,10 @@ def solve_ipt_and_adapol(
 
         if run_adapol:
             try:
-                tdc = TriqsDLRCompression(G_w, tol=tol_adapol, verbose=False)
-                poles, pole_weights, fit_error = tdc.poles, tdc.residues, tdc.error
+                poles, pole_weights, fit_error = \
+                    approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
+                    G_w, tol=tol_adapol, verbose=False)
+
             except ValueError as e:
                 print(f"Warning: AAA-BRA compression failed with error: {e}")
                 break

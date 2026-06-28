@@ -11,10 +11,8 @@ from triqs.gfs import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n, make_g
 from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance
 from adapol.triqs import approximate_gf_imfreq_with_fixed_error_tolerance
 
-from adapol.triqs_xca import TriqsDLRCompression
+from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time
 
-from adapol.triqs import _gf_dlr_to_data
-from adapol.sop import SumOfSimplePoles
 
 class Dummy():
     def __init__(self): pass
@@ -39,30 +37,23 @@ def test_convergence(beta=1.0):
     G_w << inverse(iOmega_n - 0.4 - SemiCircular(1.0))
     G_dlr = make_gf_dlr(G_w)
 
-    # Needed for imtime L2 norm calc
-    poles, residues, beta, Z =_gf_dlr_to_data(G_dlr)
-    sop = SumOfSimplePoles(poles=poles, residues=residues)
-
     for tol in tols:
         print(f"Testing convergence with tol = {tol:+2.2E}")
 
         t_tdc = time.time()
-        tdc = TriqsDLRCompression(G_w, tol=tol, nonlinear_post_optimize=False)
+        tdc = Dummy()
+        tdc.poles, tdc.residues, tdc.error = \
+            approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
+                G_dlr, tol=tol)
+        tdc.n_poles = len(tdc.poles)
         tdc.runtime = time.time() - t_tdc
         tdc.n_poles = len(tdc.poles)
         tdcs.append(tdc)
 
         t_imf = time.time()
         imf = Dummy()
-        imf.poles, imf.residues = \
+        imf.poles, imf.residues, imf.error = \
             approximate_gf_imfreq_with_fixed_error_tolerance(G_w, tol=tol)
-        
-        # Hack to compute the imtime L2 error of the imfreq approximation
-        # by constructing a sum of simple poles from the imfreq approximation 
-        # and comparing it to the original sum of simple poles 
-        # from the DLR representation, using the imtime L2 norm.
-        imf_sop = SumOfSimplePoles(poles=imf.poles, residues=imf.residues)
-        imf.error = (sop - imf_sop).imtime_l2_norm(beta=beta)
 
         imf.runtime = time.time() - t_imf
         imf.n_poles = len(imf.poles)    
@@ -70,15 +61,8 @@ def test_convergence(beta=1.0):
 
         t_dlr = time.time()
         dlr = Dummy()
-        dlr.poles, dlr.residues = \
-            approximate_gf_imfreq_with_fixed_error_tolerance(G_w, tol=tol)
-        
-        # Hack to compute the imtime L2 error of the imfreq approximation
-        # by constructing a sum of simple poles from the imfreq approximation 
-        # and comparing it to the original sum of simple poles 
-        # from the DLR representation, using the imtime L2 norm.
-        dlr_sop = SumOfSimplePoles(poles=dlr.poles, residues=dlr.residues)
-        dlr.error = (sop - dlr_sop).imtime_l2_norm(beta=beta)
+        dlr.poles, dlr.residues, dlr.error = \
+            approximate_gf_dlr_with_fixed_error_tolerance(G_dlr, tol=tol)
 
         dlr.runtime = time.time() - t_dlr
         dlr.n_poles = len(dlr.poles)    

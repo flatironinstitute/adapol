@@ -4,7 +4,7 @@ Adapol: Adaptive Pole Approximation of Frequency Data
 User-facing API for approximating frequency data
 with a sum of simple poles, using the AAA algorithm.
 
-Author: Hugo U. R. Strand (2026)
+Authors: Hugo U. R. Strand, Jason Kaye (2026)
 """
 
 
@@ -42,9 +42,9 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     Parameters
     ----------
-    F : array_like
+    F : (N, ...) array_like
         Frequency data to approximate, sampled at points :math:`Z`.
-    Z : array_like
+    Z : (N,) array_like
         Sample points in (complex) frequency space, at which :math:`F` is sampled.
     max_n_poles : int, optional
         Maximum number of poles to use in the approximation. Note that the actual
@@ -61,13 +61,59 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     Returns
     -------
-    poles : ndarray
+    poles : (M,) ndarray
         Poles of the approximating sum of simple poles.
-    residues : ndarray
+    residues : (M, ...) ndarray
         Residues of the approximating sum of simple poles.
     error : float
         Maximum absolute error of the approximation at the sample points.
+
+    Examples
+    --------
+    Fit a simple function with two poles :math:`F(Z) = 1/(Z-1) + 0.5/(Z+2)`
+    sampled on an equispaced imaginary-frequency grid :math:`Z \\in [-10i, 10i]`.
+
+    >>> import numpy as np
+    >>> np.set_printoptions(precision=2, suppress=True)
+    >>> from adapol.adapol import approximate_freq_aaa
+    >>> # Sample frequency data F at points Z
+    >>> Z = 1j * np.linspace(-10, 10, 100)
+    >>> F = 1 / (Z - 1) + 0.5 / (Z + 2)  # Example frequency data with two poles
+    >>> # Approximate F with a sum of simple poles using AAA
+    >>> poles, residues, error = approximate_freq_aaa(F, Z, aaa_tol=1e-12)
+    >>> poles
+    array([-2.  ,  0.03,  1.  ])
+    >>> residues
+    array([ 0.5+0.j, -0. -0.j,  1. +0.j])
+    >>> float(error) < 1e-12
+    True
+
+    Note that the fit contains three poles, not two,due to the constrained AAA
+    algorithm. However, the additional pole has a residue that is numerically zero.
+
+    Also tensor valued functions can be fitted, e.g. a 2x2 matrix valued function
+    :math:`\\dim(F(Z)) = 2 \\times 2` with two poles and two matrix residues:
+
+    >>> R1 = np.array([[1, 0.1j], [-0.1j, 0]])[None, ...]
+    >>> R2 = np.array([[0, 0.1], [0.1, 1]])[None, ...]
+    >>> F = R1 / (Z[:, None, None] - 1) + R2 / (Z[:, None, None] + 2)
+    >>> poles, residues, error = approximate_freq_aaa(F, Z, aaa_tol=1e-12)
+    >>> poles
+    array([-2.  , -0.27,  1.  ])
+    >>> residues
+    array([[[ 0. -0.j ,  0.1+0.j ],
+            [ 0.1-0.j ,  1. +0.j ]],
+    <BLANKLINE>
+           [[-0. -0.j , -0. -0.j ],
+            [-0. +0.j , -0. +0.j ]],
+    <BLANKLINE>
+           [[ 1. +0.j ,  0. +0.1j],
+            [ 0. -0.1j,  0. +0.j ]]])
+    >>> float(error) < 1e-12
+    True
+
     """
+
     if max_n_poles is None and aaa_tol is None:
         raise ValueError("At least one of `max_n_poles` or `aaa_tol` must be provided.")
 
@@ -127,9 +173,9 @@ def approximate_sop_fast(
 
     Parameters
     ----------
-    poles : array_like
+    poles : (K,) array_like
         Poles of the original sum of simple poles to approximate.
-    residues : array_like
+    residues : (K, ...) array_like
         Residues of the original sum of simple poles to approximate.
     beta : float
         Inverse temperature, used to define the L2 norm in imaginary time
@@ -159,13 +205,63 @@ def approximate_sop_fast(
 
     Returns
     -------
-    poles : ndarray
+    poles : (M,) ndarray
         Poles of the approximating sum of simple poles.
-    residues : ndarray
+    residues : (M, ...) ndarray
         Residues of the approximating sum of simple poles.
     error : float
         L2 norm of the difference in imaginary time between the original
         and approximating sum of simple poles.
+
+    Examples
+    --------
+
+    Approximate a sum of three simple poles
+    :math:`s(z) = 1/(z-1) + 0.5/(z+2) + 0.3/(z-0.5)`,
+    specified by its poles and residues, using AAA. Here the input is already
+    minimal, so the three poles are recovered (up to ordering), with the
+    residues re-fit in imaginary time for inverse temperature :math:`\\beta`.
+
+    >>> import numpy as np
+    >>> np.set_printoptions(precision=2, suppress=True)
+    >>> from adapol.adapol import approximate_sop_fast
+    >>> poles = np.array([1.0, -2.0, 0.5])
+    >>> residues = np.array([1.0, 0.5, 0.3])
+    >>> poles, residues, error = approximate_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
+    >>> poles
+    array([-2. ,  0.5,  1. ])
+    >>> residues
+    array([0.5, 0.3, 1. ])
+    >>> float(error) < 1e-9
+    True
+
+    Unlike `approximate_freq_aaa`, the residues are fit by minimizing the
+    imaginary-time :math:`L^2(\\tau)` error, so `error` is an imaginary-time
+    norm rather than a frequency-domain sample error.
+
+    Tensor-valued residues are supported as well, e.g. a 2x2 matrix-valued
+    sum of poles with :math:`\\dim(R_k) = 2 \\times 2`:
+
+    >>> R1 = np.array([[1, 0.1j], [-0.1j, 0]])
+    >>> R2 = np.array([[0, 0.1], [0.1, 1]])
+    >>> R3 = np.array([[0.5, 0.0], [0.0, 0.5]])
+    >>> poles = np.array([1.0, -2.0, 0.3])
+    >>> residues = np.array([R1, R2, R3])
+    >>> poles, residues, error = approximate_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
+    >>> poles
+    array([-2. ,  0.3,  1. ])
+    >>> residues
+    array([[[ 0. +0.j ,  0.1+0.j ],
+            [ 0.1-0.j ,  1. +0.j ]],
+    <BLANKLINE>
+           [[ 0.5+0.j , -0. -0.j ],
+            [-0. +0.j ,  0.5+0.j ]],
+    <BLANKLINE>
+           [[ 1. +0.j ,  0. +0.1j],
+            [ 0. -0.1j, -0. +0.j ]]])
+    >>> float(error) < 1e-9
+    True
+
     """
     if max_n_poles is None and aaa_tol is None:
         raise ValueError("At least one of `max_n_poles` or `aaa_tol` must be provided.")
@@ -207,9 +303,9 @@ def approximate_sop_tol(
 
     Parameters
     ----------
-    poles : array_like
+    poles : (K,) array_like
         Poles of the original sum of simple poles to approximate.
-    residues : array_like
+    residues : (K, ...) array_like
         Residues of the original sum of simple poles to approximate.
     tol : float
         Target tolerance on the final imaginary-time :math:`L^2(\\tau)` norm of
@@ -227,9 +323,9 @@ def approximate_sop_tol(
 
     Returns
     -------
-    poles : ndarray
+    poles : (M,) ndarray
         Poles of the approximating sum of simple poles.
-    residues : ndarray
+    residues : (M, ...) ndarray
         Residues of the approximating sum of simple poles.
     error : float
         L2 norm of the difference in imaginary time between the original
@@ -240,6 +336,30 @@ def approximate_sop_tol(
     ValueError
         If the target tolerance `tol` cannot be achieved within the internal
         maximum number of search steps.
+
+    Examples
+    --------
+
+    Compress a continuous spectral density into a small sum of simple poles.
+    The density is first discretized as a sum of 200 simple poles on the real
+    axis, which is then compressed to the smallest sum of poles whose
+    imaginary-time :math:`L^2(\\tau)` error is below `tol`.
+
+    >>> import numpy as np
+    >>> from adapol.adapol import approximate_sop_tol
+    >>> w = np.linspace(-2, 2, 200)                            # real-frequency grid
+    >>> dw = w[1] - w[0]
+    >>> rho = np.sqrt(np.maximum(4 - w**2, 0.0)) / (2 * np.pi)  # semicircle density
+    >>> poles, residues, error = approximate_sop_tol(w, rho * dw, tol=1e-5, beta=20.0)
+    >>> len(poles) < 30      # 200 input poles compressed to a handful
+    True
+    >>> float(error) < 1e-5  # final imaginary-time error is below the tolerance
+    True
+
+    Unlike `approximate_sop_fast`, the number of poles is not prescribed but
+    chosen automatically as the smallest count meeting `tol` on the final
+    imaginary-time error.
+
     """
 
     from .sop_compr import SumOfPolesCompression
