@@ -127,7 +127,7 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
 def approx_sop_fast(
         poles, residues, beta, max_n_poles=None, aaa_tol=None,
-        nonlinear_optimization=False, verbose=False):
+        nonlinear_optimization=False, Z=None, verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
     with a sum of a (possibly) smaller number of simple poles, by running the
     AAA algorithm and, optionally, a non-linear optimization step.
@@ -151,6 +151,10 @@ def approx_sop_fast(
     nonlinear_optimization : bool, optional
         If True, run a non-linear optimization step after the AAA approximation,
         using the AAA poles only as an initial guess.
+    Z : (N,) array_like, optional
+        Custom sample points in (complex) frequency space at which to sample
+        the original sum of simple poles for the AAA algorithm. If not given,
+        a symmetric fermionic Matsubara grid is used by default (see Notes).
     verbose : bool, optional
         If True, print verbose output during the approximation process.
 
@@ -197,14 +201,15 @@ def approx_sop_fast(
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
-    **Frequency grid:** The frequency-domain data used by the AAA algorithm is obtained by
-    evaluating the original sum of simple poles on an equispaced
-    imaginary-frequency grid :math:`Z_n = i \\pi n / \\beta`, with spacing
-    :math:`\\pi / \\beta`, for integer :math:`n = -n_{max}, \\ldots, n_{max}`,
-    where :math:`n_{max} = \\lfloor 4 \\beta \\, \\omega_{max} / \\pi \\rfloor + 1`
-    and :math:`\\omega_{max} = \\max_k |poles_k|` is the largest pole magnitude.
-    This grid extends to roughly :math:`4 \\, \\omega_{max}` on the imaginary
-    axis.
+    **Frequency grid:** By default, the frequency-domain data used by the AAA
+    algorithm is obtained by evaluating the original sum of simple poles on a
+    symmetric fermionic Matsubara grid
+    :math:`Z_n = i (2 n + 1) \\pi / \\beta` for
+    :math:`n = -(n_{max}), \\ldots, -1, 0, 1, \\ldots, n_{max} - 1`, with
+    :math:`n_{max} = \\lfloor 4 \\beta \\, \\omega_{max} / \\pi \\rfloor + 1`
+    and :math:`\\omega_{max} = \\max_k |poles_k|` the largest pole magnitude.
+    A custom sample grid may instead be supplied via the optional `Z` argument,
+    e.g. to use a bosonic Matsubara grid.
 
     **Non-linear optimization:** The optional non-linear optimization step keeps the number of poles fixed
     and jointly relocates the pole positions and refits the residues to minimize
@@ -281,11 +286,12 @@ def approx_sop_fast(
 
     return _sum_of_simple_poles_driver(
         poles, residues, max_n_poles=max_n_poles, tol=aaa_tol, beta=beta,
-        nonlinear_optimization=nonlinear_optimization, verbose=verbose)
+        nonlinear_optimization=nonlinear_optimization, Z=Z, verbose=verbose)
 
 
 def approx_sop_tol(
-        poles, residues, tol, beta, nonlinear_optimization=False, verbose=False):
+        poles, residues, tol, beta, nonlinear_optimization=False, Z=None,
+        verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
     with the smallest sum of simple poles whose imaginary-time
     :math:`L^2(\\tau)` error is below the tolerance `tol`.
@@ -307,6 +313,11 @@ def approx_sop_tol(
         If True, the residue step jointly optimizes the pole locations and
         residues (rather than fitting residues only) to minimize the
         imaginary-time :math:`L^2(\tau)` error.
+    Z : (N,) array_like, optional
+        Custom sample points in (complex) frequency space at which to sample
+        the original sum of simple poles for the AAA algorithm. If not given,
+        a symmetric fermionic Matsubara grid is used by default (see
+        `approx_sop_fast`).
     verbose : bool, optional
         If True, print verbose output during the approximation process.
 
@@ -338,9 +349,10 @@ def approx_sop_tol(
 
     Each candidate fit is built in two steps:
 
-    1. **Pole step:** the original sum of simple poles is evaluated on an
-       equispaced imaginary-frequency grid (see `approx_sop_fast` for the
-       grid definition) and AAA is run on this data to determine pole locations.
+    1. **Pole step:** the original sum of simple poles is evaluated on a
+       symmetric fermionic Matsubara grid (see `approx_sop_fast` for the grid
+       definition, and the optional `Z` argument to override it) and AAA is
+       run on this data to determine pole locations.
     2. **Residue step:** the residues are determined by minimizing the
        imaginary-time :math:`L^2(\\tau)` norm of the difference from the
        original sum of simple poles -- a linear least-squares fit of the
@@ -378,7 +390,7 @@ def approx_sop_tol(
 
     from .sop_compr import SumOfPolesCompression
     sc = SumOfPolesCompression(
-        poles, residues, beta, tol=tol, 
+        poles, residues, beta, Z=Z, tol=tol, 
         nonlinear_optimize=nonlinear_optimization, 
         nonlinear_post_optimize=nonlinear_optimization, verbose=verbose)
     return sc.poles, sc.residues, sc.error    
@@ -405,12 +417,12 @@ def _frequency_data_driver(F, Z, max_n_poles, tol, verbose=False,
     return sop.p, sop.R, error
 
 
-def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta, verbose=False,
+def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta,
     cleanup=True, cleanup_residue_tol=1e-12, cleanup_imag_tol=1e-8, 
-    nonlinear_optimization=False, Z=None):
+    nonlinear_optimization=False, Z=None, verbose=False):
 
     if Z is None:
-        Z = _equispaced_imaginary_frequency_grid(poles, beta)
+        Z = _fermionic_matsubara_frequency_grid(poles, beta)
 
     # Eval sop
     sop = SumOfSimplePoles(poles=poles, residues=residues)
@@ -442,7 +454,8 @@ def _max_steps_from_max_n_poles(max_n_poles):
     return (max_n_poles + 1) // 2 if max_n_poles is not None else None
 
 
-def _equispaced_imaginary_frequency_grid(poles, beta):
+def _fermionic_matsubara_frequency_grid(poles, beta):
     w_max = np.abs(poles).max()
     n_max = int(4 * beta * w_max / np.pi) + 1
-    return 1.j * np.pi / beta * np.arange(-n_max, n_max + 1)
+    n = np.arange(-n_max, n_max)
+    return 1.j * np.pi / beta * (2 * n + 1)
