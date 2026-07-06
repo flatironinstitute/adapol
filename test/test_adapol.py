@@ -5,13 +5,13 @@ import numpy as np
 
 from adapol.sop import SumOfSimplePoles
 
-from adapol.adapol import approximate_freq_aaa
-from adapol.adapol import approximate_sop_fast
-from adapol.adapol import approximate_sop_tol
+from adapol.adapol import approx_freq_aaa
+from adapol.adapol import approx_sop_fast
+from adapol.adapol import approx_sop_tol
 
 
 def test_freq_n_poles():
-    """Test ``approximate_freq_aaa`` with a maximum-pole budget.
+    """Test ``approx_freq_aaa`` with a maximum-pole budget.
 
     Fits Matsubara samples generated from a known sum-of-simple-poles under
     a maximum-pole budget and checks the fit reproduces the samples.
@@ -35,7 +35,7 @@ def test_freq_n_poles():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     max_n_poles = 4
-    poles, residues, max_abs_diff = approximate_freq_aaa(F, Z, max_n_poles=max_n_poles, verbose=True)
+    poles, residues, max_abs_diff = approx_freq_aaa(F, Z, max_n_poles=max_n_poles, verbose=True)
 
     print(f'Max abs diff = {max_abs_diff:2.2E}')
 
@@ -48,7 +48,7 @@ def test_freq_n_poles():
 
 
 def test_freq_tol():
-    """Test ``approximate_freq_aaa`` with a fixed error tolerance.
+    """Test ``approx_freq_aaa`` with a fixed error tolerance.
 
     Fits Matsubara samples generated from a known sum-of-simple-poles under
     a fixed error tolerance and checks the max sample-wise error meets it.
@@ -72,7 +72,7 @@ def test_freq_tol():
     F = np.sum(C_zp * residues[None, :], axis=1)
 
     tol = 1e-12
-    poles, residues, max_abs_diff = approximate_freq_aaa(
+    poles, residues, max_abs_diff = approx_freq_aaa(
         F, Z, aaa_tol=tol, verbose=True)
     
     print(f'Poles = {poles}')
@@ -83,7 +83,7 @@ def test_freq_tol():
 
 
 def test_sop_n_poles():
-    """Test ``approximate_sop_fast`` with a maximum-pole budget.
+    """Test ``approx_sop_fast`` with a maximum-pole budget.
 
     Compresses an existing ``SumOfSimplePoles`` under a maximum-pole budget
     and checks the imaginary-time L2 norm of the difference is small.
@@ -103,7 +103,7 @@ def test_sop_n_poles():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sop_fast(
+        approx_sop_fast(
         poles, residues, max_n_poles=4, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
@@ -112,7 +112,7 @@ def test_sop_n_poles():
 
 
 def test_sop_tol():
-    """Test ``approximate_sop_fast`` with a fixed error tolerance.
+    """Test ``approx_sop_fast`` with a fixed error tolerance.
 
     Compresses an existing ``SumOfSimplePoles`` under a fixed error tolerance
     and checks the imaginary-time L2 norm of the difference meets it.
@@ -133,7 +133,7 @@ def test_sop_tol():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sop_fast(
+        approx_sop_fast(
         poles, residues, aaa_tol=tol, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
@@ -142,7 +142,7 @@ def test_sop_tol():
 
 
 def test_sop_tol_imtime():
-    """Test ``approximate_sop_tol``.
+    """Test ``approx_sop_tol``.
 
     Compresses an existing ``SumOfSimplePoles`` under a fixed (imtime) error tolerance
     and checks the imaginary-time L2 norm of the difference meets it.
@@ -163,7 +163,7 @@ def test_sop_tol_imtime():
     residues = np.array([1., 2.])
 
     poles_fit, residues_fit, diff = \
-        approximate_sop_tol(
+        approx_sop_tol(
         poles, residues, tol=tol, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
@@ -172,7 +172,7 @@ def test_sop_tol_imtime():
 
 
 def test_freq_max_n_poles_and_tol():
-    """Test ``approximate_freq_aaa`` with both ``max_n_poles`` and ``tol`` set.
+    """Test ``approx_freq_aaa`` with both ``max_n_poles`` and ``tol`` set.
 
     AAA should stop as soon as either the tolerance is reached or the maximum
     pole budget is exhausted, whichever happens first.
@@ -198,7 +198,7 @@ def test_freq_max_n_poles_and_tol():
     # tol is loose, so the max_n_poles budget should bind first.
     max_n_poles = 2
     tol = 1e-2
-    poles_fit, residues_fit, max_abs_diff = approximate_freq_aaa(
+    poles_fit, residues_fit, max_abs_diff = approx_freq_aaa(
         F, Z, max_n_poles=max_n_poles, aaa_tol=tol, verbose=True)
 
     print(f'Poles = {poles_fit}')
@@ -208,7 +208,7 @@ def test_freq_max_n_poles_and_tol():
 
 
 def test_sop_max_n_poles_and_tol():
-    """Test ``approximate_sop_fast`` with both ``max_n_poles`` and ``tol`` set.
+    """Test ``approx_sop_fast`` with both ``max_n_poles`` and ``tol`` set.
 
     AAA should stop as soon as either the tolerance is reached or the maximum
     pole budget is exhausted, whichever happens first.
@@ -229,7 +229,7 @@ def test_sop_max_n_poles_and_tol():
     residues = np.array([1., 2.])
 
     # tol is tight enough to be reached within the generous pole budget.
-    poles_fit, residues_fit, diff = approximate_sop_fast(
+    poles_fit, residues_fit, diff = approx_sop_fast(
         poles, residues, max_n_poles=8, aaa_tol=tol, beta=beta, verbose=True)
 
     print(f'L2 norm of difference in imaginary time = {diff:2.2E}')
@@ -238,23 +238,23 @@ def test_sop_max_n_poles_and_tol():
 
 
 def test_sop_no_criterion_raises():
-    """``approximate_sop_fast`` requires at least one of ``max_n_poles``/``tol``."""
+    """``approx_sop_fast`` requires at least one of ``max_n_poles``/``tol``."""
 
     import pytest
     poles = np.array([0.5, -1.2])
     residues = np.array([1., 2.])
     with pytest.raises(ValueError):
-        approximate_sop_fast(poles, residues, beta=2.3)
+        approx_sop_fast(poles, residues, beta=2.3)
 
 
 def test_freq_no_criterion_raises():
-    """``approximate_freq_aaa`` requires at least one of ``max_n_poles``/``tol``."""
+    """``approx_freq_aaa`` requires at least one of ``max_n_poles``/``tol``."""
 
     import pytest
     Z = 1.j * np.array([0.1, 0.2, 0.3, 0.4])
     F = 1. / (Z - 0.5)
     with pytest.raises(ValueError):
-        approximate_freq_aaa(F, Z)
+        approx_freq_aaa(F, Z)
 
 
 if __name__ == '__main__':

@@ -4,13 +4,13 @@ Python reference manual
 Frequency-data approximation
 ----------------------------
 
-.. autofunction:: adapol.approximate_freq_aaa
+.. autofunction:: adapol.approx_freq_aaa
 
 Sum-of-poles compression
 ------------------------
 
-.. autofunction:: adapol.approximate_sop_fast
-.. autofunction:: adapol.approximate_sop_tol
+.. autofunction:: adapol.approx_sop_fast
+.. autofunction:: adapol.approx_sop_tol
 
 TRIQS interface
 ---------------

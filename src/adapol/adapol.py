@@ -15,7 +15,7 @@ from .aaa import aaa
 from .sop import SumOfSimplePoles
 
 
-def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
+def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     """Approximate frequency data :math:`F` sampled at points :math:`Z`
     with a sum of simple poles, by running the AAA algorithm.
 
@@ -80,12 +80,12 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     >>> import numpy as np
     >>> np.set_printoptions(precision=2, suppress=True)
-    >>> from adapol.adapol import approximate_freq_aaa
+    >>> from adapol.adapol import approx_freq_aaa
     >>> # Sample frequency data F at points Z
     >>> Z = 1j * np.linspace(-10, 10, 100)
     >>> F = 1 / (Z - 1) + 0.5 / (Z + 2)  # Example frequency data with two poles
     >>> # Approximate F with a sum of simple poles using AAA
-    >>> poles, residues, error = approximate_freq_aaa(F, Z, aaa_tol=1e-12)
+    >>> poles, residues, error = approx_freq_aaa(F, Z, aaa_tol=1e-12)
     >>> poles
     array([-2.  ,  0.03,  1.  ])
     >>> residues
@@ -102,7 +102,7 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     >>> R1 = np.array([[1, 0.1j], [-0.1j, 0]])[None, ...]
     >>> R2 = np.array([[0, 0.1], [0.1, 1]])[None, ...]
     >>> F = R1 / (Z[:, None, None] - 1) + R2 / (Z[:, None, None] + 2)
-    >>> poles, residues, error = approximate_freq_aaa(F, Z, aaa_tol=1e-12)
+    >>> poles, residues, error = approx_freq_aaa(F, Z, aaa_tol=1e-12)
     >>> poles
     array([-2.  , -0.27,  1.  ])
     >>> residues
@@ -125,7 +125,7 @@ def approximate_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     return _frequency_data_driver(F, Z, max_n_poles=max_n_poles, tol=aaa_tol, verbose=verbose)
 
 
-def approximate_sop_fast(
+def approx_sop_fast(
         poles, residues, beta, max_n_poles=None, aaa_tol=None,
         nonlinear_optimization=False, verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
@@ -186,7 +186,7 @@ def approximate_sop_fast(
        True, the pole locations and residues are instead jointly optimized,
        for details see below.
 
-    Note that, unlike `approximate_freq_aaa`, the residues here are fit in
+    Note that, unlike `approx_freq_aaa`, the residues here are fit in
     imaginary time, not in the frequency domain.
 
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
@@ -237,10 +237,10 @@ def approximate_sop_fast(
 
     >>> import numpy as np
     >>> np.set_printoptions(precision=2, suppress=True)
-    >>> from adapol.adapol import approximate_sop_fast
+    >>> from adapol.adapol import approx_sop_fast
     >>> poles = np.array([1.0, -2.0, 0.5])
     >>> residues = np.array([1.0, 0.5, 0.3])
-    >>> poles, residues, error = approximate_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
+    >>> poles, residues, error = approx_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
     >>> poles
     array([-2. ,  0.5,  1. ])
     >>> residues
@@ -248,7 +248,7 @@ def approximate_sop_fast(
     >>> float(error) < 1e-9
     True
 
-    Unlike `approximate_freq_aaa`, the residues are fit by minimizing the
+    Unlike `approx_freq_aaa`, the residues are fit by minimizing the
     imaginary-time :math:`L^2(\\tau)` error, so `error` is an imaginary-time
     norm rather than a frequency-domain sample error.
 
@@ -260,7 +260,7 @@ def approximate_sop_fast(
     >>> R3 = np.array([[0.5, 0.0], [0.0, 0.5]])
     >>> poles = np.array([1.0, -2.0, 0.3])
     >>> residues = np.array([R1, R2, R3])
-    >>> poles, residues, error = approximate_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
+    >>> poles, residues, error = approx_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
     >>> poles
     array([-2. ,  0.3,  1. ])
     >>> residues
@@ -284,7 +284,7 @@ def approximate_sop_fast(
         nonlinear_optimization=nonlinear_optimization, verbose=verbose)
 
 
-def approximate_sop_tol(
+def approx_sop_tol(
         poles, residues, tol, beta, nonlinear_optimization=False, verbose=False):
     """Approximate a sum of simple poles defined by `poles` and `residues`
     with the smallest sum of simple poles whose imaginary-time
@@ -328,7 +328,7 @@ def approximate_sop_tol(
 
     Notes
     -----
-    Unlike `approximate_sop_fast`, where the tolerance only controls the AAA
+    Unlike `approx_sop_fast`, where the tolerance only controls the AAA
     pole step, here `tol` is imposed on the **final** imaginary-time error,
     i.e. after the residues have been fit. Since AAA only determines pole
     locations and the residues (and hence the final error) are only known after
@@ -339,7 +339,7 @@ def approximate_sop_tol(
     Each candidate fit is built in two steps:
 
     1. **Pole step:** the original sum of simple poles is evaluated on an
-       equispaced imaginary-frequency grid (see `approximate_sop_fast` for the
+       equispaced imaginary-frequency grid (see `approx_sop_fast` for the
        grid definition) and AAA is run on this data to determine pole locations.
     2. **Residue step:** the residues are determined by minimizing the
        imaginary-time :math:`L^2(\\tau)` norm of the difference from the
@@ -360,17 +360,17 @@ def approximate_sop_tol(
     imaginary-time :math:`L^2(\\tau)` error is below `tol`.
 
     >>> import numpy as np
-    >>> from adapol.adapol import approximate_sop_tol
+    >>> from adapol.adapol import approx_sop_tol
     >>> w = np.linspace(-2, 2, 200)                            # real-frequency grid
     >>> dw = w[1] - w[0]
     >>> rho = np.sqrt(np.maximum(4 - w**2, 0.0)) / (2 * np.pi)  # semicircle density
-    >>> poles, residues, error = approximate_sop_tol(w, rho * dw, tol=1e-5, beta=20.0)
+    >>> poles, residues, error = approx_sop_tol(w, rho * dw, tol=1e-5, beta=20.0)
     >>> len(poles) < 30      # 200 input poles compressed to a handful
     True
     >>> float(error) < 1e-5  # final imaginary-time error is below the tolerance
     True
 
-    Unlike `approximate_sop_fast`, the number of poles is not prescribed but
+    Unlike `approx_sop_fast`, the number of poles is not prescribed but
     chosen automatically as the smallest count meeting `tol` on the final
     imaginary-time error.
 
