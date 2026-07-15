@@ -225,17 +225,17 @@ class ImTimeQuadrature:
 
 
     def l2_norm(self, f):
-        """ Compute the imaginary time L2 norm :math:`N` of an function in imaginary time
+        """ Compute the normalized imaginary time L2 norm :math:`N` of a function in imaginary time
         using the quadrature, where
-        
-        .. math::
-            N = | f |_{2,\beta} 
-                \\equiv \\sqrt{\\int_0^\\beta |f(\\tau)|^2 d\\tau}
-                \\approx \\sqrt{\\beta \\sum_i w_i |f(\\tau_i)|^2}
 
-        
+        .. math::
+            N = | f |_{2,\beta}
+                \\equiv \\sqrt{\\frac{1}{\\beta} \\int_0^\\beta |f(\\tau)|^2 d\\tau}
+                \\approx \\sqrt{\\sum_i w_i |f(\\tau_i)|^2}
+
+
         """
-        return np.sqrt(np.sum(self.integrate(np.abs(f(self.tau_i))**2)))
+        return np.sqrt(np.sum(self.integrate(np.abs(f(self.tau_i))**2)) / self.beta)
 
 
     def best_l2_norm_approximation_using_poles(self, func, poles, full_return=False):
@@ -317,12 +317,12 @@ class ImTimeQuadrature:
         func = lambda poles : self.l2_norm_gradient_with_respect_to_poles_opt(sop, poles)
 
         res = scipy_minimize(
-            func, poles, 
-            method='L-BFGS-B', 
+            func, poles,
+            method='L-BFGS-B',
             jac=True,
             tol=1e-14)
-        
-        if verbose: 
+
+        if verbose:
             print(res)
 
         poles_opt = res.x
@@ -354,7 +354,7 @@ class ImTimeQuadrature:
             sop_opt = get_sop_opt(poles, sop)
             sop_diff = sop_opt - sop
             r_iX = sop_diff.eval_imtime(self.tau_i, self.beta)
-            wr_iX = np.sqrt(self.beta) * np.einsum('i,i...->i...', self.sqrt_w_i, r_iX)
+            wr_iX = np.einsum('i,i...->i...', self.sqrt_w_i, r_iX)
             wr_A = wr_iX.flatten()
             return wr_A
         
@@ -363,8 +363,8 @@ class ImTimeQuadrature:
             sop_opt = get_sop_opt(poles, sop)
             sop_diff = sop_opt - sop
             dKdz_ip = self.dkernel_matrix_dpoles(sop_opt.p)
-            J_iXp = np.einsum('i,p...,ip->i...p', 
-                np.sqrt(self.beta) * self.sqrt_w_i, sop_opt.R, dKdz_ip).real 
+            J_iXp = np.einsum('i,p...,ip->i...p',
+                self.sqrt_w_i, sop_opt.R, dKdz_ip).real
             J_Ap = J_iXp.reshape(-1, len(poles))
             return J_Ap
         
@@ -413,18 +413,18 @@ class ImTimeQuadrature:
                 =
                 \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}
                 =
-                \\{1}{2N} \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}^2
+                \\frac{1}{2N} \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}^2
                 =
-                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial r}{\\partial z_p} d\\tau \\right)
+                \\frac{1}{\\beta N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial r}{\\partial z_p} d\\tau \\right)
                 =
-                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial \\tilde{f}}{\\partial z_p} d\\tau \\right)
+                \\frac{1}{\\beta N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial \\tilde{f}}{\\partial z_p} d\\tau \\right)
                 =
-                \\frac{1}{N} \\Re \\left[ \\int_0^\\beta  
+                \\frac{1}{\\beta N} \\Re \\left[ \\int_0^\\beta  
                     \\bar{r(\\tau)} R_p \\frac{\\partial K(\\tau, z_p)}{\\partial z_p} 
                 d\\tau \\right] 
                 =
-                \\frac{\\beta}{N} \\Re \\left[ \\sum_i w_i 
-                \\bar{r(\\tau_i)} R_p \\frac{\\partial K(\\tau_i, z_p)}{\\partial z_p} \\right] 
+                \\frac{1}{N} \\Re \\left[ \\sum_i w_i
+                \\bar{r(\\tau_i)} R_p \\frac{\\partial K(\\tau_i, z_p)}{\\partial z_p} \\right]
 
         where :math:`N` is the L2 norm error, :math:`r(\\tau) = \\tilde{f}(\\tau) - f(\\tau)` 
         is the residual function, and the analytic derivative of the kernel is given by
@@ -449,8 +449,8 @@ class ImTimeQuadrature:
 
         dKdz_ip = self.dkernel_matrix_dpoles(sop_approx.p)
 
-        jac = self.beta / N * np.einsum(
-            'i,i...,ip,p...->p...', self.w_i, r_i.conj(), dKdz_ip, sop_approx.R).real 
+        jac = np.einsum(
+            'i,i...,ip,p...->p...', self.w_i, r_i.conj(), dKdz_ip, sop_approx.R).real / N
         
         # If f is tensor valued, sum all tensor indices
         if jac.ndim > 1: jac = np.sum(jac, axis=tuple(range(1, jac.ndim)))
@@ -470,18 +470,18 @@ class ImTimeQuadrature:
                 =
                 \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}
                 =
-                \\{1}{2N} \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}^2
+                \\frac{1}{2N} \\frac{\\partial}{\\partial z_p} | r |_{2,\\beta}^2
                 =
-                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial r}{\\partial z_p} d\\tau \\right)
+                \\frac{1}{\\beta N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial r}{\\partial z_p} d\\tau \\right)
                 =
-                \\{1}{N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial \\tilde{f}}{\\partial z_p} d\\tau \\right)
+                \\frac{1}{\\beta N} \\Re \\left( \\int_0^\\beta \\bar{r} \\frac{\\partial \\tilde{f}}{\\partial z_p} d\\tau \\right)
                 =
-                \\frac{1}{N} \\Re \\left[ \\int_0^\\beta  
+                \\frac{1}{\\beta N} \\Re \\left[ \\int_0^\\beta  
                     \\bar{r(\\tau)} R_p \\frac{\\partial K(\\tau, z_p)}{\\partial z_p} 
                 d\\tau \\right] 
                 =
-                \\frac{\\beta}{N} \\Re \\left[ \\sum_i w_i 
-                \\bar{r(\\tau_i)} R_p \\frac{\\partial K(\\tau_i, z_p)}{\\partial z_p} \\right] 
+                \\frac{1}{N} \\Re \\left[ \\sum_i w_i
+                \\bar{r(\\tau_i)} R_p \\frac{\\partial K(\\tau_i, z_p)}{\\partial z_p} \\right]
 
         where :math:`N` is the L2 norm error, :math:`r(\\tau) = \\tilde{f}(\\tau) - f(\\tau)` 
         is the residual function, and the analytic derivative of the kernel is given by
@@ -497,7 +497,7 @@ class ImTimeQuadrature:
         R_p, wK_ip, wr_i, sum_sq_err = \
             self.best_l2_norm_approximation_using_poles(f_tau, poles, full_return=True)
 
-        N = np.sqrt(self.beta * np.sum(sum_sq_err))
+        N = np.sqrt(np.sum(sum_sq_err))
 
         K_0mp = kernel(np.zeros(1), -poles * self.beta)
         dwK_dpoles_ip = -wK_ip * (self.tau_i[:, None] + self.beta * K_0mp)
@@ -505,6 +505,6 @@ class ImTimeQuadrature:
         wr_iX = wr_i.reshape(wr_i.shape[0], -1)
         R_pX = R_p.reshape(R_p.shape[0], -1)
 
-        jac = (self.beta / N) * np.sum((dwK_dpoles_ip.T @ wr_iX.conj()) * R_pX, axis=1).real
+        jac = np.sum((dwK_dpoles_ip.T @ wr_iX.conj()) * R_pX, axis=1).real / N
 
         return N, jac

@@ -89,8 +89,8 @@ def approximate_gf_dlr_with_max_n_poles(
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
-        and approximating sum of simple poles.
+        Normalized imaginary-time L2 norm of the difference between the
+        original and approximating sum of simple poles.
     """
     poles, residues, beta, Z = _gf_dlr_to_data(G_dlr)
     return _sum_of_simple_poles_driver(
@@ -121,8 +121,8 @@ def approximate_gf_dlr_with_fixed_error_tolerance(
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
-        and approximating sum of simple poles."""
+        Normalized imaginary-time L2 norm of the difference between the
+        original and approximating sum of simple poles."""
     
     poles, residues, beta, Z = _gf_dlr_to_data(G_dlr)
     return _sum_of_simple_poles_driver(
@@ -153,8 +153,8 @@ def approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
     residues : ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original 
-        and approximating sum of simple poles."""
+        Normalized imaginary-time L2 norm of the difference between the
+        original and approximating sum of simple poles."""
 
     comp = TriqsDLRCompression(
         G_dlr, tol=tol, nonlinear_optimize=nonlinear_optimization, 

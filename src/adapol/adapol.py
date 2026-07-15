@@ -165,8 +165,8 @@ def approx_sop_fast(
     residues : (M, ...) ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original
-        and approximating sum of simple poles.
+        Normalized imaginary-time :math:`L^2(\\tau)` norm of the difference
+        between the original and approximating sum of simple poles (see Notes).
 
     Notes
     -----
@@ -192,6 +192,13 @@ def approx_sop_fast(
 
     Note that, unlike `approx_freq_aaa`, the residues here are fit in
     imaginary time, not in the frequency domain.
+
+    The imaginary-time :math:`L^2(\\tau)` norm is normalized by the inverse
+    temperature :math:`\\beta`,
+
+    .. math::
+        \\lVert f \\rVert_{L^2(\\tau)} =
+            \\left( \\frac{1}{\\beta} \\int_0^\\beta |f(\\tau)|^2 \\, d\\tau \\right)^{1/2}.
 
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
       are used.
@@ -328,8 +335,9 @@ def approx_sop_tol(
     residues : (M, ...) ndarray
         Residues of the approximating sum of simple poles.
     error : float
-        L2 norm of the difference in imaginary time between the original
-        and approximating sum of simple poles.
+        Normalized imaginary-time :math:`L^2(\\tau)` norm of the difference
+        between the original and approximating sum of simple poles (with the
+        :math:`1/\\beta` normalization defined in `approx_sop_fast`).
 
     Raises
     ------

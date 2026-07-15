@@ -91,7 +91,7 @@ def test_convergence(beta=1.0):
     plt.grid(True)
     #plt.axis('square')
     plt.xlabel('Tolerance')
-    plt.ylabel('L2 Error (imtime)')
+    plt.ylabel('Normalized L2 error (imtime)')
 
     plt.subplot(*subp, sharex=ax); subp[-1] += 1
     plt.plot(tols, tdcs.n_poles, 's-', label='TriqsDLRCompression')

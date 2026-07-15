@@ -43,7 +43,7 @@ def test_sop_imtime():
     np.testing.assert_array_almost_equal(f_tau, -0.5 * np.ones_like(tau))
 
     norm = sop.imtime_l2_norm(beta=beta)
-    norm_ref = np.sqrt((-0.5)**2 * beta)
+    norm_ref = np.sqrt((-0.5)**2)
     print(f'norm = {norm} (ref = {norm_ref})')
     assert( np.isclose(norm, norm_ref) )
 
@@ -56,7 +56,7 @@ def test_sop_imtime():
     np.testing.assert_array_almost_equal(f_tau, f_tau_ref)
 
     norm = sop.imtime_l2_norm(beta=beta)
-    norm_ref = np.sqrt(-(np.exp(-2*beta*w) - 1) / (2*w*(1 + np.exp(-beta*w))**2))
+    norm_ref = np.sqrt(-(np.exp(-2*beta*w) - 1) / (2*w*(1 + np.exp(-beta*w))**2) / beta)
     print(f'norm = {norm}, (ref = {norm_ref})')
     assert( np.isclose(norm, norm_ref))
 
@@ -88,21 +88,21 @@ def test_sop_imtime_pole_norm():
     itq = sop_diff.get_imtime_quadrature(beta=beta)
 
     f_i = sop_diff.eval_imtime(itq.tau_i, beta)
-    norm_0 = np.sqrt(np.sum(itq.integrate(np.abs(f_i)**2)))
+    norm_0 = np.sqrt(np.sum(itq.integrate(np.abs(f_i)**2)) / beta)
     print(f'norm_0   = {norm_0}')
     assert( np.isclose(norm_0, norm_ref) )
 
     np.testing.assert_array_almost_equal(itq.w_i, itq.sqrt_w_i**2)
 
     wf_i = np.einsum('i,i...->i...', itq.sqrt_w_i, f_i)
-    norm_1 = np.sqrt(beta * np.sum(np.abs(wf_i)**2))
+    norm_1 = np.sqrt(np.sum(np.abs(wf_i)**2))
     print(f'norm_1   = {norm_1}')
     assert( np.isclose(norm_1, norm_ref) )
 
     M_ip = itq.sqrt_w_i[:, None] * itq.kernel_matrix(sop_diff.p)
     #wf_i_manual = M_ip @ sop_diff.R
     wf_i_manual = np.einsum('ip,p...->i...', M_ip, sop_diff.R)
-    norm_2 = np.sqrt(beta) * np.linalg.norm(wf_i_manual)
+    norm_2 = np.linalg.norm(wf_i_manual)
     print(f'norm_2   = {norm_2}')
     assert( np.isclose(norm_2, norm_ref) )
 
