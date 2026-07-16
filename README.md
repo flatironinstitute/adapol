@@ -1,43 +1,53 @@
 # adapol: Adaptive Pole Fitting for Quantum Many-Body Physics
-[`adapol`](https://github.com/flatironinstitute/adapol) (pronounced "add a pole") is a python package for fitting Matsubara functions with the following form (in the fermionic case):
+
+[`adapol`](https://github.com/flatironinstitute/adapol) ("add-a-pole") is a Python package for constructing compact pole approximations of Matsubara functions,
+
 ```math
-G(\mathrm i \omega_k) = \sum_l \frac{V_lV_l^{\dagger}}{\mathrm i\omega_k - E_l}.
-```
-Or in the bosonic case,
-```math
-G(\mathrm i \omega_k) = \sum_l V_lV_l^{\dagger}\frac{E_l}{\mathrm i\omega_k - E_l}. 
+G(\mathrm{i}\nu_n) \approx \sum_{k=1}^{M} \frac{R_k}{\mathrm{i}\nu_n - p_k},
 ```
 
-Current applications include
-(1) hybridization fitting, (2) analytic continuation.
+with real poles $p_k$ and scalar or matrix-valued residues $R_k$, using the AAA rational approximation algorithm and nonlinear optimization. Given Matsubara data, or an existing pole expansion (for example, a discretized spectral density or a discrete Lehmann representation), `adapol` finds an accurate approximation with a specified maximum number of poles, or as few poles as possible. A typical application is hybridization fitting: constructing a compact bath representation of a given hybridization function.
 
-We also provide a [TRIQS](https://triqs.github.io/) interface if the Matsubara functions are stored in `triqs` Green's function container.
+## Installation
 
-# Installation
-`adapol` has `numpy` and `scipy` as its prerequisites. [`cvxpy`](https://www.cvxpy.org/) is also required for hybridization fitting of matrix-valued (instead of scalar-valued) Matsubara functions.
-
-To install `adapol`, run
-```terminal
+```
 pip install adapol
 ```
 
+The only dependencies are `numpy` and `scipy`.
 
+**Note:** the interface described below requires a newer version of `adapol`, which has not yet been released on PyPI. For now, install from source:
 
-# Documentation
+```
+pip install git+https://github.com/flatironinstitute/adapol
+```
 
-See the detailed [documentation](https://flatironinstitute.github.io/adapol/) for physical background, algorithms and user manual.
+## Usage
 
-`Adapol` is a stand-alone package. For TRIQS users, we also provide a TRIQS interface. See [user manual](https://flatironinstitute.github.io/adapol/latest/python.html#triqs-interface) for details.
+`adapol` provides three main functions:
 
-# Examples
-In the `tutorial` page, we provide two examples [`discrete.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/discrete.html) and [`semicircle.ipynb`](https://flatironinstitute.github.io/adapol/latest/tutorials/semicircle.html), showcasing how to use `adapol` for both discrete spectrum and continuous spectrum.
+- **`approx_freq_aaa(F, Z, ...)`** fits frequency data `F`, sampled at (typically Matsubara) points `Z`, with a sum of simple poles, using the AAA algorithm. The number of poles is controlled by a pole budget `max_n_poles` and/or a AAA error tolerance `aaa_tol`.
+- **`approx_sop_fast(poles, residues, beta, ...)`** approximates a given sum of poles by a (hopefully) smaller one in a single AAA pass. The number of poles is again controlled by `max_n_poles` and/or `aaa_tol`, and an optional `nonlinear_optimization` step refines the pole locations.
+- **`approx_sop_tol(poles, residues, tol, beta, ...)`** finds the smallest sum of poles whose actual error (in $L^2(\tau)$ and $l^2(i \omega_n)$) is below the tolerance `tol`.
 
-In these notebooks, we also demonstrate how to use our code through the triqs interface.
+## Examples
 
-# References
-To cite this work, please include a reference to this GitHub repository, and
-cite the following references:
+Two example notebooks demonstrate the usage of these functions in detail. We recommend reading them in the following order.
 
-1. Huang, Zhen, Emanuel Gull, and Lin Lin. "Robust analytic continuation of Green's functions via projection, pole estimation, and semidefinite relaxation." Physical Review B 107.7 (2023): 075151.
-2. Mejuto-Zaera, Carlos, et al. "Efficient hybridization fitting for dynamical mean-field theory via semi-definite relaxation." Physical Review B 101.3 (2020): 035143.
-3. Nakatsukasa, Yuji, Olivier Sète, and Lloyd N. Trefethen. "The AAA algorithm for rational approximation." SIAM Journal on Scientific Computing 40.3 (2018): A1494-A1522.
+- [`example/semicircle.ipynb`](example/semicircle.ipynb) — fitting data with a continuous spectrum (semicircular density): the stopping criteria, the nonlinear optimization option, and the error metric.
+- [`example/discrete.ipynb`](example/discrete.ipynb) — fitting multi-orbital data with a discrete spectrum, including an experiment on how the required number of poles scales with the number of orbitals.
+
+## Documentation
+
+The [reference documentation](https://flatironinstitute.github.io/adapol/latest/python.html) for the three functions also describes in detail how to use them, as well as information on the algorithms they implement. The same information is contained in the docstrings, e.g. `help(adapol.approx_freq_aaa)`.
+
+## Citation
+
+If you use this package in your research, please include a reference to this GitHub repository, and cite the following references:
+
+1. Huang, Zhen, Emanuel Gull, and Lin Lin. "[Robust analytic continuation of Green's functions via projection, pole estimation, and semidefinite relaxation](https://doi.org/10.1103/PhysRevB.107.075151)," Phys. Rev. B 107, 075151 (2023).
+2. Huang, Zhen, Denis Golež, Hugo U. R. Strand, and Jason Kaye. "[Automated evaluation of imaginary time strong coupling diagrams by sum-of-exponentials hybridization fitting](https://doi.org/10.21468/SciPostPhys.19.5.121)," SciPost Phys. 19 (5), 121 (2025).
+
+## License
+
+`adapol` is distributed under the GNU General Public License v3.0 (see [LICENSE](LICENSE)).
