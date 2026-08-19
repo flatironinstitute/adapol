@@ -1,9 +1,9 @@
 
-```{include} ../Readme.md
+```{include} ../README.md
 :end-line: 32
 ```
 
-```{include} ../Readme.md
+```{include} ../README.md
 :start-line: 43
 ```
 

@@ -40,7 +40,7 @@ Two example notebooks demonstrate the usage of these functions in detail. We rec
 
 ## Documentation
 
-The [reference documentation](https://flatironinstitute.github.io/adapol/latest/python.html) for the three functions also describes in detail how to use them, as well as information on the algorithms they implement. The same information is contained in the docstrings, e.g. `help(adapol.approx_freq_aaa)`.
+The [reference documentation](https://flatironinstitute.github.io/adapol/latest/api.html) for the three functions also describes in detail how to use them, as well as information on the algorithms they implement. The same information is contained in the docstrings, e.g. `help(adapol.approx_freq_aaa)`.
 
 ## Citation
 
