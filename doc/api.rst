@@ -1,14 +1,7 @@
-Python reference manual
+API reference
 =======================
 
-Frequency-data approximation
-----------------------------
-
 .. autofunction:: adapol.approx_freq_aaa
-
-Sum-of-poles compression
-------------------------
-
 .. autofunction:: adapol.approx_sop_fast
 .. autofunction:: adapol.approx_sop_tol
 

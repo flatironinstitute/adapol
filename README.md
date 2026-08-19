@@ -2,9 +2,9 @@
 
 [`adapol`](https://github.com/flatironinstitute/adapol) ("add-a-pole") is a Python package for constructing compact pole approximations of Matsubara functions,
 
-```math
+$$
 G(\mathrm{i}\nu_n) \approx \sum_{k=1}^{M} \frac{R_k}{\mathrm{i}\nu_n - p_k},
-```
+$$
 
 with real poles $p_k$ and scalar or matrix-valued residues $R_k$, using the AAA rational approximation algorithm and nonlinear optimization. Given Matsubara data, or an existing pole expansion (for example, a discretized spectral density or a discrete Lehmann representation), `adapol` finds an accurate approximation with a specified maximum number of poles, or as few poles as possible. A typical application is hybridization fitting: constructing a compact bath representation of a given hybridization function.
 
@@ -34,8 +34,9 @@ pip install git+https://github.com/flatironinstitute/adapol
 
 Two example notebooks demonstrate the usage of these functions in detail. We recommend reading them in the following order.
 
-- [`example/semicircle.ipynb`](example/semicircle.ipynb) — fitting data with a continuous spectrum (semicircular density): the stopping criteria, the nonlinear optimization option, and the error metric.
-- [`example/discrete.ipynb`](example/discrete.ipynb) — fitting multi-orbital data with a discrete spectrum, including an experiment on how the required number of poles scales with the number of orbitals.
+- [`doc/examples/semicircle.ipynb`](doc/examples/semicircle.ipynb) — fitting data with a continuous spectrum (semicircular density): the stopping criteria, the nonlinear optimization option, and the error metric.
+- [`doc/examples/discrete.ipynb`](doc/examples/discrete.ipynb) — fitting multi-orbital data with a discrete spectrum, including an experiment on how the required number of poles scales with the number of orbitals.
+- [`doc/examples/hubbarddimer.ipynb`](doc/examples/hubbarddimer.ipynb) — analytic continuation benchmark for the Hubbard dimer.
 
 ## Documentation
 
