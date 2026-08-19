@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pole approximation of multi-orbital data with a discrete spectrum &mdash; Adapol 0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=10f1778b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" href="semicircle.html" />
+    <link rel="prev" title="Examples" href="../examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Adapol
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Pole approximation of multi-orbital data with a discrete spectrum</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Fitting-the-Matsubara-data:-approx_freq_aaa">Fitting the Matsubara data: approx_freq_aaa</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Compressing-the-exact-expansion:-approx_sop_fast">Compressing the exact expansion: approx_sop_fast</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Compression-to-a-prescribed-accuracy:-approx_sop_tol">Compression to a prescribed accuracy: approx_sop_tol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#How-does-the-required-number-of-poles-vary-with-the-number-of-orbitals?">How does the required number of poles vary with the number of orbitals?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#References">References</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="semicircle.html">Adaptive pole approximation for a continuous spectrum (semicircular density)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hubbarddimer.html">Analytic continuation of Hubbard dimer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Adapol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Pole approximation of multi-orbital data with a discrete spectrum</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/discrete.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Pole-approximation-of-multi-orbital-data-with-a-discrete-spectrum">
+<h1>Pole approximation of multi-orbital data with a discrete spectrum<a class="headerlink" href="#Pole-approximation-of-multi-orbital-data-with-a-discrete-spectrum" title="Link to this heading"></a></h1>
+<p>In this example we consider a matrix-valued (multi-orbital) Matsubara function with a discrete spectrum: a sum of <span class="math notranslate nohighlight">\(K\)</span> delta functions at random locations <span class="math notranslate nohighlight">\(p_k \in [-1, 1]\)</span>, with random rank-one (bath-site-like) residues,</p>
+<div class="math notranslate nohighlight">
+\[F(\mathrm{i}\nu_n) = \sum_{k=1}^{K} \frac{v_k^{\phantom\dagger} v_k^\dagger}{\mathrm{i}\nu_n - p_k}, \qquad v_k \in \mathbb{C}^{n_{\mathrm{orb}}},\]</div>
+<p>with the <span class="math notranslate nohighlight">\(p_k\)</span> and <span class="math notranslate nohighlight">\(v_k\)</span> drawn from a fixed random seed. Since the exact function is itself a sum of simple poles, the accuracy of any fit can be measured exactly. Note that the goal is <em>not</em> to recover the input poles: at a given target accuracy the fitting routines are free to use fewer — and differently placed — poles than the input, and for a compact representation that is exactly what one wants.</p>
+<p>We briefly demonstrate the three main <code class="docutils literal notranslate"><span class="pre">adapol</span></code> functions with fixed, representative parameter choices — see the <code class="docutils literal notranslate"><span class="pre">semicircle</span></code> example for a more detailed exploration of the stopping criteria, the <code class="docutils literal notranslate"><span class="pre">nonlinear_optimization</span></code> switch, and the error metric. We then run a small experiment: using <code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code>, we measure how many poles are actually required to reach a given accuracy as the number of orbitals grows.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_freq_aaa</span><span class="p">,</span> <span class="n">approx_sop_fast</span><span class="p">,</span> <span class="n">approx_sop_tol</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">20.0</span>
+
+<span class="c1"># Fermionic Matsubara sampling grid Z_n = i(2n+1)*pi/beta, symmetric about zero</span>
+<span class="n">nmax</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">nmax</span><span class="p">,</span> <span class="n">nmax</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">beta</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_random_model</span><span class="p">(</span><span class="n">n_orb</span><span class="p">,</span> <span class="n">n_delta</span><span class="p">,</span> <span class="n">seed_res</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Random discrete model: n_delta poles uniform on [-1,1] (fixed seed), rank-one</span>
+<span class="sd">    residues v_k v_k^dag with complex Gaussian v_k, normalized so tr F ~ O(1)."""</span>
+    <span class="n">rng_poles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">rng_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed_res</span><span class="p">)</span>
+    <span class="n">poles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">rng_poles</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_delta</span><span class="p">))</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="n">rng_res</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_delta</span><span class="p">,</span> <span class="n">n_orb</span><span class="p">))</span>
+         <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">rng_res</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_delta</span><span class="p">,</span> <span class="n">n_orb</span><span class="p">)))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_delta</span><span class="p">)</span>
+    <span class="n">residues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'ki,kj-&gt;kij'</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">poles</span><span class="p">,</span> <span class="n">residues</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_sop</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Evaluate the sum of simple poles sum_k residues[k] / (z - poles[k]) at points z."""</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">z</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">poles</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'zp,p...-&gt;z...'</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">residues</span><span class="p">)</span>
+
+
+<span class="n">n_orb</span><span class="p">,</span> <span class="n">n_delta</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">12</span>
+<span class="n">poles_ex</span><span class="p">,</span> <span class="n">res_ex</span> <span class="o">=</span> <span class="n">make_random_model</span><span class="p">(</span><span class="n">n_orb</span><span class="p">,</span> <span class="n">n_delta</span><span class="p">,</span> <span class="n">seed_res</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">F</span> <span class="o">=</span> <span class="n">eval_sop</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">poles_ex</span><span class="p">,</span> <span class="n">res_ex</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"model: </span><span class="si">{</span><span class="n">n_delta</span><span class="si">}</span><span class="s2"> poles, </span><span class="si">{</span><span class="n">n_orb</span><span class="si">}</span><span class="s2"> orbitals, data shape </span><span class="si">{</span><span class="n">F</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"pole locations: </span><span class="si">{</span><span class="n">poles_ex</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+model: 12 poles, 4 orbitals, data shape (100, 4, 4)
+pole locations: [-0.995 -0.967 -0.918 -0.46   0.087  0.213  0.274  0.459  0.627  0.632
+  0.826  0.87 ]
+</pre></div></div>
+</div>
+<p>We plot a couple of matrix elements of the data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">F</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'Im $F_</span><span class="si">{00}</span><span class="s1">$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">F</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'Re $F_</span><span class="si">{01}</span><span class="s1">$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">F</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'Im $F_</span><span class="si">{01}</span><span class="s1">$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$\nu_n$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$F(\mathrm</span><span class="si">{i}</span><span class="s1">\nu_n)$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Matsubara data, </span><span class="si">{</span><span class="n">n_delta</span><span class="si">}</span><span class="s1"> poles, </span><span class="si">{</span><span class="n">n_orb</span><span class="si">}</span><span class="s1"> orbitals'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_discrete_4_0.svg" src="../_images/examples_discrete_4_0.svg" />
+</div>
+</div>
+<p>We measure fit quality by the normalized imaginary-time <span class="math notranslate nohighlight">\(L^2\)</span> error, with the Frobenius norm over the orbital indices,</p>
+<div class="math notranslate nohighlight">
+\[\left\lVert F_{\mathrm{fit}} - F \right\rVert_{L^2(\tau)} = \left( \frac{1}{\beta}\int_0^\beta \sum_{ij} \left| \big(F_{\mathrm{fit}}\big)_{ij}(\tau) - F_{ij}(\tau) \right|^2 d\tau \right)^{1/2},\]</div>
+<p>which is the same norm <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> and <code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code> report. Since the exact function is a known sum of poles, we can evaluate it in imaginary time analytically and compute the error by Gauss–Legendre quadrature (see the <code class="docutils literal notranslate"><span class="pre">semicircle</span></code> example):</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">K_tau</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Imaginary-time kernel K(tau, omega) = -exp(-tau*omega) / (1 + exp(-beta*omega)),</span>
+<span class="sd">    evaluated in a numerically stable way for both signs of omega."""</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">omega</span><span class="p">)))</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="o">~</span><span class="n">p</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">K</span><span class="p">[:,</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">beta</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
+    <span class="n">K</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">beta</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">m</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">K</span>
+
+
+<span class="n">x_gl</span><span class="p">,</span> <span class="n">w_gl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">tau_q</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_gl</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">w_q</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">w_gl</span>
+
+<span class="n">F_tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'tp,pij-&gt;tij'</span><span class="p">,</span> <span class="n">K_tau</span><span class="p">(</span><span class="n">tau_q</span><span class="p">,</span> <span class="n">poles_ex</span><span class="p">),</span> <span class="n">res_ex</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">l2tau_error</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Normalized Frobenius L2(tau) error of a sum of simple poles vs the exact model."""</span>
+    <span class="n">fit_tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'tp,p...-&gt;t...'</span><span class="p">,</span> <span class="n">K_tau</span><span class="p">(</span><span class="n">tau_q</span><span class="p">,</span> <span class="n">poles</span><span class="p">),</span> <span class="n">residues</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fit_tau</span> <span class="o">-</span> <span class="n">F_tau</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_q</span> <span class="o">*</span> <span class="n">d2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tau_q</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">beta</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"||F||_L2(tau) = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'t,tij-&gt;'</span><span class="p">,</span><span class="w"> </span><span class="n">w_q</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">F_tau</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+||F||_L2(tau) = 0.3440
+</pre></div></div>
+</div>
+<section id="Fitting-the-Matsubara-data:-approx_freq_aaa">
+<h2>Fitting the Matsubara data: approx_freq_aaa<a class="headerlink" href="#Fitting-the-Matsubara-data:-approx_freq_aaa" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code> fits the raw frequency data <span class="math notranslate nohighlight">\((F, Z)\)</span>; matrix-valued data of shape <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">n_orb,</span> <span class="pre">n_orb)</span></code> is supported directly, and a single set of poles is found for all matrix elements at once. We try a few representative settings. At a moderate tolerance the data — generated by 12 poles — is fit with <em>fewer</em> poles: 9 suffice for <span class="math notranslate nohighlight">\(\sim 10^{-6}\)</span> accuracy. A pole budget <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> instead caps the cost directly. The fitted residue matrices come out numerically Hermitian.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+               <span class="nb">dict</span><span class="p">(</span><span class="n">max_n_poles</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+               <span class="nb">dict</span><span class="p">(</span><span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)]:</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">'</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">opts</span><span class="si">:</span><span class="s2">20s</span><span class="si">}</span><span class="s2"> -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  error at samples = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">,  "</span>
+          <span class="sa">f</span><span class="s2">"L2(tau) error = </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+aaa_tol=0.0001       -&gt;   9 poles,  error at samples = 4.2e-06,  L2(tau) error = 1.5e-06
+max_n_poles=8        -&gt;   7 poles,  error at samples = 5.7e-04,  L2(tau) error = 1.3e-04
+aaa_tol=1e-10        -&gt;  13 poles,  error at samples = 1.1e-15,  L2(tau) error = 2.4e-16
+</pre></div></div>
+</div>
+</section>
+<section id="Compressing-the-exact-expansion:-approx_sop_fast">
+<h2>Compressing the exact expansion: approx_sop_fast<a class="headerlink" href="#Compressing-the-exact-expansion:-approx_sop_fast" title="Link to this heading"></a></h2>
+<p>The two SOP routines take the exact poles and residues as input directly. <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> makes a single AAA pass (with the residues refit in imaginary time), controlled by <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> and/or <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code>; <code class="docutils literal notranslate"><span class="pre">nonlinear_optimization=True</span></code> additionally refines the pole locations, though here the AAA poles are already essentially optimal and it adds only cost:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+               <span class="nb">dict</span><span class="p">(</span><span class="n">max_n_poles</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+               <span class="nb">dict</span><span class="p">(</span><span class="n">max_n_poles</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">nonlinear_optimization</span><span class="o">=</span><span class="kc">True</span><span class="p">)]:</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles_ex</span><span class="p">,</span> <span class="n">res_ex</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">'</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">opts</span><span class="si">:</span><span class="s2">45s</span><span class="si">}</span><span class="s2"> -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  L2(tau) error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">,  t = </span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+aaa_tol=0.0001                                -&gt;   9 poles,  L2(tau) error = 1.5e-06,  t =   8.9 ms
+max_n_poles=8                                 -&gt;   7 poles,  L2(tau) error = 1.3e-04,  t =   5.3 ms
+max_n_poles=8, nonlinear_optimization=True    -&gt;   7 poles,  L2(tau) error = 1.3e-04,  t =   8.9 ms
+</pre></div></div>
+</div>
+</section>
+<section id="Compression-to-a-prescribed-accuracy:-approx_sop_tol">
+<h2>Compression to a prescribed accuracy: approx_sop_tol<a class="headerlink" href="#Compression-to-a-prescribed-accuracy:-approx_sop_tol" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code> finds the smallest expansion whose final <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error is below <code class="docutils literal notranslate"><span class="pre">tol</span></code> — so the tolerance directly controls the pole count. Only near roundoff does the required count approach that of the input:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">tol</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">]:</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">poles_ex</span><span class="p">,</span> <span class="n">res_ex</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">  -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  L2(tau) error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+tol = 1e-03  -&gt;   7 poles,  L2(tau) error = 1.3e-04
+tol = 1e-06  -&gt;  11 poles,  L2(tau) error = 5.1e-09
+tol = 1e-10  -&gt;  13 poles,  L2(tau) error = 3.6e-16
+</pre></div></div>
+</div>
+<p>The compressed poles are not simply a subset of the input poles — they are placed wherever the requested accuracy demands. At <code class="docutils literal notranslate"><span class="pre">tol</span> <span class="pre">=</span> <span class="pre">1e-3</span></code>, seven poles reproduce the 12-pole function: the cluster of three input poles near <span class="math notranslate nohighlight">\(\omega \approx -0.95\)</span> is replaced by a <em>single</em> pole carrying their combined spectral weight (residue trace <span class="math notranslate nohighlight">\(0.50 \approx 0.19 + 0.18 + 0.13\)</span>), the near-degenerate pair at <span class="math notranslate nohighlight">\(\omega \approx 0.63\)</span> is likewise merged, and the remaining poles shift away from
+their input locations — yet the function is reproduced to the requested accuracy:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p7</span><span class="p">,</span> <span class="n">r7</span><span class="p">,</span> <span class="n">err7</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">poles_ex</span><span class="p">,</span> <span class="n">res_ex</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">p7</span><span class="p">)</span>
+<span class="n">p7s</span><span class="p">,</span> <span class="n">tr7</span> <span class="o">=</span> <span class="n">p7</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'kii-&gt;k'</span><span class="p">,</span> <span class="n">r7</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>
+<span class="n">tr_ex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">'kii-&gt;k'</span><span class="p">,</span> <span class="n">res_ex</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">poles_ex</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tr_ex</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'C0'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">poles_ex</span><span class="p">,</span> <span class="n">tr_ex</span><span class="p">,</span> <span class="s1">'C0o'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'exact (</span><span class="si">{</span><span class="n">n_delta</span><span class="si">}</span><span class="s1"> poles)'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">p7s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tr7</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'C1'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">p7s</span><span class="p">,</span> <span class="n">tr7</span><span class="p">,</span> <span class="s1">'C1s'</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'approx_sop_tol(tol=1e-3), </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p7s</span><span class="p">)</span><span class="si">}</span><span class="s1"> poles'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$\omega$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'tr $R_k$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Pole locations and residue traces (L2(tau) error = </span><span class="si">{</span><span class="n">err7</span><span class="si">:</span><span class="s1">.1e</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_discrete_14_0.svg" src="../_images/examples_discrete_14_0.svg" />
+</div>
+</div>
+</section>
+<section id="How-does-the-required-number-of-poles-vary-with-the-number-of-orbitals?">
+<h2>How does the required number of poles vary with the number of orbitals?<a class="headerlink" href="#How-does-the-required-number-of-poles-vary-with-the-number-of-orbitals?" title="Link to this heading"></a></h2>
+<p>To test this, we fix <span class="math notranslate nohighlight">\(K = 40\)</span> delta functions (same random locations throughout) and draw independent random residue vectors for increasing <span class="math notranslate nohighlight">\(n_{\mathrm{orb}}\)</span>, then ask <code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code> for the minimal pole count at fixed tolerances.</p>
+<p>For a single orbital, many of the 40 poles can be merged. As <span class="math notranslate nohighlight">\(n_{\mathrm{orb}}\)</span> grows, the data contains more independent linear combinations of the poles and the required count increases — but it quickly <em>saturates</em>, far below 40. The saturation level is the numerical <span class="math notranslate nohighlight">\(\epsilon\)</span>-rank of the Matsubara kernel <span class="math notranslate nohighlight">\(1/(\mathrm{i}\nu_n - \omega)\)</span> on <span class="math notranslate nohighlight">\(\omega \in [-1,1]\)</span> (dashed lines, computed with the pivoted-QR construction from the <code class="docutils literal notranslate"><span class="pre">semicircle</span></code> example): a universal pole set
+of that size can represent <em>any</em> function with this spectral support to accuracy <span class="math notranslate nohighlight">\(\epsilon\)</span>, no matter how many orbitals. This is the concept underlying the discrete Lehmann representation <a class="reference internal" href="#References"><span class="std std-ref">[1]</span></a>: in the limit of a large number of orbitals, the required pole count is set by the spectral support and the target accuracy — not by the number of orbitals (nor by the <span class="math notranslate nohighlight">\(n_{\mathrm{orb}}^2\)</span> matrix elements, nor the 40 input poles).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_delta_sweep</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">tols</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">]</span>
+<span class="n">n_orbs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">]</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">tol</span> <span class="ow">in</span> <span class="n">tols</span><span class="p">:</span>
+    <span class="n">counts</span><span class="p">[</span><span class="n">tol</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">no</span> <span class="ow">in</span> <span class="n">n_orbs</span><span class="p">:</span>
+        <span class="n">poles_s</span><span class="p">,</span> <span class="n">res_s</span> <span class="o">=</span> <span class="n">make_random_model</span><span class="p">(</span><span class="n">no</span><span class="p">,</span> <span class="n">n_delta_sweep</span><span class="p">,</span> <span class="n">seed_res</span><span class="o">=</span><span class="mi">100</span> <span class="o">+</span> <span class="n">no</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">poles_s</span><span class="p">,</span> <span class="n">res_s</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">tol</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">:  n_orb = </span><span class="si">{</span><span class="n">n_orbs</span><span class="si">}</span><span class="s2">  -&gt;  poles = </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="n">tol</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="c1"># epsilon-rank of the continuum Matsubara kernel on [-1, 1] (cf. the semicircle example)</span>
+<span class="n">Z_dense</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">beta</span>
+<span class="n">om_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">501</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z_dense</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">om_cand</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]),</span>
+                          <span class="n">mode</span><span class="o">=</span><span class="s1">'economic'</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">diagR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">R</span><span class="p">))</span>
+<span class="n">ranks</span> <span class="o">=</span> <span class="p">{</span><span class="n">tol</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diagR</span> <span class="o">&gt;</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">diagR</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">tol</span> <span class="ow">in</span> <span class="n">tols</span><span class="p">}</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"kernel epsilon-ranks: </span><span class="si">{</span><span class="n">ranks</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tols</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">n_orbs</span><span class="p">,</span> <span class="n">counts</span><span class="p">[</span><span class="n">tol</span><span class="p">],</span> <span class="sa">f</span><span class="s1">'C</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s1">.0e</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">ranks</span><span class="p">[</span><span class="n">tol</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s1">'C</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">'--'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'kernel rank at </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s1">.0e</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Number of orbitals'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Number of poles required'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'approx_sop_tol: pole count vs orbitals (</span><span class="si">{</span><span class="n">n_delta_sweep</span><span class="si">}</span><span class="s1"> input poles)'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+tol = 1e-04:  n_orb = [1, 2, 3, 4, 6, 8, 12, 16, 20, 24]  -&gt;  poles = [5, 7, 9, 9, 9, 9, 9, 11, 11, 11]
+tol = 1e-06:  n_orb = [1, 2, 3, 4, 6, 8, 12, 16, 20, 24]  -&gt;  poles = [7, 11, 11, 13, 13, 13, 13, 13, 13, 13]
+kernel epsilon-ranks: {0.0001: 11, 1e-06: 13}
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_discrete_16_1.svg" src="../_images/examples_discrete_16_1.svg" />
+</div>
+</div>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading"></a></h2>
+<p>[1] J. Kaye, K. Chen, and O. Parcollet, <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.105.235115">Discrete Lehmann representation of imaginary time Green’s functions</a>, Phys. Rev. B <strong>105</strong>, 235115 (2022).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="semicircle.html" class="btn btn-neutral float-right" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Zhen Huang &amp; Hugo U. R. Strand.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

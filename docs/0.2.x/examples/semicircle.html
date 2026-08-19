@@ -1,0 +1,752 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adaptive pole approximation for a continuous spectrum (semicircular density) &mdash; Adapol 0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=10f1778b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analytic continuation of Hubbard dimer" href="hubbarddimer.html" />
+    <link rel="prev" title="Pole approximation of multi-orbital data with a discrete spectrum" href="discrete.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Adapol
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="discrete.html">Pole approximation of multi-orbital data with a discrete spectrum</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Adaptive pole approximation for a continuous spectrum (semicircular density)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Error-metric:-the-L^2(\tau)-norm">Error metric: the <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Fitting-frequency-data:-approx_freq_aaa">Fitting frequency data: approx_freq_aaa</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Stopping-criterion-1:-a-pole-budget-(max_n_poles)">Stopping criterion 1: a pole budget (max_n_poles)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Stopping-criterion-2:-an-AAA-tolerance-(aaa_tol)">Stopping criterion 2: an AAA tolerance (aaa_tol)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Combining-both-criteria">Combining both criteria</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Compressing-a-sum-of-poles:-approx_sop_fast">Compressing a sum of poles: approx_sop_fast</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Convergence,-and-the-effect-of-nonlinear-optimization">Convergence, and the effect of nonlinear optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Compressing-to-a-prescribed-accuracy:-approx_sop_tol">Compressing to a prescribed accuracy: approx_sop_tol</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Pole-count-vs-tolerance">Pole count vs tolerance</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#References">References</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hubbarddimer.html">Analytic continuation of Hubbard dimer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Adapol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Adaptive pole approximation for a continuous spectrum (semicircular density)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/semicircle.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Adaptive-pole-approximation-for-a-continuous-spectrum-(semicircular-density)">
+<h1>Adaptive pole approximation for a continuous spectrum (semicircular density)<a class="headerlink" href="#Adaptive-pole-approximation-for-a-continuous-spectrum-(semicircular-density)" title="Link to this heading"></a></h1>
+<p>In this example we consider the Matsubara Green’s function</p>
+<div class="math notranslate nohighlight">
+\[G(\mathrm{i}\nu_n) = \int_{-\infty}^{\infty} \frac{\rho(\omega)}{\mathrm{i}\nu_n - \omega}\, d\omega\]</div>
+<p>for the semicircular spectral density</p>
+<div class="math notranslate nohighlight">
+\[\rho(\omega) = \frac{2}{\pi}\sqrt{1-\omega^2}, \qquad -1 \leq \omega \leq 1,\]</div>
+<p>and <span class="math notranslate nohighlight">\(\rho(\omega) = 0\)</span> otherwise. Here <span class="math notranslate nohighlight">\(\mathrm{i}\nu_n = \mathrm{i}\,(2n+1)\pi/\beta\)</span> are the fermionic Matsubara frequencies at inverse temperature <span class="math notranslate nohighlight">\(\beta\)</span>.</p>
+<p>For the semicircular density the integral is known in closed form,</p>
+<div class="math notranslate nohighlight">
+\[G(z) = 2\left(z - \sqrt{z+1}\,\sqrt{z-1}\right),\]</div>
+<p>so we use this analytic formula to generate the Matsubara data, rather than evaluating the integral by adaptive quadrature as in the <code class="docutils literal notranslate"><span class="pre">semicircle</span></code> example (note that this writing of <span class="math notranslate nohighlight">\(\sqrt{z^2-1}\)</span> numerically selects the correct branch in the upper and lower half-planes).</p>
+<p>This notebook demonstrates the three functions of the <code class="docutils literal notranslate"><span class="pre">adapol</span></code> public API:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code> approximates frequency <em>data</em> <span class="math notranslate nohighlight">\((Z, F)\)</span> by a sum of simple poles, using the AAA rational approximation algorithm;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> approximates an existing sum-of-poles (SOP) expansion by a (hopefully) smaller one, in a single AAA pass, with an optional nonlinear optimization of the pole locations;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code> finds the <em>smallest</em> sum of poles meeting a prescribed error tolerance, by running the AAA (and, optionally, optimization) pipeline repeatedly.</p></li>
+</ul>
+<p>Each section exercises the stopping criteria (a pole budget <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> vs. an error tolerance) and, for the two SOP functions, the <code class="docutils literal notranslate"><span class="pre">nonlinear_optimization</span></code> switch. Since the SOP functions take a pole expansion rather than raw data as input, we build such a trial expansion from Matsubara data using a quick and dirty version of the discrete Lehmann representation <a class="reference internal" href="#References"><span class="std std-ref">[1]</span></a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_freq_aaa</span><span class="p">,</span> <span class="n">approx_sop_fast</span><span class="p">,</span> <span class="n">approx_sop_tol</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">20.0</span>
+
+<span class="c1"># Fermionic Matsubara sampling grid Z_n = i(2n+1)*pi/beta for n = -nmax,...,nmax-1.</span>
+<span class="n">nmax</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">n_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">nmax</span><span class="p">,</span> <span class="n">nmax</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_grid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">beta</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">G_exact</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Matsubara Green's function for the semicircular density of states."""</span>
+    <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">semicircular</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_sop</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Evaluate the sum of simple poles sum_k residues[k] / (z - poles[k]) at points z."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">residues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="p">(</span><span class="n">z</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">poles</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">G_exact</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The Matsubara data looks as follows (the real part vanishes by particle-hole symmetry):</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'Re $G(\mathrm</span><span class="si">{i}</span><span class="s1">\nu_n)$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'Im $G(\mathrm</span><span class="si">{i}</span><span class="s1">\nu_n)$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$\nu_n$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$G(\mathrm</span><span class="si">{i}</span><span class="s1">\nu_n)$'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'Matsubara data, semicircular density'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_semicircle_5_0.svg" src="../_images/examples_semicircle_5_0.svg" />
+</div>
+</div>
+<section id="Error-metric:-the-L^2(\tau)-norm">
+<h2>Error metric: the <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm<a class="headerlink" href="#Error-metric:-the-L^2(\tau)-norm" title="Link to this heading"></a></h2>
+<p>Throughout the notebook we measure the quality of a fit by the normalized imaginary time <span class="math notranslate nohighlight">\(L^2\)</span> error</p>
+<div class="math notranslate nohighlight">
+\[\left\lVert G_{\mathrm{fit}} - G \right\rVert_{L^2(\tau)} = \left( \frac{1}{\beta}\int_0^\beta \left| G_{\mathrm{fit}}(\tau) - G(\tau) \right|^2 d\tau \right)^{1/2}.\]</div>
+<p>A simple pole at <span class="math notranslate nohighlight">\(\omega\)</span> with unit residue has the Matsubara-frequency kernel</p>
+<div class="math notranslate nohighlight">
+\[K(\mathrm{i}\nu_n, \omega) = \frac{1}{\mathrm{i}\nu_n - \omega},\]</div>
+<p>so that a sum of poles reads <span class="math notranslate nohighlight">\(G_{\mathrm{fit}}(\mathrm{i}\nu_n) = \sum_k R_k \, K(\mathrm{i}\nu_n, p_k)\)</span> at the Matsubara frequencies — this is just the sum-of-poles expansion introduced above, evaluated on the imaginary axis. Its Fourier transform is the imaginary time analytic continuation kernel</p>
+<div class="math notranslate nohighlight">
+\[K(\tau, \omega) = -\frac{e^{-\tau\omega}}{1 + e^{-\beta\omega}},\]</div>
+<p>so a sum of poles correspondingly maps to <span class="math notranslate nohighlight">\(G_{\mathrm{fit}}(\tau) = \sum_k R_k \, K(\tau, p_k)\)</span> in imaginary time.</p>
+<p>Below, the exact <span class="math notranslate nohighlight">\(G(\tau) = \int \rho(\omega)\, K(\tau,\omega)\, d\omega\)</span> is computed once by Gauss–Chebyshev quadrature — whose weight function <span class="math notranslate nohighlight">\(\sqrt{1-\omega^2}\)</span> is exactly the semicircle, so a couple hundred nodes give machine precision — and the <span class="math notranslate nohighlight">\(\tau\)</span> integral defining the norm is evaluated by Gauss–Legendre quadrature on <span class="math notranslate nohighlight">\([0, \beta]\)</span>. The kernel is evaluated separately for positive and negative <span class="math notranslate nohighlight">\(\omega\)</span> to avoid overflowing exponentials.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">K_tau</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Imaginary-time kernel K(tau, omega) = -exp(-tau*omega) / (1 + exp(-beta*omega)),</span>
+<span class="sd">    evaluated in a numerically stable way for both signs of omega."""</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">omega</span><span class="p">)))</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="o">~</span><span class="n">p</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">K</span><span class="p">[:,</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">beta</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">p</span><span class="p">]))</span>
+    <span class="n">K</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">beta</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">omega</span><span class="p">[</span><span class="n">m</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">K</span>
+
+
+<span class="c1"># Gauss-Legendre quadrature on [0, beta], for the tau integral</span>
+<span class="n">x_gl</span><span class="p">,</span> <span class="n">w_gl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">tau_q</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_gl</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">w_q</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">w_gl</span>
+
+<span class="c1"># Exact G(tau) at the quadrature nodes, by Gauss-Chebyshev (2nd kind) quadrature in omega</span>
+<span class="n">M</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">M</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">om_cheb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">M</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">w_cheb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">M</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">M</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">G_tau</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">K_tau</span><span class="p">(</span><span class="n">tau_q</span><span class="p">,</span> <span class="n">om_cheb</span><span class="p">)</span> <span class="o">@</span> <span class="n">w_cheb</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">l2tau_error</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Normalized L2(tau) norm  sqrt( (1/beta) int_0^beta |.|^2 dtau )</span>
+<span class="sd">    of the difference between a sum of simple poles and the exact G."""</span>
+    <span class="n">fit_tau</span> <span class="o">=</span> <span class="n">K_tau</span><span class="p">(</span><span class="n">tau_q</span><span class="p">,</span> <span class="n">poles</span><span class="p">)</span> <span class="o">@</span> <span class="n">residues</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_q</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fit_tau</span> <span class="o">-</span> <span class="n">G_tau</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"||G||_L2(tau) = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_q</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_tau</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+||G||_L2(tau) = 0.204749
+</pre></div></div>
+</div>
+</section>
+<section id="Fitting-frequency-data:-approx_freq_aaa">
+<h2>Fitting frequency data: approx_freq_aaa<a class="headerlink" href="#Fitting-frequency-data:-approx_freq_aaa" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa(F,</span> <span class="pre">Z,</span> <span class="pre">max_n_poles=...,</span> <span class="pre">aaa_tol=...)</span></code> takes frequency data <span class="math notranslate nohighlight">\(F\)</span> sampled at points <span class="math notranslate nohighlight">\(Z\)</span> and returns a pole approximation</p>
+<div class="math notranslate nohighlight">
+\[G_{\mathrm{fit}}(z) = \sum_{k=1}^{M} \frac{R_k}{z - p_k}\]</div>
+<p>as a tuple <code class="docutils literal notranslate"><span class="pre">(poles,</span> <span class="pre">residues,</span> <span class="pre">error)</span></code>. It proceeds in two steps: the AAA algorithm determines the pole locations <span class="math notranslate nohighlight">\(p_k\)</span> from the data, and the residues <span class="math notranslate nohighlight">\(R_k\)</span> are then obtained by a linear least-squares fit against the data. The returned <code class="docutils literal notranslate"><span class="pre">error</span></code> is the <strong>maximum absolute error at the sample points</strong> — a frequency-domain quantity, unlike the <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> metric defined above, so we report both below.</p>
+<p>At least one of the two stopping criteria must be given:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> bounds the number of poles;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> is the error tolerance at which the AAA iteration stops.</p></li>
+</ul>
+<p>The number of poles produced is always odd (a consequence of the symmetry-constrained AAA variant used here), and can be smaller than <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> if AAA converges early, or if the AAA cleanup step removes poles with negligible residues.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"number of poles:   </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"error at samples:  </span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">   (max abs, returned by approx_freq_aaa)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"L2(tau) error:     </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"poles: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+number of poles:   7
+error at samples:  1.39e-07   (max abs, returned by approx_freq_aaa)
+L2(tau) error:     4.45e-08
+poles: [-0.856458 -0.540225 -0.226438 -0.        0.226438  0.540225  0.856458]
+</pre></div></div>
+</div>
+<p>We can verify that the maximum error returned by <code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code> matches the error we obtain directly by evaluating the pole expansion:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">direct_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eval_sop</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">)</span> <span class="o">-</span> <span class="n">G</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max error from direct evaluation:   </span><span class="si">{</span><span class="n">direct_error</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max error from direct evaluation:   1.391e-07
+</pre></div></div>
+</div>
+<section id="Stopping-criterion-1:-a-pole-budget-(max_n_poles)">
+<h3>Stopping criterion 1: a pole budget (max_n_poles)<a class="headerlink" href="#Stopping-criterion-1:-a-pole-budget-(max_n_poles)" title="Link to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> we prescribe a maximum number of poles and take whatever accuracy that budget buys. Sweeping the budget shows the error converging geometrically with the number of poles, down to a roundoff floor of about <span class="math notranslate nohighlight">\(10^{-14}\)</span>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_poles</span><span class="p">,</span> <span class="n">err_freq</span><span class="p">,</span> <span class="n">err_tau</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">max_np</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_n_poles</span><span class="o">=</span><span class="n">max_np</span><span class="p">)</span>
+    <span class="n">n_poles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="n">err_freq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="n">err_tau</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max_n_poles = </span><span class="si">{</span><span class="n">max_np</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2">  -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  "</span>
+          <span class="sa">f</span><span class="s2">"error at samples = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  L2(tau) error = </span><span class="si">{</span><span class="n">err_tau</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">n_poles</span><span class="p">,</span> <span class="n">err_freq</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'max abs error at samples'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">n_poles</span><span class="p">,</span> <span class="n">err_tau</span><span class="p">,</span> <span class="s1">'s--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">'$L^2(\tau)$ error'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Number of poles'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Error'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'approx_freq_aaa: convergence with pole count'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max_n_poles =  2  -&gt;   1 poles,  error at samples = 5.56e-01,  L2(tau) error = 9.89e-02
+max_n_poles =  4  -&gt;   3 poles,  error at samples = 2.31e-02,  L2(tau) error = 3.52e-03
+max_n_poles =  6  -&gt;   5 poles,  error at samples = 5.49e-05,  L2(tau) error = 1.25e-05
+max_n_poles =  8  -&gt;   7 poles,  error at samples = 1.39e-07,  L2(tau) error = 4.45e-08
+max_n_poles = 10  -&gt;   9 poles,  error at samples = 4.04e-11,  L2(tau) error = 9.18e-12
+max_n_poles = 12  -&gt;  11 poles,  error at samples = 7.01e-15,  L2(tau) error = 3.02e-15
+max_n_poles = 14  -&gt;  11 poles,  error at samples = 1.29e-14,  L2(tau) error = 9.11e-15
+max_n_poles = 16  -&gt;  11 poles,  error at samples = 4.12e-14,  L2(tau) error = 5.34e-15
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_semicircle_13_1.svg" src="../_images/examples_semicircle_13_1.svg" />
+</div>
+</div>
+<p>Note that the budget is not always saturated: <code class="docutils literal notranslate"><span class="pre">max_n_poles</span> <span class="pre">=</span> <span class="pre">14</span></code> and <code class="docutils literal notranslate"><span class="pre">16</span></code> both return 11 poles, since by then AAA has hit the roundoff floor and additional poles would not improve the fit.</p>
+</section>
+<section id="Stopping-criterion-2:-an-AAA-tolerance-(aaa_tol)">
+<h3>Stopping criterion 2: an AAA tolerance (aaa_tol)<a class="headerlink" href="#Stopping-criterion-2:-an-AAA-tolerance-(aaa_tol)" title="Link to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code>, the AAA iteration instead runs until its internal error estimate drops below the requested tolerance. We saw this above, but will now sweep over values of this parameter. Note that <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> controls the <em>pole step</em> only: it bounds the AAA interpolation error on the data, not the final <span class="math notranslate nohighlight">\(L^2\)</span> error after the residue refit. It is a stopping heuristic rather than a guarantee (though in this case we see that it acts as an upper bound).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tols</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">]</span>
+<span class="n">achieved</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">tol</span> <span class="ow">in</span> <span class="n">tols</span><span class="p">:</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">achieved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"aaa_tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">  -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  error at samples = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  "</span>
+          <span class="sa">f</span><span class="s2">"L2(tau) error = </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">achieved</span><span class="p">,</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'achieved error at samples'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">tols</span><span class="p">,</span> <span class="s1">'k--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'achieved = requested'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'aaa_tol'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Error'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'approx_freq_aaa: requested vs achieved error'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+aaa_tol = 1e-03  -&gt;   5 poles,  error at samples = 5.49e-05,  L2(tau) error = 1.25e-05
+aaa_tol = 1e-06  -&gt;   7 poles,  error at samples = 1.39e-07,  L2(tau) error = 4.45e-08
+aaa_tol = 1e-09  -&gt;   9 poles,  error at samples = 4.04e-11,  L2(tau) error = 9.18e-12
+aaa_tol = 1e-12  -&gt;  11 poles,  error at samples = 7.01e-15,  L2(tau) error = 3.02e-15
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_semicircle_15_1.svg" src="../_images/examples_semicircle_15_1.svg" />
+</div>
+</div>
+</section>
+<section id="Combining-both-criteria">
+<h3>Combining both criteria<a class="headerlink" href="#Combining-both-criteria" title="Link to this heading"></a></h3>
+<p>If both criteria are given, AAA stops at whichever is reached first — useful for requesting a tolerance while capping the cost.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_n_poles</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max_n_poles=20, aaa_tol=1e-8  -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s2"> poles, error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">   (tolerance reached first)"</span><span class="p">)</span>
+
+<span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_n_poles</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max_n_poles=6,  aaa_tol=1e-12 -&gt;  </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s2"> poles, error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">   (pole budget reached first)"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max_n_poles=20, aaa_tol=1e-8  -&gt;  9 poles, error = 4.04e-11   (tolerance reached first)
+AAA: Warning! Failed to converge after 3 steps. Final residual 7.94E-05 larger than tolerance 1.00E-12.
+max_n_poles=6,  aaa_tol=1e-12 -&gt;  5 poles, error = 5.49e-05   (pole budget reached first)
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Compressing-a-sum-of-poles:-approx_sop_fast">
+<h2>Compressing a sum of poles: approx_sop_fast<a class="headerlink" href="#Compressing-a-sum-of-poles:-approx_sop_fast" title="Link to this heading"></a></h2>
+<p>The remaining two functions, <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> and <code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code>, take as input not raw data but an existing <em>sum-of-poles expansion</em> — poles <span class="math notranslate nohighlight">\(P_k\)</span> and weights <span class="math notranslate nohighlight">\(W_k\)</span> with <span class="math notranslate nohighlight">\(G(z) \approx \sum_{k} W_k / (z - P_k)\)</span>. So we first build a trial expansion from the Matsubara data, then compress it.</p>
+<p>For the trial expansion, we use a quick and dirty version of the discrete Lehmann representation. On a dense candidate grid <span class="math notranslate nohighlight">\(\omega_j \in [-1, 1]\)</span>, we form the matrix of simple poles <span class="math notranslate nohighlight">\(K_{nj} = 1/(\mathrm{i}\nu_n - \omega_j)\)</span> sampled on a dense Matsubara grid, keep a well-conditioned subset of poles via a rank-revealing column-pivoted QR (those with <span class="math notranslate nohighlight">\(|R_{jj}| &gt; \epsilon_{\mathrm{QR}}|R_{00}|\)</span>), and fit their weights to the data for <span class="math notranslate nohighlight">\(G\)</span> by least squares.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dense fermionic Matsubara grid and dense candidate pole grid</span>
+<span class="n">n_dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+<span class="n">Z_dense</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_dense</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">beta</span>
+<span class="n">G_dense</span> <span class="o">=</span> <span class="n">G_exact</span><span class="p">(</span><span class="n">Z_dense</span><span class="p">)</span>
+
+<span class="n">om_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">501</span><span class="p">)</span>
+<span class="n">Kmat</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z_dense</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">om_cand</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
+
+<span class="c1"># rank-revealing pivoted QR selects the linearly independent candidate poles</span>
+<span class="n">qr_tol</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">piv</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">Kmat</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'economic'</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">R</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">qr_tol</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])))</span>
+<span class="n">poles_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">om_cand</span><span class="p">[</span><span class="n">piv</span><span class="p">[:</span><span class="n">rank</span><span class="p">]])</span>
+
+<span class="c1"># least-squares fit for the weights</span>
+<span class="n">Ksel</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z_dense</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">poles_in</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
+<span class="n">weights_in</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">Ksel</span><span class="p">,</span> <span class="n">G_dense</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"selected </span><span class="si">{</span><span class="n">rank</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">om_cand</span><span class="p">)</span><span class="si">}</span><span class="s2"> candidate poles"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max |Im weights|: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">weights_in</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">weights_in</span> <span class="o">=</span> <span class="n">weights_in</span><span class="o">.</span><span class="n">real</span>   <span class="c1"># discard the tiny imaginary parts (see below)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"max |G - SOP| on the dense grid: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eval_sop</span><span class="p">(</span><span class="n">Z_dense</span><span class="p">,</span><span class="w"> </span><span class="n">poles_in</span><span class="p">,</span><span class="w"> </span><span class="n">weights_in</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G_dense</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"L2(tau) error of the input SOP:  </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span><span class="w"> </span><span class="n">weights_in</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+selected 21 of 501 candidate poles
+max |Im weights|: 2.9e-07
+max |G - SOP| on the dense grid: 1.9e-14
+L2(tau) error of the input SOP:  2.0e-15
+</pre></div></div>
+</div>
+<p>These 21 poles reproduce <span class="math notranslate nohighlight">\(G\)</span> to near machine precision, so the expansion is a faithful proxy whose <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error, <span class="math notranslate nohighlight">\(\sim 2\times10^{-15}\)</span>, is the accuracy floor for everything below. However, even at this tight tolerance, it is known that a fit using poles <em>customized to :math:`G` itself</em> outperforms the generic DLR-style construction, in the sense that the same accuracy can be achieved with fewer poles <a class="reference internal" href="#References"><span class="std std-ref">[2]</span></a>. <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> and <code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code>
+attempt to compress a given pole approximation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">approx_sop_fast(poles,</span> <span class="pre">residues,</span> <span class="pre">beta,</span> <span class="pre">...)</span></code> does this in a single pass:</p>
+<ol class="arabic simple">
+<li><p><strong>Pole step:</strong> the input expansion is evaluated on a symmetric fermionic Matsubara grid <span class="math notranslate nohighlight">\(\mathrm{i}(2n+1)\pi/\beta\)</span>, <span class="math notranslate nohighlight">\(-n_{\max} \le n \le n_{\max}-1\)</span>, with <span class="math notranslate nohighlight">\(n_{\max} = \lfloor 4\beta\omega_{\max}/\pi\rfloor + 1\)</span> and <span class="math notranslate nohighlight">\(\omega_{\max} = \max_k |P_k|\)</span> (here <span class="math notranslate nohighlight">\(n_{\max} = 26\)</span>, i.e. 52 points; a custom grid can be supplied via the <code class="docutils literal notranslate"><span class="pre">Z</span></code> argument), and AAA is run on this data to determine the new pole locations.</p></li>
+<li><p><strong>Residue step:</strong> the residues are determined by minimizing the <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the deviation from the input expansion — a <em>linear</em> least-squares problem once the poles are fixed. With <code class="docutils literal notranslate"><span class="pre">nonlinear_optimization=True</span></code>, the pole locations and residues are instead optimized <em>jointly</em> (L-BFGS-B with an analytic gradient, keeping the number of poles fixed), using the AAA poles as the initial guess.</p></li>
+</ol>
+<p>Note that the residue fit happens in imaginary time — unlike <code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code>, which fits the residues to the frequency data. Accordingly, the returned <code class="docutils literal notranslate"><span class="pre">error</span></code> is the <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the deviation from the <em>input expansion</em>; it is the same norm as our metric, which instead measures against the exact <span class="math notranslate nohighlight">\(G\)</span>.</p>
+<p>The stopping criteria <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> and <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> work exactly as in <code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code>, with <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> again controlling only the AAA pole step.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span> <span class="n">weights_in</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles_in</span><span class="p">)</span><span class="si">}</span><span class="s2"> input poles compressed to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s2"> poles in </span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"returned L2(tau) error (vs the input SOP): </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"L2(tau) error vs the exact G:              </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+21 input poles compressed to 9 poles in 4.7 ms
+returned L2(tau) error (vs the input SOP): 9.37e-12
+L2(tau) error vs the exact G:              9.37e-12
+</pre></div></div>
+</div>
+<section id="Convergence,-and-the-effect-of-nonlinear-optimization">
+<h3>Convergence, and the effect of nonlinear optimization<a class="headerlink" href="#Convergence,-and-the-effect-of-nonlinear-optimization" title="Link to this heading"></a></h3>
+<p>We sweep the pole budget with the nonlinear optimization switched off and on. (Timings here and below are rough single-shot measurements.)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">nlo</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">]:</span>
+    <span class="n">ns</span><span class="p">,</span> <span class="n">errs</span><span class="p">,</span> <span class="n">times</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">max_np</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span> <span class="n">weights_in</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span>
+                                    <span class="n">max_n_poles</span><span class="o">=</span><span class="n">max_np</span><span class="p">,</span> <span class="n">nonlinear_optimization</span><span class="o">=</span><span class="n">nlo</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="n">ns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">));</span> <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">);</span> <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"nonlinear_optimization=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">nlo</span><span class="p">)</span><span class="si">:</span><span class="s2">5s</span><span class="si">}</span><span class="s2">  max_n_poles=</span><span class="si">{</span><span class="n">max_np</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2">  -&gt;  "</span>
+              <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  error vs exact G = </span><span class="si">{</span><span class="n">l2tau_error</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  "</span>
+              <span class="sa">f</span><span class="s2">"t = </span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+    <span class="n">results</span><span class="p">[</span><span class="n">nlo</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">errs</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="kc">False</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="kc">False</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'linear residue fit'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="kc">True</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="kc">True</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'s--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'nonlinear optimization'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Number of poles'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$L^2(\tau)$ error'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'approx_sop_fast: convergence of the compression'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+nonlinear_optimization=False  max_n_poles= 2  -&gt;   1 poles,  error vs exact G = 9.88e-02,  t =   4.7 ms
+nonlinear_optimization=False  max_n_poles= 4  -&gt;   3 poles,  error vs exact G = 3.52e-03,  t =   2.0 ms
+nonlinear_optimization=False  max_n_poles= 6  -&gt;   5 poles,  error vs exact G = 1.24e-05,  t =   1.0 ms
+nonlinear_optimization=False  max_n_poles= 8  -&gt;   7 poles,  error vs exact G = 4.44e-08,  t =   7.8 ms
+nonlinear_optimization=False  max_n_poles=10  -&gt;   9 poles,  error vs exact G = 9.37e-12,  t =   3.9 ms
+nonlinear_optimization=False  max_n_poles=12  -&gt;  11 poles,  error vs exact G = 3.56e-15,  t =   4.7 ms
+nonlinear_optimization=False  max_n_poles=14  -&gt;  13 poles,  error vs exact G = 2.01e-15,  t =   8.5 ms
+nonlinear_optimization=False  max_n_poles=16  -&gt;  13 poles,  error vs exact G = 2.00e-15,  t =   2.3 ms
+
+nonlinear_optimization=True   max_n_poles= 2  -&gt;   1 poles,  error vs exact G = 9.88e-02,  t =   1.1 ms
+nonlinear_optimization=True   max_n_poles= 4  -&gt;   3 poles,  error vs exact G = 2.09e-03,  t =   1.7 ms
+nonlinear_optimization=True   max_n_poles= 6  -&gt;   5 poles,  error vs exact G = 9.25e-06,  t =   3.6 ms
+nonlinear_optimization=True   max_n_poles= 8  -&gt;   7 poles,  error vs exact G = 1.20e-08,  t =  11.6 ms
+nonlinear_optimization=True   max_n_poles=10  -&gt;   9 poles,  error vs exact G = 9.27e-12,  t =   5.0 ms
+nonlinear_optimization=True   max_n_poles=12  -&gt;  11 poles,  error vs exact G = 3.56e-15,  t =   6.9 ms
+nonlinear_optimization=True   max_n_poles=14  -&gt;  13 poles,  error vs exact G = 2.01e-15,  t =   7.5 ms
+nonlinear_optimization=True   max_n_poles=16  -&gt;  13 poles,  error vs exact G = 2.00e-15,  t =   4.8 ms
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_semicircle_23_1.svg" src="../_images/examples_semicircle_23_1.svg" />
+</div>
+</div>
+<p>For this smooth, particle-hole-symmetric density the AAA poles are already nearly optimal, so we see there is not much to gain from running the nonlinear optimization step. In general, it is worth experimenting with.</p>
+</section>
+</section>
+<section id="Compressing-to-a-prescribed-accuracy:-approx_sop_tol">
+<h2>Compressing to a prescribed accuracy: approx_sop_tol<a class="headerlink" href="#Compressing-to-a-prescribed-accuracy:-approx_sop_tol" title="Link to this heading"></a></h2>
+<p>For <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code>, the tolerance <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> is only a stopping heuristic for the pole step. <code class="docutils literal notranslate"><span class="pre">approx_sop_tol(poles,</span> <span class="pre">residues,</span> <span class="pre">tol,</span> <span class="pre">beta,</span> <span class="pre">...)</span></code> instead imposes the tolerance on the <strong>final</strong> <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error, and returns the <em>smallest</em> pole expansion meeting it. Since the final error is only known after the residue fit, the AAA + residue-fit pipeline is run repeatedly: the number of AAA steps is increased until the error drops below <code class="docutils literal notranslate"><span class="pre">tol</span></code>, and a bisection then locates the
+smallest number of steps that still meets it. If the tolerance cannot be met (for instance, because it lies below the roundoff floor), a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.</p>
+<p>The search costs several <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code>-like passes, as the timing comparison below shows. With <code class="docutils literal notranslate"><span class="pre">verbose=True</span></code> the progress of the search is printed:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span> <span class="n">weights_in</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+                           <span class="n">nonlinear_optimization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dt_tol</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">approx_sop_tol(tol=1e-6):        </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s2"> poles,  error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  t = </span><span class="si">{</span><span class="n">dt_tol</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+
+<span class="c1"># a single fast pass reaching the same accuracy, for timing comparison</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">p2</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">err2</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span> <span class="n">weights_in</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+                               <span class="n">nonlinear_optimization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dt_fast</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"approx_sop_fast(aaa_tol=1e-6):   </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span><span class="si">}</span><span class="s2"> poles,  error = </span><span class="si">{</span><span class="n">err2</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  t = </span><span class="si">{</span><span class="n">dt_fast</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Adapol: compressing 21 poles, tol 1.00E-06 on the imaginary time L2 error
+        beta = 20, 52 Matsubara points, joint pole and residue optimization
+Adapol: [1/2 bracket] growing the AAA step count until the tolerance is met
+           4 steps -&gt;  7 poles, error 1.20E-08 &lt;= tol  ok     AAA residual 1.36E-07
+Adapol: [2/2 bisect] smallest step count still meeting the tolerance, candidates 1..4
+           2 steps -&gt;  3 poles, error 2.09E-03  &gt; tol  fail   AAA residual 1.67E-02   candidates 3..4
+           3 steps -&gt;  5 poles, error 9.25E-06  &gt; tol  fail   AAA residual 7.87E-05   candidates 4..4
+Adapol: done -- 7 poles (4 AAA steps), error 1.20E-08 &lt;= tol 1.00E-06, 3 pipeline passes, 3 AAA runs
+
+approx_sop_tol(tol=1e-6):        7 poles,  error = 1.20e-08,  t =  14.4 ms
+approx_sop_fast(aaa_tol=1e-6):   7 poles,  error = 1.20e-08,  t =   7.0 ms
+</pre></div></div>
+</div>
+<p>The log shows the search: a first upward sweep in the number of AAA steps until the tolerance is met, followed by re-runs that bisect the step count down to the smallest sufficient one. The result costs a few times more than a single <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> pass, but comes with an actual guarantee on the final error rather than a heuristic.</p>
+<section id="Pole-count-vs-tolerance">
+<h3>Pole count vs tolerance<a class="headerlink" href="#Pole-count-vs-tolerance" title="Link to this heading"></a></h3>
+<p>Sweeping the tolerance maps out how many poles a given accuracy requires — a staircase, since poles are added in symmetric pairs. In contrast to the heuristic <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> of <code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code>, the achieved error now always sits at or below the requested tolerance:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tols</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+<span class="n">stair</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">nlo</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">]:</span>
+    <span class="n">ns</span><span class="p">,</span> <span class="n">errs</span><span class="p">,</span> <span class="n">times</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tol</span> <span class="ow">in</span> <span class="n">tols</span><span class="p">:</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">poles_in</span><span class="p">,</span> <span class="n">weights_in</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span>
+                                   <span class="n">nonlinear_optimization</span><span class="o">=</span><span class="n">nlo</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="n">ns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">));</span> <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">);</span> <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"nonlinear_optimization=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">nlo</span><span class="p">)</span><span class="si">:</span><span class="s2">5s</span><span class="si">}</span><span class="s2">  tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">  -&gt;  "</span>
+              <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2"> poles,  error = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">,  t = </span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+    <span class="n">stair</span><span class="p">[</span><span class="n">nlo</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">errs</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">stair</span><span class="p">[</span><span class="kc">False</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'linear residue fit'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">stair</span><span class="p">[</span><span class="kc">True</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'s--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'nonlinear optimization'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'tol'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Number of poles'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'poles required vs tolerance'</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">stair</span><span class="p">[</span><span class="kc">False</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'o-'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'linear residue fit'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">stair</span><span class="p">[</span><span class="kc">True</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'s--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'nonlinear optimization'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tols</span><span class="p">,</span> <span class="n">tols</span><span class="p">,</span> <span class="s1">'k:'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'error = tol'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'tol'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">'achieved $L^2(\tau)$ error'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'the tolerance is respected'</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+nonlinear_optimization=False  tol = 1e-02  -&gt;   3 poles,  error = 3.52e-03,  t =   3.4 ms
+nonlinear_optimization=False  tol = 1e-03  -&gt;   5 poles,  error = 1.24e-05,  t =   2.7 ms
+nonlinear_optimization=False  tol = 1e-04  -&gt;   5 poles,  error = 1.24e-05,  t =   2.5 ms
+nonlinear_optimization=False  tol = 1e-05  -&gt;   7 poles,  error = 4.44e-08,  t =   2.6 ms
+nonlinear_optimization=False  tol = 1e-06  -&gt;   7 poles,  error = 4.44e-08,  t =   3.2 ms
+nonlinear_optimization=False  tol = 1e-07  -&gt;   7 poles,  error = 4.44e-08,  t =   4.0 ms
+nonlinear_optimization=False  tol = 1e-08  -&gt;   9 poles,  error = 9.37e-12,  t =   4.1 ms
+nonlinear_optimization=False  tol = 1e-09  -&gt;   9 poles,  error = 9.37e-12,  t =   3.9 ms
+nonlinear_optimization=False  tol = 1e-10  -&gt;   9 poles,  error = 9.37e-12,  t =   3.6 ms
+nonlinear_optimization=False  tol = 1e-11  -&gt;   9 poles,  error = 9.37e-12,  t =   4.1 ms
+nonlinear_optimization=False  tol = 1e-12  -&gt;  11 poles,  error = 3.02e-15,  t =   4.7 ms
+
+nonlinear_optimization=True   tol = 1e-02  -&gt;   3 poles,  error = 2.09e-03,  t =   5.3 ms
+nonlinear_optimization=True   tol = 1e-03  -&gt;   5 poles,  error = 9.25e-06,  t =   4.7 ms
+nonlinear_optimization=True   tol = 1e-04  -&gt;   5 poles,  error = 9.25e-06,  t =   5.0 ms
+nonlinear_optimization=True   tol = 1e-05  -&gt;   5 poles,  error = 9.25e-06,  t =  10.5 ms
+nonlinear_optimization=True   tol = 1e-06  -&gt;   7 poles,  error = 1.20e-08,  t =  10.1 ms
+nonlinear_optimization=True   tol = 1e-07  -&gt;   7 poles,  error = 1.20e-08,  t =  12.1 ms
+nonlinear_optimization=True   tol = 1e-08  -&gt;   9 poles,  error = 9.27e-12,  t =  12.6 ms
+nonlinear_optimization=True   tol = 1e-09  -&gt;   9 poles,  error = 9.27e-12,  t =  12.4 ms
+nonlinear_optimization=True   tol = 1e-10  -&gt;   9 poles,  error = 9.27e-12,  t =  12.2 ms
+nonlinear_optimization=True   tol = 1e-11  -&gt;   9 poles,  error = 9.27e-12,  t =  14.2 ms
+nonlinear_optimization=True   tol = 1e-12  -&gt;  11 poles,  error = 3.96e-15,  t =  14.3 ms
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_semicircle_28_1.svg" src="../_images/examples_semicircle_28_1.svg" />
+</div>
+</div>
+<p>We also observe that the nonlinear optimization can sometimes produce a more compact pole approximation at the same tolerance.</p>
+</section>
+</section>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa</span></code> fits raw Matsubara (or other frequency) data directly; its error is measured at the sample points.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_sop_fast</span></code> is a cheap single-pass compression of an existing pole expansion; <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> acts as a budget, <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code> as a stopping heuristic for the pole search.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">approx_sop_tol</span></code> returns the smallest expansion meeting a prescribed final <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> accuracy, at the cost of a few fast passes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nonlinear_optimization=True</span></code> refines the AAA pole locations, if possible.</p></li>
+</ul>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading"></a></h2>
+<p>[1] J. Kaye, K. Chen, and O. Parcollet, <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.105.235115">Discrete Lehmann representation of imaginary time Green’s functions</a>, Phys. Rev. B <strong>105</strong>, 235115 (2022).</p>
+<p>[2] Z. Huang, D. Golež, H. U. R. Strand, J. Kaye, <a class="reference external" href="https://scipost.org/SciPostPhys.19.5.121">Automated evaluation of imaginary time strong coupling diagrams by sum-of-exponentials hybridization fitting</a>, SciPost Phys., 19 (5), 121 (2025).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="discrete.html" class="btn btn-neutral float-left" title="Pole approximation of multi-orbital data with a discrete spectrum" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hubbarddimer.html" class="btn btn-neutral float-right" title="Analytic continuation of Hubbard dimer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Zhen Huang &amp; Hugo U. R. Strand.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

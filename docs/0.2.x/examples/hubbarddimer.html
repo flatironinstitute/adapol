@@ -1,0 +1,255 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytic continuation of Hubbard dimer &mdash; Adapol 0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=10f1778b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API reference" href="../api.html" />
+    <link rel="prev" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" href="semicircle.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Adapol
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="discrete.html">Pole approximation of multi-orbital data with a discrete spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semicircle.html">Adaptive pole approximation for a continuous spectrum (semicircular density)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Analytic continuation of Hubbard dimer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Adapol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Analytic continuation of Hubbard dimer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/hubbarddimer.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Analytic-continuation-of-Hubbard-dimer">
+<h1>Analytic continuation of Hubbard dimer<a class="headerlink" href="#Analytic-continuation-of-Hubbard-dimer" title="Link to this heading"></a></h1>
+<p>In this notebook, we illustrate how to conduct analytic continuation using <code class="docutils literal notranslate"><span class="pre">adapol</span></code>. We took the strongly correlated hubbard dimer model as an example. On the one hand, it serves as a nontrivial test case which features several closely spaced peaks that could be very challenging. On the other hand, its modest size allows for exact diagonalization, enabling the calculation of ground truth results for rigorous benchmarking. This example was also used as benchmark tests in
+<a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.104.165111">this</a> and <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.075151">this</a> paper.</p>
+<p>Let us consider the following Hamiltonian:</p>
+<div class="math notranslate nohighlight">
+\[\hat H = \hat H_0 + \hat H_1,\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[H_0 = -t \sum_{\sigma \in \{\uparrow, \downarrow\}} \left( \hat c_{0\sigma}^\dagger \hat c_{1\sigma} + \hat c_{1\sigma}^\dagger \hat c_{0\sigma} \right)
+-\mu \left( \hat n_{0\uparrow} + \hat n_{0\downarrow} + \hat n_{1\uparrow} + \hat n_{1\downarrow} \right),\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+    H_1 =&amp; (U+U_a) \hat n_{0\uparrow} \hat n_{0\downarrow} + (U-U_a) \hat n_{1\uparrow} \hat n_{1\downarrow} \\
+&amp; - \frac U 2 \left( \hat n_{0\uparrow} + \hat n_{0\downarrow} + \hat n_{1\uparrow} + \hat n_{1\downarrow} \right) + h \left( \hat n_{0\uparrow} - \hat n_{0\downarrow} + \hat n_{1\uparrow} - \hat n_{1\downarrow} \right)\\
+&amp;+ \mu_a \left( \hat n_{0\uparrow} + \hat n_{0\downarrow} - \hat n_{1\uparrow} - \hat n_{1\downarrow} \right)+ h_a \left( \hat n_{0\uparrow} - \hat n_{0\downarrow} - \hat n_{1\uparrow} + \hat n_{1\downarrow} \right),
+\end{aligned}\end{split}\]</div>
+<p>Here <span class="math notranslate nohighlight">\(\hat n_{i\sigma} = \hat c_{i\sigma}^\dagger \hat c_{i\sigma}\)</span> is the number operator.</p>
+<p>The parameters are taken as follows:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">c</span><span class="p">,</span> <span class="n">c_dag</span><span class="p">,</span><span class="n">n</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.atom_diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">AtomDiag</span><span class="p">,</span> <span class="n">atomic_g_w</span><span class="p">,</span> <span class="n">atomic_g_iw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">h</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">U_a</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">mu_a</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">h_a</span> <span class="o">=</span> <span class="mf">0.03</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">25.0</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">5.0</span>
+</pre></div>
+</div>
+</div>
+<p>Using <code class="docutils literal notranslate"><span class="pre">triqs</span></code>, we can construct the Hamiltonian and obtain the Green’s function and spectral function through exact diagonalization:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f_ops</span> <span class="o">=</span> <span class="p">[(</span><span class="n">sn</span><span class="p">,</span><span class="n">on</span><span class="p">)</span> <span class="k">for</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">product</span><span class="p">((</span><span class="s1">'up'</span><span class="p">,</span><span class="s1">'down'</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">))]</span>
+<span class="n">H_0</span> <span class="o">=</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_dag</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">c_dag</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_0</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_dag</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">c_dag</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_0</span> <span class="o">+=</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="n">H_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">U</span> <span class="o">+</span> <span class="n">U_a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">U</span> <span class="o">-</span> <span class="n">U_a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_1</span> <span class="o">-=</span> <span class="p">(</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_1</span> <span class="o">+=</span> <span class="n">h</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_1</span> <span class="o">+=</span> <span class="n">mu_a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">H_1</span> <span class="o">+=</span> <span class="n">h_a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">'up'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">'down'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="n">H</span> <span class="o">=</span> <span class="n">H_0</span> <span class="o">+</span> <span class="n">H_1</span>
+<span class="n">ad</span> <span class="o">=</span> <span class="n">AtomDiag</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">f_ops</span><span class="p">)</span>
+
+<span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">'down'</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="s1">'up'</span><span class="p">,</span><span class="mi">2</span><span class="p">)]</span> <span class="c1"># fix the bug in the old version by changing orb_names to len(orb_names).</span>
+<span class="n">G_w</span> <span class="o">=</span> <span class="n">atomic_g_w</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="mi">4000</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="n">Tr_G_w</span> <span class="o">=</span> <span class="n">G_w</span><span class="p">[</span><span class="s1">'up'</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_w</span><span class="p">[</span><span class="s1">'down'</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_w</span><span class="p">[</span><span class="s1">'up'</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_w</span><span class="p">[</span><span class="s1">'down'</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">wmesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">Tr_G_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wmesh</span><span class="p">,</span>  <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Tr_G_w</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"Spectral function"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_hubbarddimer_5_0.svg" src="../_images/examples_hubbarddimer_5_0.svg" />
+</div>
+</div>
+<p>Let us also construct the Matsubara Green’s function data:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G_iw</span> <span class="o">=</span> <span class="n">atomic_g_iw</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">TrG_iw</span> <span class="o">=</span> <span class="n">G_iw</span><span class="p">[</span><span class="s1">'up'</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_iw</span><span class="p">[</span><span class="s1">'down'</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_iw</span><span class="p">[</span><span class="s1">'up'</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">G_iw</span><span class="p">[</span><span class="s1">'down'</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">iwmesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">iw</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">iw</span> <span class="ow">in</span> <span class="n">TrG_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>Let us first show how to conduct analytic continuation through the <code class="docutils literal notranslate"><span class="pre">anacont</span></code> function:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_freq_aaa</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">adapol.sop</span><span class="w"> </span><span class="kn">import</span> <span class="n">SumOfSimplePoles</span>
+
+<span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">TrG_iw</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">iwmesh</span><span class="p">,</span> <span class="n">max_n_poles</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">sop</span> <span class="o">=</span> <span class="n">SumOfSimplePoles</span><span class="p">(</span><span class="n">poles</span><span class="o">=</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="o">=</span><span class="n">residues</span><span class="p">)</span>
+<span class="n">Spec_approx</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">sop</span><span class="p">(</span><span class="n">wmesh</span><span class="o">+</span><span class="mf">0.01</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wmesh</span><span class="p">,</span>  <span class="n">Spec_approx</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wmesh</span><span class="p">,</span>  <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Tr_G_w</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>  <span class="s2">"--"</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">"Analytic continuation"</span><span class="p">,</span> <span class="s2">"Ground truth"</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_hubbarddimer_9_0.svg" src="../_images/examples_hubbarddimer_9_0.svg" />
+</div>
+</div>
+<p>Next let’s see how to conduct analytic continuation through the triqs interface:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">adapol.triqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_gf_imfreq_aaa</span>
+
+<span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">approx_gf_imfreq_aaa</span><span class="p">(</span><span class="n">TrG_iw</span><span class="p">,</span> <span class="n">max_n_poles</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">sop2</span> <span class="o">=</span> <span class="n">SumOfSimplePoles</span><span class="p">(</span><span class="n">poles</span><span class="o">=</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="o">=</span><span class="n">residues</span><span class="p">)</span>
+<span class="n">Spec_approx2</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">sop2</span><span class="p">(</span><span class="n">wmesh</span><span class="o">+</span><span class="mf">0.01</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wmesh</span><span class="p">,</span>  <span class="n">Spec_approx2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wmesh</span><span class="p">,</span>  <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Tr_G_w</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>  <span class="s2">"--"</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">"Analytic continuation"</span><span class="p">,</span> <span class="s2">"Ground truth"</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_hubbarddimer_11_0.svg" src="../_images/examples_hubbarddimer_11_0.svg" />
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="semicircle.html" class="btn btn-neutral float-left" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Zhen Huang &amp; Hugo U. R. Strand.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

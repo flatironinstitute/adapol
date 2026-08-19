@@ -1,0 +1,676 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API reference &mdash; Adapol 0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=10f1778b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Analytic continuation of Hubbard dimer" href="examples/hubbarddimer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Adapol
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adapol.approx_freq_aaa"><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adapol.approx_sop_fast"><code class="docutils literal notranslate"><span class="pre">approx_sop_fast()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adapol.approx_sop_tol"><code class="docutils literal notranslate"><span class="pre">approx_sop_tol()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#triqs-interface">TRIQS interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#adapol.triqs.approx_gf_imfreq_aaa"><code class="docutils literal notranslate"><span class="pre">approx_gf_imfreq_aaa()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adapol.triqs.approx_gf_dlr_fast"><code class="docutils literal notranslate"><span class="pre">approx_gf_dlr_fast()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adapol.triqs.approx_gf_dlr_tol"><code class="docutils literal notranslate"><span class="pre">approx_gf_dlr_tol()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Adapol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.approx_freq_aaa">
+<span class="sig-prename descclassname"><span class="pre">adapol.</span></span><span class="sig-name descname"><span class="pre">approx_freq_aaa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_poles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aaa_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/adapol.html#approx_freq_aaa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.approx_freq_aaa" title="Link to this definition"></a></dt>
+<dd><p>Approximate frequency data <span class="math notranslate nohighlight">\(F\)</span> sampled at points <span class="math notranslate nohighlight">\(Z\)</span>
+with a sum of simple poles, by running the AAA algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>F</strong> (<em>(</em><em>N</em><em>, </em><em>...</em><em>) </em><em>array_like</em>) – Frequency data to approximate, sampled at points <span class="math notranslate nohighlight">\(Z\)</span>.</p></li>
+<li><p><strong>Z</strong> (<em>(</em><em>N</em><em>,</em><em>) </em><em>array_like</em>) – Sample points in (complex) frequency space, at which <span class="math notranslate nohighlight">\(F\)</span> is sampled.</p></li>
+<li><p><strong>max_n_poles</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of poles to use in the approximation.</p></li>
+<li><p><strong>aaa_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Tolerance on the AAA residual, i.e. on the pole step (see the note below).</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, print verbose output during the approximation process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles (<cite>M &lt;= max_n_poles</cite>).</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Maximum absolute error of the approximation at the sample points.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The approximation is built in two steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Pole step:</strong> the AAA algorithm is run on the data <span class="math notranslate nohighlight">\((Z, F)\)</span> to
+determine the pole locations.</p></li>
+<li><p><strong>Residue step:</strong> the residues are then determined by a linear
+least-squares fit that minimizes the error against the
+frequency-domain data <span class="math notranslate nohighlight">\(F\)</span> at the sample points <span class="math notranslate nohighlight">\(Z\)</span>.</p></li>
+</ol>
+<ul class="simple">
+<li><p>If only <cite>max_n_poles</cite> is set, AAA runs until at most <cite>max_n_poles</cite> poles
+are used.</p></li>
+<li><p>If only <cite>aaa_tol</cite> is set, AAA runs until the AAA residual tolerance
+<cite>aaa_tol</cite> is reached.</p></li>
+<li><p>If both are set, AAA stops as soon as either the AAA residual tolerance
+<cite>aaa_tol</cite> is reached or <cite>max_n_poles</cite> poles are used, whichever happens
+first.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The number of poles produced might be smaller than <cite>max_n_poles</cite>, for two reasons:</p>
+<ol class="arabic simple">
+<li><p>an odd number of poles is always produced, from symmetry considerations, and</p></li>
+<li><p>the AAA cleanup step might remove poles with small residues.</p></li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tolerance <cite>aaa_tol</cite> controls the AAA residual, i.e. the maximum absolute
+deviation from the frequency-domain data <span class="math notranslate nohighlight">\(F\)</span> over the sample points
+<span class="math notranslate nohighlight">\(Z\)</span> not yet used as AAA support points (pole step); it does <strong>not</strong>
+bound the final error, which also depends on the subsequent residue fit.</p>
+</div>
+<p class="rubric">Examples</p>
+<p>Fit a simple function with two poles <span class="math notranslate nohighlight">\(F(Z) = 1/(Z-1) + 0.5/(Z+2)\)</span>
+sampled on an equispaced imaginary-frequency grid <span class="math notranslate nohighlight">\(Z \in [-10i, 10i]\)</span>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">adapol.adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_freq_aaa</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Sample frequency data F at points Z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Example frequency data with two poles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Approximate F with a sum of simple poles using AAA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">physical</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">residues</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>   <span class="c1"># discard the null-residue pole</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">[</span><span class="n">physical</span><span class="p">]</span>
+<span class="go">array([-2.,  1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span><span class="p">[</span><span class="n">physical</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0</span>
+<span class="go">array([0.5+0.j, 1. +0.j])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Note that the fit contains three poles, not two, due to the constrained AAA
+algorithm. However, the additional pole has a residue that is numerically zero.
+Since it does not contribute to the fit, its location is not determined by the
+data: it is fixed only by round-off and therefore varies between platforms and
+BLAS implementations. For that reason the examples select the poles with a
+non-negligible residue instead of printing the returned arrays verbatim.</p>
+<p>Also tensor valued functions can be fitted, e.g. a 2x2 matrix valued function
+<span class="math notranslate nohighlight">\(\dim(F(Z)) = 2 \times 2\)</span> with two poles and two matrix residues:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">R1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">R1</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">R2</span> <span class="o">/</span> <span class="p">(</span><span class="n">Z</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_freq_aaa</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">residues</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>   <span class="c1"># residue norm of each pole</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">[</span><span class="n">weight</span> <span class="o">&gt;</span> <span class="mf">1e-8</span><span class="p">]</span>
+<span class="go">array([-2.,  1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span><span class="p">[</span><span class="n">weight</span> <span class="o">&gt;</span> <span class="mf">1e-8</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0</span>  <span class="c1"># round-off noise in the zero entries removed</span>
+<span class="go">array([[[0. +0.j , 0.1+0.j ],</span>
+<span class="go">        [0.1+0.j , 1. +0.j ]],</span>
+
+<span class="go">       [[1. +0.j , 0. +0.1j],</span>
+<span class="go">        [0. -0.1j, 0. +0.j ]]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.approx_sop_fast">
+<span class="sig-prename descclassname"><span class="pre">adapol.</span></span><span class="sig-name descname"><span class="pre">approx_sop_fast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_poles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aaa_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/adapol.html#approx_sop_fast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.approx_sop_fast" title="Link to this definition"></a></dt>
+<dd><p>Approximate a sum of simple poles defined by <cite>poles</cite> and <cite>residues</cite>
+with a sum of a (possibly) smaller number of simple poles, by running the
+AAA algorithm and, optionally, a non-linear optimization step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poles</strong> (<em>(</em><em>K</em><em>,</em><em>) </em><em>array_like</em>) – Poles <span class="math notranslate nohighlight">\(P_k\)</span> of the original sum of simple poles to approximate.</p></li>
+<li><p><strong>residues</strong> (<em>(</em><em>K</em><em>, </em><em>...</em><em>) </em><em>array_like</em>) – Residues <span class="math notranslate nohighlight">\(R_k\)</span> of the original sum of simple poles to approximate.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Inverse temperature, used to define the L2 norm in imaginary time
+and the imaginary-frequency grid on which the AAA data is sampled.</p></li>
+<li><p><strong>max_n_poles</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of poles to use in the approximation.</p></li>
+<li><p><strong>aaa_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Tolerance on the AAA residual. This is the maximum absolute deviation
+from the imaginary-frequency-domain data used by the AAA algorithm (the
+original sum of simple poles evaluated on the grid described below), over
+the sample points not yet used as AAA support points.</p></li>
+<li><p><strong>nonlinear_optimization</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, run a non-linear optimization step after the AAA approximation,
+using the AAA poles only as an initial guess.</p></li>
+<li><p><strong>Z</strong> (<em>(</em><em>N</em><em>,</em><em>) </em><em>array_like</em><em>, </em><em>optional</em>) – Custom sample points in (complex) frequency space at which to sample
+the original sum of simple poles for the AAA algorithm. If not given,
+a symmetric fermionic Matsubara grid is used by default (see Notes).</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, print verbose output during the approximation process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles.</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Normalized imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference
+between the original and approximating sum of simple poles (see Notes).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The original sum of simple poles</p>
+<div class="math notranslate nohighlight">
+\[F(Z) = \sum_{k=1}^K \frac{R_k}{Z - P_k}\]</div>
+<p>is first evaluated on an equispaced grid <span class="math notranslate nohighlight">\(Z_n\)</span> on the imaginary-frequency
+axis (see below), to produce the frequency-domain data <span class="math notranslate nohighlight">\(F_n = F(Z_n)\)</span>
+used by the AAA algorithm.</p>
+<p>The approximation is then built in two steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Pole step:</strong> the AAA algorithm is run on this frequency-domain data
+<span class="math notranslate nohighlight">\((Z_n, F_n)\)</span> to determine the pole locations.</p></li>
+<li><p><strong>Residue step:</strong> the residues are determined by minimizing the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference from the
+original sum of simple poles. By default this is a linear least-squares
+fit of the residues for the AAA poles; if <cite>nonlinear_optimization</cite> is
+True, the pole locations and residues are instead jointly optimized,
+for details see below.</p></li>
+</ol>
+<p>Note that, unlike <cite>approx_freq_aaa</cite>, the residues here are fit in
+imaginary time, not in the frequency domain.</p>
+<p>The imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm is normalized by the inverse
+temperature <span class="math notranslate nohighlight">\(\beta\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\lVert f \rVert_{L^2(\tau)} =
+    \left( \frac{1}{\beta} \int_0^\beta |f(\tau)|^2 \, d\tau \right)^{1/2}.\]</div>
+<ul class="simple">
+<li><p>If only <cite>max_n_poles</cite> is set, AAA runs until at most <cite>max_n_poles</cite> poles
+are used.</p></li>
+<li><p>If only <cite>aaa_tol</cite> is set, AAA runs until the AAA residual tolerance
+<cite>aaa_tol</cite> is reached.</p></li>
+<li><p>If both are set, AAA stops as soon as either the AAA residual tolerance
+<cite>aaa_tol</cite> is reached or <cite>max_n_poles</cite> poles are used, whichever happens
+first.</p></li>
+</ul>
+<p><strong>Frequency grid:</strong> By default, the frequency-domain data used by the AAA
+algorithm is obtained by evaluating the original sum of simple poles on a
+symmetric fermionic Matsubara grid
+<span class="math notranslate nohighlight">\(Z_n = i (2 n + 1) \pi / \beta\)</span> for
+<span class="math notranslate nohighlight">\(n = -(n_{max}), \ldots, -1, 0, 1, \ldots, n_{max} - 1\)</span>, with
+<span class="math notranslate nohighlight">\(n_{max} = \lfloor 4 \beta \, \omega_{max} / \pi \rfloor + 1\)</span>
+and <span class="math notranslate nohighlight">\(\omega_{max} = \max_k |poles_k|\)</span> the largest pole magnitude.
+A custom sample grid may instead be supplied via the optional <cite>Z</cite> argument,
+e.g. to use a bosonic Matsubara grid.</p>
+<p><strong>Non-linear optimization:</strong> The optional non-linear optimization step keeps the number of poles fixed
+and jointly relocates the pole positions and refits the residues to minimize
+the imaginary-time L2 norm error between the original and approximating
+sum of simple poles. It is solved with the L-BFGS-B method (using an analytic
+gradient) and is run to optimizer convergence, i.e. to reduce the error as
+much as possible rather than to meet a prescribed error tolerance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The number of poles produced might be smaller than <cite>max_n_poles</cite>, for two reasons:</p>
+<ol class="arabic simple">
+<li><p>an odd number of poles is always produced, from symmetry considerations, and</p></li>
+<li><p>the AAA cleanup step might remove poles with small residues.</p></li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting <cite>aaa_tol</cite> does <strong>not</strong> guarantee that the final imaginary-time L2 norm
+<cite>error</cite> is below <cite>aaa_tol</cite>; this is not possible to guarantee within the AAA
+algorithm alone. However, this function returns the final imaginary-time L2
+norm <cite>error</cite> of approximation (see Returns above).</p>
+</div>
+<p class="rubric">Examples</p>
+<p>Approximate a sum of three simple poles
+<span class="math notranslate nohighlight">\(s(z) = 1/(z-1) + 0.5/(z+2) + 0.3/(z-0.5)\)</span>,
+specified by its poles and residues, using AAA. Here the input is already
+minimal, so the three poles are recovered (up to ordering), with the
+residues re-fit in imaginary time for inverse temperature <span class="math notranslate nohighlight">\(\beta\)</span>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">adapol.adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_sop_fast</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span>
+<span class="go">array([-2. ,  0.5,  1. ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span>
+<span class="go">array([0.5, 0.3, 1. ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Unlike <cite>approx_freq_aaa</cite>, the residues are fit by minimizing the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error, so <cite>error</cite> is an imaginary-time
+norm rather than a frequency-domain sample error.</p>
+<p>Tensor-valued residues are supported as well, e.g. a 2x2 matrix-valued
+sum of poles with <span class="math notranslate nohighlight">\(\dim(R_k) = 2 \times 2\)</span>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">R1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">R1</span><span class="p">,</span> <span class="n">R2</span><span class="p">,</span> <span class="n">R3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_sop_fast</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">aaa_tol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span>
+<span class="go">array([-2. ,  0.3,  1. ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residues</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0</span>  <span class="c1"># round-off noise in the zero entries removed</span>
+<span class="go">array([[[0. +0.j , 0.1+0.j ],</span>
+<span class="go">        [0.1+0.j , 1. +0.j ]],</span>
+
+<span class="go">       [[0.5+0.j , 0. +0.j ],</span>
+<span class="go">        [0. +0.j , 0.5+0.j ]],</span>
+
+<span class="go">       [[1. +0.j , 0. +0.1j],</span>
+<span class="go">        [0. -0.1j, 0. +0.j ]]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.approx_sop_tol">
+<span class="sig-prename descclassname"><span class="pre">adapol.</span></span><span class="sig-name descname"><span class="pre">approx_sop_tol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/adapol.html#approx_sop_tol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.approx_sop_tol" title="Link to this definition"></a></dt>
+<dd><p>Approximate a sum of simple poles defined by <cite>poles</cite> and <cite>residues</cite>
+with the smallest sum of simple poles whose imaginary-time
+<span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error is below the tolerance <cite>tol</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poles</strong> (<em>(</em><em>K</em><em>,</em><em>) </em><em>array_like</em>) – Poles of the original sum of simple poles to approximate.</p></li>
+<li><p><strong>residues</strong> (<em>(</em><em>K</em><em>, </em><em>...</em><em>) </em><em>array_like</em>) – Residues of the original sum of simple poles to approximate.</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Target tolerance on the final imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of
+the difference between the original and approximating sum of simple
+poles.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Inverse temperature, used to define the L2 norm in imaginary time
+and the imaginary-frequency grid on which the AAA data is sampled.</p></li>
+<li><p><strong>nonlinear_optimization</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the residue step jointly optimizes the pole locations and
+residues (rather than fitting residues only) to minimize the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(      au)\)</span> error.</p></li>
+<li><p><strong>Z</strong> (<em>(</em><em>N</em><em>,</em><em>) </em><em>array_like</em><em>, </em><em>optional</em>) – Custom sample points in (complex) frequency space at which to sample
+the original sum of simple poles for the AAA algorithm. If not given,
+a symmetric fermionic Matsubara grid is used by default (see
+<cite>approx_sop_fast</cite>).</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em> or </em><em>bool</em><em>, </em><em>optional</em>) – Amount of printed output. 0 (or False) is silent, 1 (or True) prints one
+line per pass through the AAA and residue fit pipeline, showing the pole
+count and error of each candidate fit, and 2 additionally prints the
+indented per step output of the AAA algorithm itself.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles.</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Normalized imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference
+between the original and approximating sum of simple poles (with the
+<span class="math notranslate nohighlight">\(1/\beta\)</span> normalization defined in <cite>approx_sop_fast</cite>).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the target tolerance <cite>tol</cite> cannot be achieved within the internal
+    maximum number of search steps.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Unlike <cite>approx_sop_fast</cite>, where the tolerance only controls the AAA residual
+in the pole step, here <cite>tol</cite> is imposed on the <strong>final</strong> imaginary-time error,
+i.e. after the residues have been fit. Since AAA only determines pole
+locations and the residues (and hence the final error) are only known after
+the residue step, the requested error cannot be reached by a single AAA run.
+Instead, the AAA + residue pipeline is run repeatedly to search for the
+minimal number of poles that achieves <cite>tol</cite>.</p>
+<p>Each candidate fit is built in two steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Pole step:</strong> the original sum of simple poles is evaluated on a
+symmetric fermionic Matsubara grid (see <cite>approx_sop_fast</cite> for the grid
+definition, and the optional <cite>Z</cite> argument to override it) and AAA is
+run on this data to determine pole locations.</p></li>
+<li><p><strong>Residue step:</strong> the residues are determined by minimizing the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference from the
+original sum of simple poles – a linear least-squares fit of the
+residues for the AAA poles, or, if <cite>nonlinear_optimization</cite> is True, a
+joint optimization of the pole locations and residues.</p></li>
+</ol>
+<p>The pole-count search proceeds in two phases: first the number of AAA poles
+is increased until the imaginary-time error drops below <cite>tol</cite>, then a
+bisection on the number of AAA steps locates the smallest pole count that
+still meets <cite>tol</cite>.</p>
+<p class="rubric">Examples</p>
+<p>Compress a continuous spectral density into a small sum of simple poles.
+The density is first discretized as a sum of 200 simple poles on the real
+axis, which is then compressed to the smallest sum of poles whose
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error is below <cite>tol</cite>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">adapol.adapol</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_sop_tol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>                            <span class="c1"># real-frequency grid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dw</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">4</span> <span class="o">-</span> <span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>  <span class="c1"># semicircle density</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poles</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">approx_sop_tol</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">dw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">20.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span>      <span class="c1"># 200 input poles compressed to a handful</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span>  <span class="c1"># final imaginary-time error is below the tolerance</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Unlike <cite>approx_sop_fast</cite>, the number of poles is not prescribed but
+chosen automatically as the smallest count meeting <cite>tol</cite> on the final
+imaginary-time error.</p>
+</dd></dl>
+
+<section id="triqs-interface">
+<h2>TRIQS interface<a class="headerlink" href="#triqs-interface" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.triqs.approx_gf_imfreq_aaa">
+<span class="sig-prename descclassname"><span class="pre">adapol.triqs.</span></span><span class="sig-name descname"><span class="pre">approx_gf_imfreq_aaa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_poles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aaa_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/triqs.html#approx_gf_imfreq_aaa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.triqs.approx_gf_imfreq_aaa" title="Link to this definition"></a></dt>
+<dd><p>Approximate a Green’s function <span class="math notranslate nohighlight">\(G\)</span> given on an imaginary-frequency
+mesh with a sum of simple poles, by running the AAA algorithm.</p>
+<p>This is the TRIQS front-end to <cite>adapol.approx_freq_aaa</cite>, taking the
+frequency data <span class="math notranslate nohighlight">\(F\)</span> and the sample points <span class="math notranslate nohighlight">\(Z\)</span> from the Green’s
+function and its mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G_w</strong> (<em>triqs.gf.Gf</em>) – Green’s function to approximate, defined on an imaginary-frequency
+mesh (<cite>MeshImFreq</cite> or <cite>MeshDLRImFreq</cite>).</p></li>
+<li><p><strong>max_n_poles</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of poles to use in the approximation.</p></li>
+<li><p><strong>aaa_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Tolerance on the AAA residual, i.e. on the pole step. It does not bound
+the final error, which also depends on the subsequent residue fit.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, print verbose output during the approximation process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles (<cite>M &lt;= max_n_poles</cite>).</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Maximum absolute error of the approximation at the mesh points.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If neither <cite>max_n_poles</cite> nor <cite>aaa_tol</cite> is given.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If only <cite>max_n_poles</cite> is set, AAA runs until at most <cite>max_n_poles</cite> poles
+are used.</p></li>
+<li><p>If only <cite>aaa_tol</cite> is set, AAA runs until the AAA residual tolerance
+<cite>aaa_tol</cite> is reached.</p></li>
+<li><p>If both are set, AAA stops as soon as either the AAA residual tolerance
+<cite>aaa_tol</cite> is reached or <cite>max_n_poles</cite> poles are used, whichever happens
+first.</p></li>
+</ul>
+<p>See <cite>adapol.approx_freq_aaa</cite> for details on the algorithm, on why the
+number of poles produced may be smaller than <cite>max_n_poles</cite>, and on why
+<cite>aaa_tol</cite> does not bound the returned <cite>error</cite>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#adapol.approx_freq_aaa" title="adapol.approx_freq_aaa"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adapol.approx_freq_aaa</span></code></a></dt><dd><p>Underlying array-based routine.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.triqs.approx_gf_dlr_fast">
+<span class="sig-prename descclassname"><span class="pre">adapol.triqs.</span></span><span class="sig-name descname"><span class="pre">approx_gf_dlr_fast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G_dlr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_poles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aaa_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/triqs.html#approx_gf_dlr_fast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.triqs.approx_gf_dlr_fast" title="Link to this definition"></a></dt>
+<dd><p>Approximate a Green’s function <span class="math notranslate nohighlight">\(G\)</span> given in the discrete Lehmann
+representation (DLR) with a sum of a (possibly) smaller number of simple
+poles, by running the AAA algorithm and, optionally, a non-linear
+optimization step.</p>
+<p>This is the TRIQS front-end to <cite>adapol.approx_sop_fast</cite>, taking the
+original poles and residues from the DLR frequencies and coefficients of
+the Green’s function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G_dlr</strong> (<em>triqs.gf.Gf</em>) – Green’s function to approximate, defined on a DLR mesh (<cite>MeshDLR</cite>,
+<cite>MeshDLRImFreq</cite> or <cite>MeshDLRImTime</cite>).</p></li>
+<li><p><strong>max_n_poles</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of poles to use in the approximation.</p></li>
+<li><p><strong>aaa_tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Tolerance on the AAA residual. This is the maximum absolute deviation
+from the imaginary-frequency-domain data used by the AAA algorithm (the
+DLR expansion evaluated on the grid described below), over the sample
+points not yet used as AAA support points.</p></li>
+<li><p><strong>nonlinear_optimization</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, run a non-linear optimization step after the AAA approximation,
+using the AAA poles only as an initial guess.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, print verbose output during the approximation process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles.</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Normalized imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference
+between the original DLR expansion and the approximating sum of simple
+poles (see Notes).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If neither <cite>max_n_poles</cite> nor <cite>aaa_tol</cite> is given, or if <cite>G_dlr</cite> is not
+    defined on a DLR mesh.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The DLR expansion of <span class="math notranslate nohighlight">\(G\)</span> is a sum of simple poles</p>
+<div class="math notranslate nohighlight">
+\[G(Z) = \sum_{k=1}^K \frac{R_k}{Z - P_k}\]</div>
+<p>with poles <span class="math notranslate nohighlight">\(P_k = \omega_k / \beta\)</span> given by the DLR frequencies
+<span class="math notranslate nohighlight">\(\omega_k\)</span> of the mesh, and residues <span class="math notranslate nohighlight">\(R_k\)</span> given by the DLR
+coefficients of <cite>G_dlr</cite>. The approximation is then built in two steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Pole step:</strong> the DLR expansion is evaluated on the DLR
+imaginary-frequency nodes and AAA is run on this data to determine the
+pole locations. Note that this is the DLR Matsubara node set of the
+mesh of <cite>G_dlr</cite>, and not the equispaced fermionic Matsubara grid that
+<cite>adapol.approx_sop_fast</cite> uses by default.</p></li>
+<li><p><strong>Residue step:</strong> the residues are determined by minimizing the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference from the DLR
+expansion. By default this is a linear least-squares fit of the
+residues for the AAA poles; if <cite>nonlinear_optimization</cite> is True, the
+pole locations and residues are instead jointly optimized.</p></li>
+</ol>
+<p>The imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm is normalized by the inverse
+temperature <span class="math notranslate nohighlight">\(\beta\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\lVert f \rVert_{L^2(\tau)} =
+    \left( \frac{1}{\beta} \int_0^\beta |f(\tau)|^2 \, d\tau \right)^{1/2}.\]</div>
+<ul class="simple">
+<li><p>If only <cite>max_n_poles</cite> is set, AAA runs until at most <cite>max_n_poles</cite> poles
+are used.</p></li>
+<li><p>If only <cite>aaa_tol</cite> is set, AAA runs until the AAA residual tolerance
+<cite>aaa_tol</cite> is reached.</p></li>
+<li><p>If both are set, AAA stops as soon as either the AAA residual tolerance
+<cite>aaa_tol</cite> is reached or <cite>max_n_poles</cite> poles are used, whichever happens
+first.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting <cite>aaa_tol</cite> does <strong>not</strong> guarantee that the returned imaginary-time
+L2 norm <cite>error</cite> is below <cite>aaa_tol</cite>. Use <cite>approx_gf_dlr_tol</cite> to impose a
+tolerance on the final error instead.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#adapol.approx_sop_fast" title="adapol.approx_sop_fast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adapol.approx_sop_fast</span></code></a></dt><dd><p>Underlying array-based routine.</p>
+</dd>
+<dt><a class="reference internal" href="#adapol.triqs.approx_gf_dlr_tol" title="adapol.triqs.approx_gf_dlr_tol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">approx_gf_dlr_tol</span></code></a></dt><dd><p>Smallest approximation meeting a final error tolerance.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="adapol.triqs.approx_gf_dlr_tol">
+<span class="sig-prename descclassname"><span class="pre">adapol.triqs.</span></span><span class="sig-name descname"><span class="pre">approx_gf_dlr_tol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G_dlr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adapol/triqs.html#approx_gf_dlr_tol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#adapol.triqs.approx_gf_dlr_tol" title="Link to this definition"></a></dt>
+<dd><p>Approximate a Green’s function <span class="math notranslate nohighlight">\(G\)</span> given in the discrete Lehmann
+representation (DLR) with the smallest sum of simple poles whose
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error is below the tolerance <cite>tol</cite>.</p>
+<p>This is the TRIQS front-end to <cite>adapol.approx_sop_tol</cite>, taking the
+original poles and residues from the DLR frequencies and coefficients of
+the Green’s function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G_dlr</strong> (<em>triqs.gf.Gf</em>) – Green’s function to approximate, defined on a DLR mesh (<cite>MeshDLR</cite>,
+<cite>MeshDLRImFreq</cite> or <cite>MeshDLRImTime</cite>).</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Target tolerance on the final imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of
+the difference between the original DLR expansion and the approximating
+sum of simple poles.</p></li>
+<li><p><strong>nonlinear_optimization</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the residue step jointly optimizes the pole locations and
+residues (rather than fitting residues only) to minimize the
+imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> error.</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em> or </em><em>bool</em><em>, </em><em>optional</em>) – Amount of printed output. 0 (or False) is silent, 1 (or True) prints one
+line per pass through the AAA and residue fit pipeline, showing the pole
+count and error of each candidate fit, and 2 additionally prints the
+indented per step output of the AAA algorithm itself.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>poles</strong> (<em>(M,) ndarray</em>) – Poles of the approximating sum of simple poles.</p></li>
+<li><p><strong>residues</strong> (<em>(M, …) ndarray</em>) – Residues of the approximating sum of simple poles.</p></li>
+<li><p><strong>error</strong> (<em>float</em>) – Normalized imaginary-time <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> norm of the difference
+between the original DLR expansion and the approximating sum of simple
+poles (with the <span class="math notranslate nohighlight">\(1/\beta\)</span> normalization defined in
+<cite>approx_gf_dlr_fast</cite>).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the target tolerance <cite>tol</cite> cannot be achieved within the internal
+    maximum number of search steps, or if <cite>G_dlr</cite> is not defined on a DLR
+    mesh.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Unlike <cite>approx_gf_dlr_fast</cite>, where the tolerance only controls the AAA
+pole step, here <cite>tol</cite> is imposed on the <strong>final</strong> imaginary-time error,
+i.e. after the residues have been fit. Since the residues (and hence the
+final error) are only known after the residue step, the AAA + residue
+pipeline is run repeatedly to search for the minimal number of poles that
+achieves <cite>tol</cite>: the number of AAA poles is first increased until the
+imaginary-time error drops below <cite>tol</cite>, then a bisection on the number of
+AAA steps locates the smallest pole count that still meets <cite>tol</cite>.</p>
+<p>As in <cite>approx_gf_dlr_fast</cite>, the AAA data is the DLR expansion evaluated on
+the DLR imaginary-frequency nodes of the mesh of <cite>G_dlr</cite>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#adapol.approx_sop_tol" title="adapol.approx_sop_tol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adapol.approx_sop_tol</span></code></a></dt><dd><p>Underlying array-based routine.</p>
+</dd>
+<dt><a class="reference internal" href="#adapol.triqs.approx_gf_dlr_fast" title="adapol.triqs.approx_gf_dlr_fast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">approx_gf_dlr_fast</span></code></a></dt><dd><p>Single-pass compression with an AAA stopping criterion.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/hubbarddimer.html" class="btn btn-neutral float-left" title="Analytic continuation of Hubbard dimer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Zhen Huang &amp; Hugo U. R. Strand.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
