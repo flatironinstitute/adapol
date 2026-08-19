@@ -37,16 +37,16 @@ class SumOfPolesCompression:
         self.Z = Z
         self.F = self.sop(self.Z)
 
+        self._aaa_cache = {}
+        self._pipeline_cache = {}
+
         aaa_tol = tol
         aaa_max_steps = None
 
         for step in range(1, max_upwind_steps+1):
 
-            poles, residues, aaa_steps, aaa_err = self.aaa_compress(tol=aaa_tol, max_steps=aaa_max_steps)
-            if self.nonlinear_optimize:
-                err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
-            else:
-                err, residues = self.lstsq_weight_optimization(poles)
+            poles, residues, aaa_steps, aaa_err, err = self._pipeline(
+                n_steps=aaa_max_steps, aaa_tol=aaa_tol)
 
             if err < tol:
                 break
@@ -78,14 +78,7 @@ class SumOfPolesCompression:
 
             n_test = (n_not_converged + n_converged) // 2
             #print(f"Adapol: Running AAA with max_steps = {n_test}, in interval [{n_not_converged}, {n_converged}].")
-            poles, residues, aaa_steps, aaa_err = self.aaa_compress(max_steps=n_test)
-
-            #print(f'Adapol: AAA with max_steps = {n_test} gives error {aaa_err:2.2E}.')
-
-            if self.nonlinear_optimize:
-                err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
-            else:
-                err, residues = self.lstsq_weight_optimization(poles)
+            poles, residues, aaa_steps, aaa_err, err = self._pipeline(n_steps=n_test)
 
             if verbose:
                 print(f'Adapol: Error {err:2.2E} for {n_test} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
@@ -103,16 +96,15 @@ class SumOfPolesCompression:
             #print(f'Adapol: aaa_max_steps = {n_not_converged:2d} is not converged, error {err_not_conv:2.2E} > tol {tol:2.2E}.')
 
         if self.nonlinear_post_optimize:
-            """ Exploit that the non-linear optimization often can reduce the pole no by one.
+            # Exploit that the non-linear optimization often can reduce the pole no by one.
+            #
+            # Try first with one pole less and then with the same number of poles,
+            # and keep least no of poles that satisfy the tolerance.
 
-            Try first with one pole less and then with the same number of poles, 
-            and keep least no of poles that satisfy the tolerance. """
-            
             n_tests = [n_converged - 1, n_converged] if n_converged > 1 else [n_converged]
 
             for n_test in n_tests:
-                poles, residues, _, _ = self.aaa_compress(max_steps=n_test)
-                err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
+                poles, residues, _, _, err = self._pipeline(n_steps=n_test, nonlinear=True)
                 if err < tol:
                     n_converged = n_test
                     poles_conv = poles.copy()
@@ -123,6 +115,62 @@ class SumOfPolesCompression:
         if verbose:
             print(f'Adapol: Compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
         self.poles, self.residues, self.aaa_steps, self.error = poles_conv, residues_conv, n_converged, err_conv
+
+
+    def _pipeline(self, n_steps=None, aaa_tol=None, nonlinear=None):
+
+        """ Run the AAA pole step followed by the residue step.
+
+        The number of AAA steps is fixed by `n_steps`, or, if `n_steps` is None,
+        determined by the AAA error tolerance `aaa_tol`. The residue step is the
+        joint non-linear optimization of poles and residues if `nonlinear` is True,
+        and the linear least squares fit of the residues otherwise, defaulting to
+        the `nonlinear_optimize` flag of the compression.
+
+        Returns (poles, residues, n_steps, aaa_err, err) where `n_steps` is the
+        number of AAA steps actually taken, `aaa_err` the AAA error of the pole
+        step, and `err` the imaginary time L2 error of the result.
+
+        The result is cached on the number of AAA steps and the kind of residue
+        step, since the search for the smallest approximation can revisit step
+        counts that already have been run. A tolerance driven pole step is cached
+        on the number of steps it takes, which gives the same approximation as
+        asking for that number of steps directly. """
+
+        if nonlinear is None:
+            nonlinear = self.nonlinear_optimize
+
+        if (n_steps, nonlinear) not in self._pipeline_cache:
+
+            poles, residues, n_steps, aaa_err = self._aaa_poles(n_steps=n_steps, aaa_tol=aaa_tol)
+
+            if nonlinear:
+                err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
+            else:
+                err, residues = self.lstsq_weight_optimization(poles)
+
+            self._pipeline_cache[(n_steps, nonlinear)] = (poles, residues, n_steps, aaa_err, err)
+
+        poles, residues, n_steps, aaa_err, err = self._pipeline_cache[(n_steps, nonlinear)]
+
+        return poles.copy(), residues.copy(), n_steps, aaa_err, err
+
+
+    def _aaa_poles(self, n_steps=None, aaa_tol=None):
+
+        """ AAA pole step, cached on the number of AAA steps taken.
+
+        Cached separately from the pipeline, since the poles do not depend on how
+        the residues subsequently are determined, and the post optimization redoes
+        the residue step for step counts that the search already has run. """
+
+        if n_steps not in self._aaa_cache:
+            poles, residues, n_steps, aaa_err = self.aaa_compress(tol=aaa_tol, max_steps=n_steps)
+            self._aaa_cache[n_steps] = (poles, residues, n_steps, aaa_err)
+
+        poles, residues, n_steps, aaa_err = self._aaa_cache[n_steps]
+
+        return poles.copy(), residues.copy(), n_steps, aaa_err
 
 
     def aaa_compress(self, tol=None, max_steps=None, cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4):
