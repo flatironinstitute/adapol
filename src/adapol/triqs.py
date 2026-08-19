@@ -7,7 +7,6 @@ Author: Hugo U. R. Strand (2026)"""
 
 import numpy as np
 
-
 from .adapol import _frequency_data_driver
 from .adapol import _sum_of_simple_poles_driver
 
@@ -256,13 +255,16 @@ def _gf_imfreq_to_data(G_w):
 
 
 def _gf_dlr_to_data(G_dlr):
-    from triqs.gfs import MeshDLR, MeshDLRImFreq, MeshDLRImTime
-    from triqs.gfs import make_gf_dlr, make_gf_dlr_imfreq
+    from triqs.gfs import MeshDLR
+    from triqs.gfs import MeshDLRImFreq
+    from triqs.gfs import MeshDLRImTime
+    from triqs.gfs import make_gf_dlr
+    from triqs.gfs import make_gf_dlr_imfreq
 
     if type(G_dlr.mesh) not in [MeshDLR, MeshDLRImFreq, MeshDLRImTime]:
         raise ValueError('G_dlr must be defined on a DLR mesh')
 
-    G_c = G_dlr if type(G_dlr.mesh) == MeshDLR else make_gf_dlr(G_dlr)
+    G_c = G_dlr if type(G_dlr.mesh) is MeshDLR else make_gf_dlr(G_dlr)
 
     beta = G_c.mesh.beta
     poles = np.array([float(w) for w in G_c.mesh]) / beta
@@ -286,9 +288,10 @@ class TriqsDLRCompression:
         self.nonlinear_post_optimize = nonlinear_post_optimize
         self.verbose = verbose
 
-        from triqs.gfs import MeshDLR, make_gf_dlr
+        from triqs.gfs import MeshDLR
+        from triqs.gfs import make_gf_dlr
 
-        self.G_dlr = G if type(G.mesh) == MeshDLR else make_gf_dlr(G)
+        self.G_dlr = G if type(G.mesh) is MeshDLR else make_gf_dlr(G)
         self.dlr_freq = np.array([float(w) for w in self.G_dlr.mesh])
         self.G_dlr_coeff = self.G_dlr.data.copy()
         self.beta = self.G_dlr.mesh.beta
@@ -296,9 +299,10 @@ class TriqsDLRCompression:
         poles = self.dlr_freq / self.beta
         residues = self.G_dlr_coeff.copy()
 
-        from triqs.gfs import MeshDLRImFreq, make_gf_dlr_imfreq
+        from triqs.gfs import MeshDLRImFreq
+        from triqs.gfs import make_gf_dlr_imfreq
 
-        self.G_w = G if type(G.mesh) == MeshDLRImFreq else make_gf_dlr_imfreq(G)
+        self.G_w = G if type(G.mesh) is MeshDLRImFreq else make_gf_dlr_imfreq(G)
         self.Z = np.array([complex(w) for w in self.G_w.mesh])
 
         from .sop_compr import SumOfPolesCompression

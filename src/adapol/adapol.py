@@ -10,7 +10,6 @@ Authors: Hugo U. R. Strand, Jason Kaye (2026)
 
 import numpy as np
 
-
 from .aaa import aaa
 from .sop import SumOfSimplePoles
 

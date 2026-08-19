@@ -10,7 +10,6 @@ Author: Hugo U. R. Strand, 2026
 import numpy as np
 from scipy.linalg import eigvals as scipy_eigvals
 
-
 from .sop import SumOfSimplePoles
 
 
@@ -539,7 +538,7 @@ class ConjugatedBarycentricRationalApproximation:
         poles = scipy_eigvals(A, B, overwrite_a=True)
 
         if scale_and_balance:
-            print(f'Poles from SAS   = {poles_sas}')
+            #print(f'Poles from SAS   = {poles_sas}')
             print(f'Poles from SSASS = {poles_ssass}')
             print(f'Poles from A     = {poles}')
             poles = poles_ssass

@@ -10,8 +10,6 @@ Authors: Zhen Huang and Hugo U. R. Strand (2026)
 
 
 import numpy as np
-
-
 from numpy.polynomial.legendre import leggauss
 from scipy.optimize import minimize as scipy_minimize
 
@@ -338,7 +336,7 @@ class ImTimeQuadrature:
 
     def best_l2_norm_approximation_non_linear_least_squares(self, sop, poles, verbose=False):
 
-        print(f'--> best_l2_norm_approximation_non_linear_least_squares')
+        print('--> best_l2_norm_approximation_non_linear_least_squares')
         print(f'type(sop) = {type(sop)}, type(poles) = {type(poles)}')
 
         
@@ -361,7 +359,6 @@ class ImTimeQuadrature:
 
         def jac(poles, sop):
             sop_opt = get_sop_opt(poles, sop)
-            sop_diff = sop_opt - sop
             dKdz_ip = self.dkernel_matrix_dpoles(sop_opt.p)
             J_iXp = np.einsum('i,p...,ip->i...p',
                 self.sqrt_w_i, sop_opt.R, dKdz_ip).real

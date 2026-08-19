@@ -4,11 +4,10 @@ Author: Hugo U. R. Strand (2026)"""
 
 
 import itertools
+
 import numpy as np
 
-
 from adapol.aaa import aaa
-from adapol.bra import BarycentricRationalApproximation
 
 
 def test_aaa_bra():

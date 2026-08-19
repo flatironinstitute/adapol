@@ -6,8 +6,8 @@ Author: Zhen Huang (2025)"""
 
 import numpy as np
 
-
-from adapol.imtime import exp_quadrature, kernel
+from adapol.imtime import exp_quadrature
+from adapol.imtime import kernel
 
 
 def analytic_integral(omega):
@@ -58,7 +58,7 @@ def test_panel_quadrature_individual_kernels():
 
     omega_values = [0.1, 1.0, 10.0, 50.0, 100.0, -0.1, -1.0, -10.0, -50.0, -100.0]
 
-    print(f"\nIndividual kernels K(tau, omega) integrated over [0, 1]:")
+    print("\nIndividual kernels K(tau, omega) integrated over [0, 1]:")
     for omega in omega_values:
         omega_arr = np.array([omega])
         omega_max = np.abs(omega)

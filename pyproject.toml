@@ -33,3 +33,24 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://flatironinstitute.github.io/adapol"
 "Bug Tracker" = "https://github.com/flatironinstitute/adapol/issues"
+
+[tool.ruff.lint]
+# Pin the rule set explicitly. Without this ruff lints with whatever its current
+# defaults are, which change between releases and silently break CI.
+# This is ruff's classic default (pycodestyle errors + pyflakes) plus import sorting.
+select = ["E4", "E7", "E9", "F", "I"]
+ignore = [
+    "E701",  # multiple statements on one line (colon), used for compact guards
+    "E702",  # multiple statements on one line (semicolon), used in plot scripts
+    "E731",  # lambda assignment
+    "E741",  # ambiguous variable name, e.g. `I` for the identity matrix
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Benchmarks and example notebooks are exploratory scripts, not library code.
+"benchmarks/*" = ["F401", "F841", "I001"]
+"doc/examples/*.ipynb" = ["E402", "F401", "I001"]
+
+[tool.ruff.lint.isort]
+# Match the existing one-import-per-line style.
+force-single-line = true

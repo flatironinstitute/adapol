@@ -12,19 +12,19 @@ pytest.importorskip(
 
 
 import numpy as np
-
-
-from triqs.gfs import Gf, MeshImFreq, MeshDLRImFreq, inverse, \
-    iOmega_n, SemiCircular, make_gf_dlr, make_gf_dlr_imtime
-
-
-from adapol.sop import SumOfSimplePoles
+from triqs.gfs import Gf
+from triqs.gfs import MeshDLRImFreq
+from triqs.gfs import MeshImFreq
+from triqs.gfs import SemiCircular
+from triqs.gfs import inverse
+from triqs.gfs import iOmega_n
+from triqs.gfs import make_gf_dlr
+from triqs.gfs import make_gf_dlr_imtime
 
 from adapol.triqs import TriqsDLRCompression
-
-from adapol.triqs import approx_gf_imfreq_aaa
 from adapol.triqs import approx_gf_dlr_fast
 from adapol.triqs import approx_gf_dlr_tol
+from adapol.triqs import approx_gf_imfreq_aaa
 
 
 def test_gf_imfreq_n_poles(max_n_poles=5):

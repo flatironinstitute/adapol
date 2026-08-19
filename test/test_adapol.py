@@ -2,9 +2,6 @@
 
 import numpy as np
 
-
-from adapol.sop import SumOfSimplePoles
-
 from adapol.adapol import approx_freq_aaa
 from adapol.adapol import approx_sop_fast
 from adapol.adapol import approx_sop_tol

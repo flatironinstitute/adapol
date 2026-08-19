@@ -8,7 +8,6 @@ Author: Hugo U. R. Strand (2026)
 
 import numpy as np
 
-
 from adapol.sop import SumOfSimplePoles
 
 

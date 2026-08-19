@@ -9,7 +9,6 @@ Author: Hugo U. R. Strand, 2026
 
 import numpy as np
 
-
 from adapol.imtime import ImTimeQuadrature
 from adapol.imtime import kernel as imtime_kernel
 

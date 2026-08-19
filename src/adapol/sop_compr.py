@@ -3,12 +3,9 @@
 Author: Hugo U. R. Strand, 2026
 """
 
-import numpy as np
-
-
 from .aaa import aaa
-from .sop import SumOfSimplePoles
 from .adapol import _fermionic_matsubara_frequency_grid
+from .sop import SumOfSimplePoles
 
 
 class SumOfPolesCompression:
@@ -84,8 +81,6 @@ class SumOfPolesCompression:
         residues_conv = residues.copy()
         err_conv = err
 
-        err_not_conv = float('inf')
-
         if self.verbose and n_not_converged + 1 != n_converged:
             print(f'Adapol: [2/{n_phases} bisect] smallest step count still meeting the '
                   f'tolerance, candidates {n_not_converged+1}..{n_converged}')
@@ -102,7 +97,6 @@ class SumOfPolesCompression:
                 err_conv = err
             else:
                 n_not_converged = n_test
-                err_not_conv = err
 
             if self.verbose:
                 self._print_pass(n_test, poles, err, aaa_err,

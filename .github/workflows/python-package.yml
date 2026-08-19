@@ -29,8 +29,8 @@ jobs:
         pip3 install pytest numpy scipy sphinx sphinx-rtd-theme nbsphinx ipython myst-parser linkify-it-py
     - name: Lint with Ruff
       run: |
-        pip install ruff
-        ruff check --output-format=github . -v
+        pip install ruff==0.16.3
+        ruff check --output-format=github .
     - name: Test with pytest
       run: |
         pip install -e .
