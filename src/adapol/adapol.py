@@ -85,15 +85,22 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     >>> F = 1 / (Z - 1) + 0.5 / (Z + 2)  # Example frequency data with two poles
     >>> # Approximate F with a sum of simple poles using AAA
     >>> poles, residues, error = approx_freq_aaa(F, Z, aaa_tol=1e-12)
-    >>> poles
-    array([-2.  ,  0.03,  1.  ])
-    >>> residues
-    array([ 0.5+0.j, -0. -0.j,  1. +0.j])
+    >>> len(poles)
+    3
+    >>> physical = np.abs(residues) > 1e-8   # discard the null-residue pole
+    >>> poles[physical]
+    array([-2.,  1.])
+    >>> residues[physical].round(2) + 0.0
+    array([0.5+0.j, 1. +0.j])
     >>> float(error) < 1e-12
     True
 
-    Note that the fit contains three poles, not two,due to the constrained AAA
+    Note that the fit contains three poles, not two, due to the constrained AAA
     algorithm. However, the additional pole has a residue that is numerically zero.
+    Since it does not contribute to the fit, its location is not determined by the
+    data: it is fixed only by round-off and therefore varies between platforms and
+    BLAS implementations. For that reason the examples select the poles with a
+    non-negligible residue instead of printing the returned arrays verbatim.
 
     Also tensor valued functions can be fitted, e.g. a 2x2 matrix valued function
     :math:`\\dim(F(Z)) = 2 \\times 2` with two poles and two matrix residues:
@@ -102,17 +109,15 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     >>> R2 = np.array([[0, 0.1], [0.1, 1]])[None, ...]
     >>> F = R1 / (Z[:, None, None] - 1) + R2 / (Z[:, None, None] + 2)
     >>> poles, residues, error = approx_freq_aaa(F, Z, aaa_tol=1e-12)
-    >>> poles
-    array([-2.  , -0.27,  1.  ])
-    >>> residues
-    array([[[ 0. -0.j ,  0.1+0.j ],
-            [ 0.1-0.j ,  1. +0.j ]],
+    >>> weight = np.abs(residues).max(axis=(1, 2))   # residue norm of each pole
+    >>> poles[weight > 1e-8]
+    array([-2.,  1.])
+    >>> residues[weight > 1e-8].round(2) + 0.0  # round-off noise in the zero entries removed
+    array([[[0. +0.j , 0.1+0.j ],
+            [0.1+0.j , 1. +0.j ]],
     <BLANKLINE>
-           [[-0. -0.j , -0. -0.j ],
-            [-0. +0.j , -0. +0.j ]],
-    <BLANKLINE>
-           [[ 1. +0.j ,  0. +0.1j],
-            [ 0. -0.1j,  0. +0.j ]]])
+           [[1. +0.j , 0. +0.1j],
+            [0. -0.1j, 0. +0.j ]]])
     >>> float(error) < 1e-12
     True
 
