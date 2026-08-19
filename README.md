@@ -32,11 +32,11 @@ pip install git+https://github.com/flatironinstitute/adapol
 
 ## Examples
 
-Two example notebooks demonstrate the usage of these functions in detail. We recommend reading them in the following order.
+Three example notebooks demonstrate the usage of these functions in detail. We recommend reading them in the following order.
 
-- [`doc/examples/semicircle.ipynb`](doc/examples/semicircle.ipynb) — fitting data with a continuous spectrum (semicircular density): the stopping criteria, the nonlinear optimization option, and the error metric.
-- [`doc/examples/discrete.ipynb`](doc/examples/discrete.ipynb) — fitting multi-orbital data with a discrete spectrum, including an experiment on how the required number of poles scales with the number of orbitals.
-- [`doc/examples/hubbarddimer.ipynb`](doc/examples/hubbarddimer.ipynb) — analytic continuation benchmark for the Hubbard dimer.
+- [`semicircle.ipynb`](https://flatironinstitute.github.io/adapol/latest/examples/semicircle.html) — fitting data with a continuous spectrum (semicircular density): the stopping criteria, the nonlinear optimization option, and the error metric.
+- [`discrete.ipynb`](https://flatironinstitute.github.io/adapol/latest/examples/discrete.html) — fitting multi-orbital data with a discrete spectrum, including an experiment on how the required number of poles scales with the number of orbitals.
+- [`hubbarddimer.ipynb`](https://flatironinstitute.github.io/adapol/latest/examples/hubbarddimer.html) — analytic continuation benchmark for the Hubbard dimer.
 
 ## Documentation
 
