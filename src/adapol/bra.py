@@ -108,8 +108,6 @@ class BarycentricRationalApproximation:
             axis = tuple(range(1, R.ndim))
             idx = np.argmax(np.max(np.abs(R), axis=axis))
 
-        self.residual = np.max(np.abs(R[idx]))
-
         # Use this point as new support point, and update the interpolation set
         z_new = Z[idx]
         f_new = F[idx]
@@ -125,6 +123,7 @@ class BarycentricRationalApproximation:
 
         self.w = self.__fit_weights(Z, F)
         R = F - self.fast_eval(Z) # Recompute residual
+        self.residual = np.max(np.abs(R))
         return Z, F, R
 
 
@@ -378,8 +377,6 @@ class ConjugatedBarycentricRationalApproximation:
         if R.ndim == 1: idx = np.argmax(np.abs(R))
         elif R.ndim == 3: idx = np.argmax(np.max(np.abs(R), axis=(1, 2)))
         else: raise NotImplementedError("Only scalar and matrix valued functions are supported.")
-        
-        self.residual = np.max(np.abs(R[idx]))
 
         #print(f'AAA: Largest residual {residual:2.2E} at z = {Z[idx]:2.2E}, idx = {idx}')
 
@@ -407,6 +404,7 @@ class ConjugatedBarycentricRationalApproximation:
 
         self.w = self.__fit_weights(Z, F)
         R = F - self.fast_eval(Z) # Recompute residual
+        self.residual = np.max(np.abs(R))
         return Z, F, R    
 
 
