@@ -275,15 +275,15 @@ def approx_sop_fast(
     >>> poles, residues, error = approx_sop_fast(poles, residues, beta=20.0, aaa_tol=1e-12)
     >>> poles
     array([-2. ,  0.3,  1. ])
-    >>> residues
-    array([[[ 0. +0.j ,  0.1+0.j ],
-            [ 0.1-0.j ,  1. +0.j ]],
+    >>> residues.round(2) + 0.0  # round-off noise in the zero entries removed
+    array([[[0. +0.j , 0.1+0.j ],
+            [0.1+0.j , 1. +0.j ]],
     <BLANKLINE>
-           [[ 0.5+0.j , -0. -0.j ],
-            [-0. +0.j ,  0.5+0.j ]],
+           [[0.5+0.j , 0. +0.j ],
+            [0. +0.j , 0.5+0.j ]],
     <BLANKLINE>
-           [[ 1. +0.j ,  0. +0.1j],
-            [ 0. -0.1j, -0. +0.j ]]])
+           [[1. +0.j , 0. +0.1j],
+            [0. -0.1j, 0. +0.j ]]])
     >>> float(error) < 1e-9
     True
 
