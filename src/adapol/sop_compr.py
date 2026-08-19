@@ -19,8 +19,14 @@ class SumOfPolesCompression:
         
         self.tol = tol
         self.nonlinear_optimize = nonlinear_optimize
-        self.nonlinear_post_optimize = nonlinear_post_optimize
         self.verbose = verbose
+
+        # The post optimization retries the bisection result with one pole less,
+        # using the non-linear optimization. When the bisection itself already runs
+        # the non-linear optimization, both retries only repeat (deterministic)
+        # pipeline passes that the bisection has made, and can not change the
+        # result. Hence, drop the post optimization in that case.
+        self.nonlinear_post_optimize = nonlinear_post_optimize and not nonlinear_optimize
 
         self.beta = beta
         self.sop = SumOfSimplePoles(poles=poles, residues=residues)
