@@ -8,10 +8,10 @@ import numpy as np
 
 from triqs.gfs import Gf, MeshDLRImFreq, SemiCircular, inverse, iOmega_n, make_gf_dlr
 
-from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance
-from adapol.triqs import approximate_gf_imfreq_with_fixed_error_tolerance
+from adapol.triqs import approx_gf_dlr_fast
+from adapol.triqs import approx_gf_imfreq_aaa
 
-from adapol.triqs import approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time
+from adapol.triqs import approx_gf_dlr_tol
 
 
 class Dummy():
@@ -43,7 +43,7 @@ def test_convergence(beta=1.0):
         t_tdc = time.time()
         tdc = Dummy()
         tdc.poles, tdc.residues, tdc.error = \
-            approximate_gf_dlr_with_fixed_error_tolerance_in_imaginary_time(
+            approx_gf_dlr_tol(
                 G_dlr, tol=tol)
         tdc.n_poles = len(tdc.poles)
         tdc.runtime = time.time() - t_tdc
@@ -53,7 +53,7 @@ def test_convergence(beta=1.0):
         t_imf = time.time()
         imf = Dummy()
         imf.poles, imf.residues, imf.error = \
-            approximate_gf_imfreq_with_fixed_error_tolerance(G_w, tol=tol)
+            approx_gf_imfreq_aaa(G_w, aaa_tol=tol)
 
         imf.runtime = time.time() - t_imf
         imf.n_poles = len(imf.poles)    
@@ -62,7 +62,7 @@ def test_convergence(beta=1.0):
         t_dlr = time.time()
         dlr = Dummy()
         dlr.poles, dlr.residues, dlr.error = \
-            approximate_gf_dlr_with_fixed_error_tolerance(G_dlr, tol=tol)
+            approx_gf_dlr_fast(G_dlr, aaa_tol=tol)
 
         dlr.runtime = time.time() - t_dlr
         dlr.n_poles = len(dlr.poles)    
