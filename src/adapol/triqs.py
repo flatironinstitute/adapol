@@ -28,7 +28,8 @@ def approx_gf_imfreq_aaa(G_w, max_n_poles=None, aaa_tol=None, verbose=False):
     max_n_poles : int, optional
         Maximum number of poles to use in the approximation.
     aaa_tol : float, optional
-        Error tolerance for the AAA algorithm.
+        Tolerance on the AAA residual, i.e. on the pole step. It does not bound
+        the final error, which also depends on the subsequent residue fit.
     verbose : bool, optional
         If True, print verbose output during the approximation process.
 
@@ -50,9 +51,9 @@ def approx_gf_imfreq_aaa(G_w, max_n_poles=None, aaa_tol=None, verbose=False):
     -----
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
       are used.
-    - If only `aaa_tol` is set, AAA runs until the AAA error tolerance
+    - If only `aaa_tol` is set, AAA runs until the AAA residual tolerance
       `aaa_tol` is reached.
-    - If both are set, AAA stops as soon as either the AAA error tolerance
+    - If both are set, AAA stops as soon as either the AAA residual tolerance
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
@@ -92,9 +93,10 @@ def approx_gf_dlr_fast(
     max_n_poles : int, optional
         Maximum number of poles to use in the approximation.
     aaa_tol : float, optional
-        Error tolerance for the AAA algorithm. This is the maximum absolute
-        error over the imaginary-frequency-domain data used by the AAA
-        algorithm (the DLR expansion evaluated on the grid described below).
+        Tolerance on the AAA residual. This is the maximum absolute deviation
+        from the imaginary-frequency-domain data used by the AAA algorithm (the
+        DLR expansion evaluated on the grid described below), over the sample
+        points not yet used as AAA support points.
     nonlinear_optimization : bool, optional
         If True, run a non-linear optimization step after the AAA approximation,
         using the AAA poles only as an initial guess.
@@ -149,9 +151,9 @@ def approx_gf_dlr_fast(
 
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
       are used.
-    - If only `aaa_tol` is set, AAA runs until the AAA error tolerance
+    - If only `aaa_tol` is set, AAA runs until the AAA residual tolerance
       `aaa_tol` is reached.
-    - If both are set, AAA stops as soon as either the AAA error tolerance
+    - If both are set, AAA stops as soon as either the AAA residual tolerance
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
@@ -197,8 +199,11 @@ def approx_gf_dlr_tol(G_dlr, tol, nonlinear_optimization=False, verbose=False):
         If True, the residue step jointly optimizes the pole locations and
         residues (rather than fitting residues only) to minimize the
         imaginary-time :math:`L^2(\\tau)` error.
-    verbose : bool, optional
-        If True, print verbose output during the approximation process.
+    verbose : int or bool, optional
+        Amount of printed output. 0 (or False) is silent, 1 (or True) prints one
+        line per pass through the AAA and residue fit pipeline, showing the pole
+        count and error of each candidate fit, and 2 additionally prints the
+        indented per step output of the AAA algorithm itself.
 
     Returns
     -------

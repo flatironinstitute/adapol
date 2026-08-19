@@ -16,7 +16,7 @@ from .bra import ConjugatedBarycentricRationalApproximation
 
 def aaa(Z, F, tol=None, max_steps=None, constrained=False, 
         cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4,
-        verbose=True):
+        verbose=True, prefix=''):
 
     """ Implementation of the AAA algorithm for barycentric rational approximation. 
     
@@ -27,7 +27,9 @@ def aaa(Z, F, tol=None, max_steps=None, constrained=False,
     F : array_like, shape (n, ...)
         The function values at the support points.
     tol : float, optional
-        The tolerance for convergence.
+        The tolerance on the AAA residual, i.e. on the maximum absolute deviation
+        from the data over the sample points not yet used as support points. The
+        iteration stops once the residual drops below the tolerance.
     max_steps : int, optional
         The maximum number of AAA steps.
     constrained : bool, optional
@@ -40,6 +42,9 @@ def aaa(Z, F, tol=None, max_steps=None, constrained=False,
         The tolerance for identifying poles with non-negligible imaginary part.
     verbose : bool, optional
         Whether to print progress information.
+    prefix : str, optional
+        String prepended to each printed line, e.g. to indent the output when
+        the algorithm is run as a sub step of a larger calculation.
 
     Returns
     -------
@@ -73,15 +78,15 @@ def aaa(Z, F, tol=None, max_steps=None, constrained=False,
         Z, F, R = bra.aaa_step(Z, F, R)
         residual = np.max(np.abs(R))
         if verbose:
-            print(f'AAA: Error {residual:2.2E} using {len(bra.z)} support and {len(Z)} fitting points (step {step}/{max_steps})')
+            print(f'{prefix}AAA: Residual {residual:2.2E} using {len(bra.z)} support and {len(Z)} fitting points (step {step}/{max_steps})')
 
         if tol is not None and residual <= tol:
             if verbose:
-                print(f"AAA: Converged after {step} steps with error {residual:2.2E}.")
+                print(f"{prefix}AAA: Converged after {step} steps with residual {residual:2.2E}.")
             break
 
     if cleanup:
-        opts = dict(tol=cleanup_residue_tol, verbose=verbose)
+        opts = dict(tol=cleanup_residue_tol, verbose=verbose, prefix=prefix)
         if constrained:
             opts['imag_tol'] = cleanup_imag_tol
 
@@ -90,7 +95,7 @@ def aaa(Z, F, tol=None, max_steps=None, constrained=False,
             n_removed, Z, F = bra.remove_froissart_doublets(Z, F, **opts)
 
     if step == max_steps and tol is not None and residual > tol:
-        print(f"AAA: Warning! Failed to converge after {max_steps} steps. Final error {residual:2.2E} larger than tolerance {tol:2.2E}.")   
+        print(f"{prefix}AAA: Warning! Failed to converge after {max_steps} steps. Final residual {residual:2.2E} larger than tolerance {tol:2.2E}.")   
 
     bra.aaa_steps = step
 

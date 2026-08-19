@@ -16,10 +16,16 @@ class SumOfPolesCompression:
     def __init__(self, poles, residues, beta, Z=None, tol=1e-10, 
                  nonlinear_optimize=False, nonlinear_post_optimize=False, 
                  max_upwind_steps=4, verbose=True):
-        
+
+        """ `verbose` selects the amount of printed output:
+
+        0 (or False) is silent, 1 (or True) prints one line per pass through the
+        AAA and residue fit pipeline, and 2 also prints the indented per step
+        output of the AAA algorithm itself. """
+
         self.tol = tol
         self.nonlinear_optimize = nonlinear_optimize
-        self.verbose = verbose
+        self.verbose = int(verbose)
 
         # The post optimization retries the bisection result with one pole less,
         # using the non-linear optimization. When the bisection itself already runs
@@ -40,6 +46,17 @@ class SumOfPolesCompression:
         self._aaa_cache = {}
         self._pipeline_cache = {}
 
+        n_phases = 3 if self.nonlinear_post_optimize else 2
+
+        if self.verbose:
+            residue_step = 'joint pole and residue optimization' \
+                if self.nonlinear_optimize else 'linear residue fit'
+            print(f'Adapol: compressing {len(self.sop.p)} poles, '
+                  f'tol {tol:2.2E} on the imaginary time L2 error')
+            print(f'        beta = {beta:g}, {len(self.Z)} Matsubara points, {residue_step}')
+            print(f'Adapol: [1/{n_phases} bracket] '
+                  f'growing the AAA step count until the tolerance is met')
+
         aaa_tol = tol
         aaa_max_steps = None
 
@@ -48,19 +65,14 @@ class SumOfPolesCompression:
             poles, residues, aaa_steps, aaa_err, err = self._pipeline(
                 n_steps=aaa_max_steps, aaa_tol=aaa_tol)
 
+            if self.verbose:
+                self._print_pass(aaa_steps, poles, err, aaa_err)
+
             if err < tol:
                 break
 
-            if verbose:
-                print('-'*72)
-                print(f'Adapol: Step {step}/{max_upwind_steps}, AAA steps = {aaa_steps}, error = {err:2.2E} with tol = {aaa_tol}.')
-                print('-'*72)
-
             aaa_tol = None
             aaa_max_steps = aaa_steps + 1
-
-        if verbose:
-            print(f'Adapol: Error {err:2.2E} for {aaa_steps} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
 
         if step == max_upwind_steps and err >= tol:
             raise ValueError(f"Adapol: Compression failed to achieve the desired accuracy {tol:2.2E} after {max_upwind_steps} steps, with final error {err:2.2E}. Consider increasing max_upwind_steps or relaxing tol.")
@@ -74,14 +86,14 @@ class SumOfPolesCompression:
 
         err_not_conv = float('inf')
 
+        if self.verbose and n_not_converged + 1 != n_converged:
+            print(f'Adapol: [2/{n_phases} bisect] smallest step count still meeting the '
+                  f'tolerance, candidates {n_not_converged+1}..{n_converged}')
+
         while(n_not_converged + 1 != n_converged):
 
             n_test = (n_not_converged + n_converged) // 2
-            #print(f"Adapol: Running AAA with max_steps = {n_test}, in interval [{n_not_converged}, {n_converged}].")
             poles, residues, aaa_steps, aaa_err, err = self._pipeline(n_steps=n_test)
-
-            if verbose:
-                print(f'Adapol: Error {err:2.2E} for {n_test} AAA steps (Error {aaa_err:2.2E} no opt) c.f. tol {tol:2.2E}.')
 
             if err < tol:
                 n_converged = n_test
@@ -92,8 +104,9 @@ class SumOfPolesCompression:
                 n_not_converged = n_test
                 err_not_conv = err
 
-            #print(f"Adapol: aaa_max_steps = {n_converged:2d} is converged with error {err_conv:2.2E} < tol {tol:2.2E}.")
-            #print(f'Adapol: aaa_max_steps = {n_not_converged:2d} is not converged, error {err_not_conv:2.2E} > tol {tol:2.2E}.')
+            if self.verbose:
+                self._print_pass(n_test, poles, err, aaa_err,
+                                 note=f'candidates {n_not_converged+1}..{n_converged}')
 
         if self.nonlinear_post_optimize:
             # Exploit that the non-linear optimization often can reduce the pole no by one.
@@ -103,8 +116,15 @@ class SumOfPolesCompression:
 
             n_tests = [n_converged - 1, n_converged] if n_converged > 1 else [n_converged]
 
+            if self.verbose:
+                print(f'Adapol: [{n_phases}/{n_phases} polish] retrying '
+                      f'{" and ".join([str(n) for n in n_tests])} steps '
+                      f'with joint pole and residue optimization')
+
             for n_test in n_tests:
-                poles, residues, _, _, err = self._pipeline(n_steps=n_test, nonlinear=True)
+                poles, residues, _, aaa_err, err = self._pipeline(n_steps=n_test, nonlinear=True)
+                if self.verbose:
+                    self._print_pass(n_test, poles, err, aaa_err)
                 if err < tol:
                     n_converged = n_test
                     poles_conv = poles.copy()
@@ -112,9 +132,22 @@ class SumOfPolesCompression:
                     err_conv = err
                     break
 
-        if verbose:
-            print(f'Adapol: Compression finished with {n_converged} AAA steps and error {err_conv:2.2E}.')
+        if self.verbose:
+            print(f'Adapol: done -- {len(poles_conv)} poles ({n_converged} AAA steps), '
+                  f'error {err_conv:2.2E} <= tol {tol:2.2E}, '
+                  f'{len(self._pipeline_cache)} pipeline passes, {len(self._aaa_cache)} AAA runs')
+
         self.poles, self.residues, self.aaa_steps, self.error = poles_conv, residues_conv, n_converged, err_conv
+
+
+    def _print_pass(self, n_steps, poles, err, aaa_err, note=''):
+
+        """ Print the one line summary of a single pass through the pipeline. """
+
+        ok = err < self.tol
+        print(f'          {n_steps:2d} steps -> {len(poles):2d} poles, '
+              f'error {err:2.2E} {"<=" if ok else " >"} tol  {"ok  " if ok else "fail"}'
+              f'   AAA residual {aaa_err:2.2E}' + (f'   {note}' if note else ''))
 
 
     def _pipeline(self, n_steps=None, aaa_tol=None, nonlinear=None):
@@ -122,13 +155,13 @@ class SumOfPolesCompression:
         """ Run the AAA pole step followed by the residue step.
 
         The number of AAA steps is fixed by `n_steps`, or, if `n_steps` is None,
-        determined by the AAA error tolerance `aaa_tol`. The residue step is the
-        joint non-linear optimization of poles and residues if `nonlinear` is True,
+        determined by the tolerance `aaa_tol` on the AAA residual. The residue step is
+        the joint non-linear optimization of poles and residues if `nonlinear` is True,
         and the linear least squares fit of the residues otherwise, defaulting to
         the `nonlinear_optimize` flag of the compression.
 
         Returns (poles, residues, n_steps, aaa_err, err) where `n_steps` is the
-        number of AAA steps actually taken, `aaa_err` the AAA error of the pole
+        number of AAA steps actually taken, `aaa_err` the AAA residual of the pole
         step, and `err` the imaginary time L2 error of the result.
 
         The result is cached on the number of AAA steps and the kind of residue
@@ -178,7 +211,7 @@ class SumOfPolesCompression:
         bra = aaa(
             self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
             cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
-            verbose=self.verbose)
+            verbose=self.verbose >= 2, prefix='    ' if self.verbose >= 2 else '')
 
         poles, residues = bra.poles_and_residues()
         poles = poles.real

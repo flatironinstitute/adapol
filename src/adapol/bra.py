@@ -185,7 +185,7 @@ class BarycentricRationalApproximation:
         return poles, residues
         
 
-    def remove_froissart_doublets(self, Z, F, tol=None, verbose=False):
+    def remove_froissart_doublets(self, Z, F, tol=None, verbose=False, prefix=''):
         """ Remove Froissart doublets, i.e. poles with small residues, 
         by putting the closest support point of each pole back to the fitting set. """
 
@@ -206,14 +206,14 @@ class BarycentricRationalApproximation:
             return 0, Z, F
 
         if verbose:
-            print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
+            print(f'{prefix}AAA: Found {len(ridxs[0])} residues < {tol}.')
 
         # Locate the closest support point to each pole with small residue
         dists = np.abs(self.z[:, None] - poles[None, ridxs])
         pidxs = np.unique(np.argmin(dists, axis=0))
 
         if verbose:
-            print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
+            print(f'{prefix}AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         # Put points back to the fitting set
         Z = np.concatenate((Z, self.z[pidxs]))
@@ -228,7 +228,7 @@ class BarycentricRationalApproximation:
         self.residual = np.max(np.abs(R))
 
         if verbose:
-            print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
+            print(f'{prefix}AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
     
@@ -582,7 +582,7 @@ class ConjugatedBarycentricRationalApproximation:
         return poles, residues
 
 
-    def remove_froissart_doublets(self, Z, F, tol=None, imag_tol=1e-4, verbose=True):
+    def remove_froissart_doublets(self, Z, F, tol=None, imag_tol=1e-4, verbose=True, prefix=''):
         """ Remove Froissart doublets, i.e. poles with small residues, 
         by putting the closest support point of each pole back to the fitting set.
          
@@ -614,7 +614,7 @@ class ConjugatedBarycentricRationalApproximation:
             return 0, Z, F
 
         if verbose:
-            print(f'AAA: Found {len(ridxs[0])} residues < {tol}.')
+            print(f'{prefix}AAA: Found {len(ridxs[0])} residues < {tol}.')
 
         # Locate the closest support point to each pole with small residue
         zz = np.concatenate((self.z, self.z.conjugate()))
@@ -623,7 +623,7 @@ class ConjugatedBarycentricRationalApproximation:
         pidxs = np.unique(np.mod(pidxs, len(self.z)))
 
         if verbose:
-            print(f'AAA: Found {len(pidxs)} adjacent support points to remove.')
+            print(f'{prefix}AAA: Found {len(pidxs)} adjacent support points to remove.')
 
         assert( len(pidxs) > 0 )
 
@@ -640,7 +640,7 @@ class ConjugatedBarycentricRationalApproximation:
         self.residual = np.max(np.abs(R))
 
         if verbose:
-            print(f'AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
+            print(f'{prefix}AAA: After removing {len(pidxs)} support points the residual is {self.residual:2.2E}')
 
         return len(pidxs), Z, F
 

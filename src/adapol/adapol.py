@@ -28,7 +28,7 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
     max_n_poles : int, optional
         Maximum number of poles to use in the approximation.
     aaa_tol : float, optional
-        Error tolerance for the AAA algorithm.
+        Tolerance on the AAA residual, i.e. on the pole step (see the note below).
     verbose : bool, optional
         If True, print verbose output during the approximation process.
 
@@ -53,9 +53,9 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
       are used.
-    - If only `aaa_tol` is set, AAA runs until the AAA error tolerance
+    - If only `aaa_tol` is set, AAA runs until the AAA residual tolerance
       `aaa_tol` is reached.
-    - If both are set, AAA stops as soon as either the AAA error tolerance
+    - If both are set, AAA stops as soon as either the AAA residual tolerance
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
@@ -68,10 +68,10 @@ def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
 
     Note
     ----
-    The error tolerance `aaa_tol` controls the maximum absolute error 
-    over the frequency-domain data :math:`F` at the sample points :math:`Z` 
-    in the AAA algorithm (pole step); it does **not** bound the
-    final error, which also depends on the subsequent residue fit.
+    The tolerance `aaa_tol` controls the AAA residual, i.e. the maximum absolute
+    deviation from the frequency-domain data :math:`F` over the sample points
+    :math:`Z` not yet used as AAA support points (pole step); it does **not**
+    bound the final error, which also depends on the subsequent residue fit.
 
     Examples
     --------
@@ -144,10 +144,10 @@ def approx_sop_fast(
     max_n_poles : int, optional
         Maximum number of poles to use in the approximation.
     aaa_tol : float, optional
-        Error tolerance for the AAA algorithm. This is the maximum absolute
-        error over the imaginary-frequency-domain data used by the AAA
-        algorithm (the original sum of simple poles evaluated on the grid
-        described below).
+        Tolerance on the AAA residual. This is the maximum absolute deviation
+        from the imaginary-frequency-domain data used by the AAA algorithm (the
+        original sum of simple poles evaluated on the grid described below), over
+        the sample points not yet used as AAA support points.
     nonlinear_optimization : bool, optional
         If True, run a non-linear optimization step after the AAA approximation,
         using the AAA poles only as an initial guess.
@@ -202,9 +202,9 @@ def approx_sop_fast(
 
     - If only `max_n_poles` is set, AAA runs until at most `max_n_poles` poles
       are used.
-    - If only `aaa_tol` is set, AAA runs until the AAA error tolerance
+    - If only `aaa_tol` is set, AAA runs until the AAA residual tolerance
       `aaa_tol` is reached.
-    - If both are set, AAA stops as soon as either the AAA error tolerance
+    - If both are set, AAA stops as soon as either the AAA residual tolerance
       `aaa_tol` is reached or `max_n_poles` poles are used, whichever happens
       first.
 
@@ -325,8 +325,11 @@ def approx_sop_tol(
         the original sum of simple poles for the AAA algorithm. If not given,
         a symmetric fermionic Matsubara grid is used by default (see
         `approx_sop_fast`).
-    verbose : bool, optional
-        If True, print verbose output during the approximation process.
+    verbose : int or bool, optional
+        Amount of printed output. 0 (or False) is silent, 1 (or True) prints one
+        line per pass through the AAA and residue fit pipeline, showing the pole
+        count and error of each candidate fit, and 2 additionally prints the
+        indented per step output of the AAA algorithm itself.
 
     Returns
     -------
@@ -347,8 +350,8 @@ def approx_sop_tol(
 
     Notes
     -----
-    Unlike `approx_sop_fast`, where the tolerance only controls the AAA
-    pole step, here `tol` is imposed on the **final** imaginary-time error,
+    Unlike `approx_sop_fast`, where the tolerance only controls the AAA residual
+    in the pole step, here `tol` is imposed on the **final** imaginary-time error,
     i.e. after the residues have been fit. Since AAA only determines pole
     locations and the residues (and hence the final error) are only known after
     the residue step, the requested error cannot be reached by a single AAA run.
