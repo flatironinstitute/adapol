@@ -27,6 +27,12 @@ jobs:
     - name: Install dependencies
       run: |
         pip3 install pytest numpy scipy sphinx sphinx-rtd-theme nbsphinx ipython myst-parser linkify-it-py
+    - name: Install pandoc
+      # nbsphinx shells out to the pandoc binary to convert the notebook markdown
+      # cells. It is not a pip package and is not preinstalled on the runner image.
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
     - name: Lint with Ruff
       run: |
         pip install ruff==0.16.3
