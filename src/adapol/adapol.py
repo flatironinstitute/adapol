@@ -10,8 +10,12 @@ Authors: Hugo U. R. Strand, Jason Kaye (2026)
 
 import numpy as np
 
+from ._pipeline import _aaa_pole_step
+from ._pipeline import _fermionic_matsubara_frequency_grid
+from ._pipeline import _imtime_residue_step
 from .aaa import aaa
 from .sop import SumOfSimplePoles
+from .sop_compr import SumOfPolesCompression
 
 
 def approx_freq_aaa(F, Z, max_n_poles=None, aaa_tol=None, verbose=False):
@@ -403,7 +407,6 @@ def approx_sop_tol(
 
     """
 
-    from .sop_compr import SumOfPolesCompression
     sc = SumOfPolesCompression(
         poles, residues, beta, Z=Z, tol=tol, 
         nonlinear_optimize=nonlinear_optimization, 
@@ -436,41 +439,21 @@ def _sum_of_simple_poles_driver(poles, residues, max_n_poles, tol, beta,
     cleanup=True, cleanup_residue_tol=1e-12, cleanup_imag_tol=1e-8, 
     nonlinear_optimization=False, Z=None, verbose=False):
 
+    """ Single pass of the pole and residue steps, see `adapol._pipeline`. """
+
     if Z is None:
         Z = _fermionic_matsubara_frequency_grid(poles, beta)
 
-    # Eval sop
     sop = SumOfSimplePoles(poles=poles, residues=residues)
-    F = sop(Z)
 
-    max_steps = _max_steps_from_max_n_poles(max_n_poles)
+    aaa_poles, _, _ = _aaa_pole_step(
+        Z, sop(Z), max_steps=_max_steps_from_max_n_poles(max_n_poles), tol=tol,
+        cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol,
+        cleanup_imag_tol=cleanup_imag_tol, verbose=verbose)
 
-    # Run AAA
-    bra = aaa(
-        Z, F, tol=tol, max_steps=max_steps, constrained=True,
-        cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
-        verbose=verbose)
-
-    # Fit residues
-    sop_aaa = bra.get_sop()
-
-    if nonlinear_optimization:
-        sop_opt = sop.best_imtime_non_linear_lstsq_l2_norm_approximation_using_pole_guess(
-            poles=sop_aaa.p, beta=beta, verbose=verbose)
-    else:
-        sop_opt = sop.best_imtime_lstsq_l2_norm_approximation_using_poles(sop_aaa.p, beta)
-
-    error = (sop - sop_opt).imtime_l2_norm(beta=beta)
-
-    return sop_opt.p, sop_opt.R, error
+    return _imtime_residue_step(
+        sop, aaa_poles, beta, nonlinear=nonlinear_optimization, verbose=verbose)
 
 
 def _max_steps_from_max_n_poles(max_n_poles):
     return (max_n_poles + 1) // 2 if max_n_poles is not None else None
-
-
-def _fermionic_matsubara_frequency_grid(poles, beta):
-    w_max = np.abs(poles).max()
-    n_max = int(4 * beta * w_max / np.pi) + 1
-    n = np.arange(-n_max, n_max)
-    return 1.j * np.pi / beta * (2 * n + 1)

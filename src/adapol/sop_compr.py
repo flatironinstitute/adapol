@@ -3,9 +3,24 @@
 Author: Hugo U. R. Strand, 2026
 """
 
-from .aaa import aaa
-from .adapol import _fermionic_matsubara_frequency_grid
+from ._pipeline import _aaa_pole_step
+from ._pipeline import _fermionic_matsubara_frequency_grid
+from ._pipeline import _imtime_residue_step
 from .sop import SumOfSimplePoles
+
+# The AAA cleanup tolerances of the pole step, deliberately looser than the
+# defaults used for a single pass approximation (see `adapol._pipeline`).
+#
+# The search runs the pole step at step counts well beyond the one a single pass
+# would use, and there the imaginary part that the constrained AAA poles pick up
+# from the ill conditioned pole solve grows past the single pass tolerance of
+# 1e-8. Culling at that level then removes poles that are not Froissart doublets,
+# and the error grows with the step count instead of shrinking, which puts the
+# tighter tolerances out of reach. For matrix valued data this sets in early, at
+# 14 steps in a 6x6 example, where the 1e-8 cleanup drops 25 poles to 17 and the
+# error jumps from 5e-10 to 9e-05.
+_CLEANUP_RESIDUE_TOL = 1e-13
+_CLEANUP_IMAG_TOL = 1e-4
 
 
 class SumOfPolesCompression:
@@ -169,12 +184,10 @@ class SumOfPolesCompression:
 
         if (n_steps, nonlinear) not in self._pipeline_cache:
 
-            poles, residues, n_steps, aaa_err = self._aaa_poles(n_steps=n_steps, aaa_tol=aaa_tol)
+            poles, n_steps, aaa_err = self._aaa_poles(n_steps=n_steps, aaa_tol=aaa_tol)
 
-            if nonlinear:
-                err, poles, residues = self.nonlinear_optimization_of_poles_and_weights(poles, residues)
-            else:
-                err, residues = self.lstsq_weight_optimization(poles)
+            poles, residues, err = _imtime_residue_step(
+                self.sop, poles, self.beta, nonlinear=nonlinear)
 
             self._pipeline_cache[(n_steps, nonlinear)] = (poles, residues, n_steps, aaa_err, err)
 
@@ -192,42 +205,17 @@ class SumOfPolesCompression:
         the residue step for step counts that the search already has run. """
 
         if n_steps not in self._aaa_cache:
-            poles, residues, n_steps, aaa_err = self.aaa_compress(tol=aaa_tol, max_steps=n_steps)
-            self._aaa_cache[n_steps] = (poles, residues, n_steps, aaa_err)
 
-        poles, residues, n_steps, aaa_err = self._aaa_cache[n_steps]
+            poles, n_steps, aaa_err = _aaa_pole_step(
+                self.Z, self.F, max_steps=n_steps, tol=aaa_tol,
+                cleanup_residue_tol=_CLEANUP_RESIDUE_TOL,
+                cleanup_imag_tol=_CLEANUP_IMAG_TOL,
+                verbose=self.verbose >= 2,
+                prefix='    ' if self.verbose >= 2 else '')
 
-        return poles.copy(), residues.copy(), n_steps, aaa_err
+            self._aaa_cache[n_steps] = (poles, n_steps, aaa_err)
 
+        poles, n_steps, aaa_err = self._aaa_cache[n_steps]
 
-    def aaa_compress(self, tol=None, max_steps=None, cleanup=True, cleanup_residue_tol=1e-13, cleanup_imag_tol=1e-4):
+        return poles.copy(), n_steps, aaa_err
 
-        bra = aaa(
-            self.Z, self.F, tol=tol, max_steps=max_steps, constrained=True,
-            cleanup=cleanup, cleanup_residue_tol=cleanup_residue_tol, cleanup_imag_tol=cleanup_imag_tol,
-            verbose=self.verbose >= 2, prefix='    ' if self.verbose >= 2 else '')
-
-        poles, residues = bra.poles_and_residues()
-        poles = poles.real
-
-        return poles, residues, bra.aaa_steps, bra.residual
-
-
-    def lstsq_weight_optimization(self, poles):
-
-        sop_opt = self.sop.best_imtime_lstsq_l2_norm_approximation_using_poles(poles, self.beta)
-        residues = sop_opt.R
-        err = (sop_opt - self.sop).imtime_l2_norm(self.beta)
-        return err, residues
-    
-
-    def nonlinear_optimization_of_poles_and_weights(self, poles, residues):
-
-        sop_opt = self.sop.best_imtime_non_linear_lstsq_l2_norm_approximation_using_pole_guess(
-                poles=poles, beta=self.beta, verbose=False)
-        
-        err = sop_opt.err
-        poles = sop_opt.p
-        residues = sop_opt.R
-
-        return err, poles, residues
