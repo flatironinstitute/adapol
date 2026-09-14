@@ -53,11 +53,11 @@ link-citations: true
 # Summary
 
 The Green's function approach to quantum many-body physics aims to replace high-dimensional wavefunctions with correlation functions which are more closely related to experimental observables of interest, such as spectral and response functions.
-Within this framework, real-time quantities, such as the Green's function, self-energy, and hybridization functions, are often represented in the discrete "Matsubara" domain on the imaginary frequency axis. A variety of physical observables can be directly recovered from the Matsubara Green's function, and many quantities of interest can be calculated more efficiently in this formalism.
+Finite temperature quantities, such as the Green's function, self-energy, and hybridization functions, are often represented in the discrete "Matsubara" domain on the imaginary frequency axis [@Matsubara1955]. A variety of physical observables can be directly recovered from the Matsubara Green's function, and many quantities of interest can be calculated more efficiently in this formalism.
 
 A common computational task within this framework is decomposing a Matsubara function into a sum of simple poles:
 $$G(\mathrm{i} \nu_n) \approx \sum_{k=1}^{M} \frac{R_k}{\mathrm{i} \nu_n-p_k}.$$
-Here, $G(\mathrm{i}\nu_{n})$ is in general an $m \times m$ matrix-valued function of the Matsubara frequency point $\mathrm{i} \nu_n = (2n+1) \pi\mathrm{i} / \beta$ for fermionic functions, and $\mathrm{i} \nu_n = 2 n \pi\mathrm{i} / \beta$ for bosonic functions, with $\beta$ representing the inverse temperature, $n \in \mathbb{Z}$, and $m$ the number of quantum states or spin-orbitals. The $p_k$ are real pole locations, and the $R_k$ are the corresponding matrix-valued residues. In applications such as hybridization fitting, the poles and residues define an effective non-interacting model, with the $p_k$ playing the role of energy levels, and it is often desirable to obtain an accurate fit with as few poles as possible.
+Here, $G(\mathrm{i}\nu_{n})$ is in general an $m \times m$ matrix-valued function of the Matsubara frequency point $\mathrm{i} \nu_n = (2n+1) \pi\mathrm{i} / \beta$ for fermionic functions, and $\mathrm{i} \nu_n = 2 n \pi\mathrm{i} / \beta$ for bosonic functions, with $\beta$ representing the inverse temperature, $n \in \mathbb{Z}$, and $m$ the number of quantum states or spin-orbitals. The $p_k$ are real-valued pole locations, and the $R_k$ are the corresponding matrix-valued residues. In applications such as hybridization fitting, the poles and residues define an effective non-interacting model, with the $p_k$ playing the role of energy levels, and it is often desirable to obtain an accurate fit with as few poles as possible.
 
 Since the pole locations enter the approximation nonlinearly and are shared by all components of a matrix-valued function, a best fit from Matsubara frequency data cannot be obtained component-wise, leading to a highly non-convex optimization landscape.
 `adapol` ("add a pole") is a Python package implementing the adaptive pole-fitting procedure outlined in [@huang25; @huang2023].
@@ -87,6 +87,6 @@ Generative AI tools such as Claude and Codex were used to assist in writing code
 
 # Acknowledgements
 
-This work is partially supported by the Simons Targeted Grants in Mathematics and Physical Sciences on Moiré Materials Magic (Z.H., L.L.). The Flatiron Institute is a division of the Simons Foundation.
+This work is partially supported by the Simons Targeted Grants in Mathematics and Physical Sciences on Moiré Materials Magic (Z.H., L.L.). H.U.R.S acknowledges financial support from the Swedish Research Council (Vetenskapsrådet, VR) grant number 2024-04652 and funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No. 854843-FASTCORR). The Flatiron Institute is a division of the Simons Foundation.
 
 # References
