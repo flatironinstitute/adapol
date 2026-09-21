@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analytic continuation of Hubbard dimer &mdash; Adapol 0.2 documentation</title>
+  <title>Analytic continuation of Hubbard dimer &mdash; adapol 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=10f1778b"></script>
+      <script src="../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="API reference" href="../api.html" />
-    <link rel="prev" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" href="semicircle.html" /> 
+    <link rel="prev" title="Pole approximation of multi-orbital data with a discrete spectrum" href="discrete.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,7 +36,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            Adapol
+            adapol
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -48,8 +48,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="discrete.html">Pole approximation of multi-orbital data with a discrete spectrum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="semicircle.html">Adaptive pole approximation for a continuous spectrum (semicircular density)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discrete.html">Pole approximation of multi-orbital data with a discrete spectrum</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Analytic continuation of Hubbard dimer</a></li>
 </ul>
 </li>
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">Adapol</a>
+          <a href="../index.html">adapol</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -83,7 +83,7 @@
              
   <section id="Analytic-continuation-of-Hubbard-dimer">
 <h1>Analytic continuation of Hubbard dimer<a class="headerlink" href="#Analytic-continuation-of-Hubbard-dimer" title="Link to this heading"></a></h1>
-<p>In this notebook, we illustrate how to conduct analytic continuation using <code class="docutils literal notranslate"><span class="pre">adapol</span></code>. We took the strongly correlated hubbard dimer model as an example. On the one hand, it serves as a nontrivial test case which features several closely spaced peaks that could be very challenging. On the other hand, its modest size allows for exact diagonalization, enabling the calculation of ground truth results for rigorous benchmarking. This example was also used as benchmark tests in
+<p>In this notebook, we illustrate how to conduct analytic continuation using <code class="docutils literal notranslate"><span class="pre">adapol</span></code>, using the strongly correlated Hubbard dimer model as an example. On the one hand, it serves as a nontrivial, challenging test case, featuring several closely-spaced peaks in the spectrum. On the other hand, its modest size allows for exact diagonalization, enabling the calculation of ground truth results for rigorous benchmarking. This example was also used as a benchmark test in
 <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.104.165111">this</a> and <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.107.075151">this</a> paper.</p>
 <p>Let us consider the following Hamiltonian:</p>
 <div class="math notranslate nohighlight">
@@ -168,7 +168,7 @@
 </pre></div>
 </div>
 </div>
-<p>Let us first show how to conduct analytic continuation through the <code class="docutils literal notranslate"><span class="pre">anacont</span></code> function:</p>
+<p>We perform analytic continuation by broadening the sum-of-delta functions representation of the spectral function produced by <code class="docutils literal notranslate"><span class="pre">adapol</span></code>:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -194,7 +194,7 @@
 <img alt="../_images/examples_hubbarddimer_9_0.svg" src="../_images/examples_hubbarddimer_9_0.svg" />
 </div>
 </div>
-<p>Next let’s see how to conduct analytic continuation through the triqs interface:</p>
+<p>We can do the same using the <code class="docutils literal notranslate"><span class="pre">triqs</span></code> interface:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -225,7 +225,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="semicircle.html" class="btn btn-neutral float-left" title="Adaptive pole approximation for a continuous spectrum (semicircular density)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="discrete.html" class="btn btn-neutral float-left" title="Pole approximation of multi-orbital data with a discrete spectrum" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../api.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
