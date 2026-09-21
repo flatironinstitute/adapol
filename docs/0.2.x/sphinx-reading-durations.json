@@ -1,8 +1,8 @@
 {
-    "api": 0.583,
+    "api": 0.647,
     "examples": 0.002,
-    "examples/discrete": 0.44,
-    "examples/hubbarddimer": 0.348,
-    "examples/semicircle": 0.651,
-    "index": 0.021
+    "examples/discrete": 0.436,
+    "examples/hubbarddimer": 0.336,
+    "examples/semicircle": 0.622,
+    "index": 0.02
 }

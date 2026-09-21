@@ -75,6 +75,7 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="adapol-adaptive-pole-fitting-for-quantum-many-body-physics">
 <h1>adapol: Adaptive Pole Fitting for Quantum Many-Body Physics<a class="headerlink" href="#adapol-adaptive-pole-fitting-for-quantum-many-body-physics" title="Link to this heading"></a></h1>
+<p><a class="reference external" href="https://github.com/flatironinstitute/adapol/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/flatironinstitute/adapol/actions/workflows/ci.yml/badge.svg?branch=main" /></a></p>
 <p><a class="reference external" href="https://github.com/flatironinstitute/adapol"><code class="docutils literal notranslate"><span class="pre">adapol</span></code></a> (“add-a-pole”) is a Python package for constructing compact pole approximations of Matsubara functions,</p>
 <div class="math notranslate nohighlight">
 \[
@@ -98,8 +99,8 @@ G(\mathrm{i}\nu_n) \approx \sum_{k=1}^{M} \frac{R_k}{\mathrm{i}\nu_n - p_k},
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">approx_freq_aaa(F,</span> <span class="pre">Z,</span> <span class="pre">...)</span></code></strong> fits frequency data <code class="docutils literal notranslate"><span class="pre">F</span></code>, sampled at (typically Matsubara) points <code class="docutils literal notranslate"><span class="pre">Z</span></code>, with a sum of simple poles, using the AAA algorithm. The number of poles is controlled by a pole budget <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> and/or a AAA error tolerance <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">approx_sop_fast(poles,</span> <span class="pre">residues,</span> <span class="pre">beta,</span> <span class="pre">...)</span></code></strong> approximates a given sum of poles by a (hopefully) smaller one in a single AAA pass. The number of poles is again controlled by <code class="docutils literal notranslate"><span class="pre">max_n_poles</span></code> and/or <code class="docutils literal notranslate"><span class="pre">aaa_tol</span></code>, and an optional <code class="docutils literal notranslate"><span class="pre">nonlinear_optimization</span></code> step refines the pole locations.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">approx_sop_tol(poles,</span> <span class="pre">residues,</span> <span class="pre">tol,</span> <span class="pre">beta,</span> <span class="pre">...)</span></code></strong> finds the smallest sum of poles whose actual error (in <span class="math notranslate nohighlight">\(L^2(\tau)\)</span> and <span class="math notranslate nohighlight">\(l^2(i \omega_n)\)</span>) is below the tolerance <code class="docutils literal notranslate"><span class="pre">tol</span></code>.</p></li>
 </ul>
+<p>The <a class="reference external" href="https://flatironinstitute.github.io/adapol/latest/api.html">reference documentation</a> for the three functions also describes in detail how to use them, as well as information on the algorithms they implement. The same information is contained in the docstrings, e.g. <code class="docutils literal notranslate"><span class="pre">help(adapol.approx_freq_aaa)</span></code>.</p>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h2>
