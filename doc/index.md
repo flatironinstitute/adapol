@@ -1,10 +1,5 @@
 
 ```{include} ../README.md
-:end-line: 32
-```
-
-```{include} ../README.md
-:start-line: 43
 ```
 
 ```{toctree}
