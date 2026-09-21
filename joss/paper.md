@@ -13,33 +13,33 @@ tags:
 authors:
   - name: Zhen Huang
     orcid: 0000-0002-4801-8635
-    affiliation: 2,3,1
+    affiliation: 1,2,3
   - name: Chia-Nan Yeh
     orcid: 0000-0002-4166-0764
-    affiliation: 2
+    affiliation: 1
   - name: Lin Lin
     orcid: 0000-0001-6860-9566
-    affiliation: "5, 1, 4"
+    affiliation: "4, 3, 5"
   - name: Nils Wentzell
     orcid: 0000-0003-3613-007X
-    affiliation: 2
+    affiliation: 1
   - name: Jason Kaye
     corresponding: true
     orcid: 0000-0001-8045-6179
-    affiliation: "2, 3"
+    affiliation: "1, 2"
   - name: Hugo U. R. Strand
     orcid: 0000-0002-7263-4403
     affiliation: 6
 affiliations:
- - name: Department of Mathematics, University of California, Berkeley, CA 94720, USA
-   index: 1
  - name: Center for Computational Quantum Physics, Flatiron Institute, New York, NY 10010, USA
-   index: 2
+   index: 1
  - name: Center for Computational Mathematics, Flatiron Institute, New York, NY 10010, USA
+   index: 2
+ - name: Department of Mathematics, University of California, Berkeley, CA 94720, USA
    index: 3
- - name: Applied Mathematics and Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA 94720, USA
-   index: 4
  - name: Department of Computing and Mathematical Sciences, California Institute of Technology
+   index: 4
+ - name: Applied Mathematics and Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA 94720, USA
    index: 5
  - name: School of Science and Technology, Örebro University, SE-70182 Örebro, Sweden
    index: 6
