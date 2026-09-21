@@ -1,5 +1,7 @@
 # adapol: Adaptive Pole Fitting for Quantum Many-Body Physics
 
+[![CI](https://github.com/flatironinstitute/adapol/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/flatironinstitute/adapol/actions/workflows/python-package.yml)
+
 [`adapol`](https://github.com/flatironinstitute/adapol) ("add-a-pole") is a Python package for constructing compact pole approximations of Matsubara functions,
 
 $$
