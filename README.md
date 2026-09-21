@@ -18,12 +18,6 @@ pip install adapol
 
 The only dependencies are `numpy` and `scipy`.
 
-**Note:** the interface described below requires a newer version of `adapol`, which has not yet been released on PyPI. For now, install from source:
-
-```
-pip install git+https://github.com/flatironinstitute/adapol
-```
-
 ## Usage
 
 `adapol` provides three main functions:
