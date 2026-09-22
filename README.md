@@ -24,7 +24,7 @@ The only dependencies are `numpy` and `scipy`.
 
 - **`approx_freq_aaa(F, Z, ...)`** fits frequency data `F`, sampled at (typically Matsubara) points `Z`, with a sum of simple poles, using the AAA algorithm. The number of poles is controlled by a pole budget `max_n_poles` and/or a AAA error tolerance `aaa_tol`.
 - **`approx_sop_fast(poles, residues, beta, ...)`** approximates a given sum of poles by a (hopefully) smaller one in a single AAA pass. The number of poles is again controlled by `max_n_poles` and/or `aaa_tol`, and an optional `nonlinear_optimization` step refines the pole locations.
-- **`approx_sop_tol(poles, residues, tol, beta, ...)`** finds the smallest sum of poles whose actual error (in $L^2(\tau)$ and $l^2(i \omega_n)$) is below the tolerance `tol`.
+- **`approx_sop_tol(poles, residues, tol, beta, ...)`** finds the smallest sum of poles whose actual error (in $L^2(\tau)$ and $l^2(i \omega_n)$ ) is below the tolerance `tol`.
 
 ## Examples
 
