@@ -1,4 +1,4 @@
-""" Test the convergence of the TriqsDLRCompression class 
+""" Test the convergence of the approx_gf_dlr_tol function 
 as a function of the tolerance parameter.
 
 Author: Hugo U. R. Strand (2026)"""
@@ -83,7 +83,7 @@ def test_convergence(beta=1.0):
 
     ax = plt.subplot(*subp); subp[-1] += 1
     plt.title(r'$\beta = '+ f'{m.beta}$')
-    plt.plot(tols, tdcs.error, 's-', label='TriqsDLRCompression')
+    plt.plot(tols, tdcs.error, 's-', label='approx_gf_dlr_tol')
     plt.plot(tols, imfs.error, 'o-', label='ImFreq Approximation')
     plt.plot(tols, dlrs.error, '^-', label='DLR Approximation')
     plt.plot(tols, tols, 'k-')
@@ -94,7 +94,7 @@ def test_convergence(beta=1.0):
     plt.ylabel('Normalized L2 error (imtime)')
 
     plt.subplot(*subp, sharex=ax); subp[-1] += 1
-    plt.plot(tols, tdcs.n_poles, 's-', label='TriqsDLRCompression')
+    plt.plot(tols, tdcs.n_poles, 's-', label='approx_gf_dlr_tol')
     plt.plot(tols, imfs.n_poles, 'o-', label='ImFreq Approximation')
     plt.plot(tols, dlrs.n_poles, '^-', label='DLR Approximation')
     plt.semilogx()
@@ -104,7 +104,7 @@ def test_convergence(beta=1.0):
     plt.legend(loc='best', fontsize=9)
 
     plt.subplot(*subp, sharex=ax); subp[-1] += 1
-    plt.plot(tols, tdcs.runtime, 's-', label='TriqsDLRCompression')
+    plt.plot(tols, tdcs.runtime, 's-', label='approx_gf_dlr_tol')
     plt.plot(tols, imfs.runtime, 'o-', label='ImFreq Approximation')
     plt.plot(tols, dlrs.runtime, '^-', label='DLR Approximation')
     plt.loglog()

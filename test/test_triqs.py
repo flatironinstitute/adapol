@@ -21,7 +21,6 @@ from triqs.gfs import iOmega_n
 from triqs.gfs import make_gf_dlr
 from triqs.gfs import make_gf_dlr_imtime
 
-from adapol.triqs import TriqsDLRCompression
 from adapol.triqs import approx_gf_dlr_fast
 from adapol.triqs import approx_gf_dlr_tol
 from adapol.triqs import approx_gf_imfreq_aaa
@@ -205,7 +204,7 @@ def test_gf_missing_stopping_criterion():
         approx_gf_dlr_fast(G_dlr)
 
 
-def test_tdc_tol_sweep():
+def test_gf_dlr_tol_sweep():
 
     m = MeshDLRImFreq(beta=100.0, statistic='Fermion', eps=1e-14, w_max=8.0)
 
@@ -213,17 +212,13 @@ def test_tdc_tol_sweep():
     G_w << inverse(iOmega_n - 0.4 - SemiCircular(1.0))
 
     for tol in 10.**(-np.arange(2, 12)):
-        print(f"Testing TriqsDLRCompression with tol = {tol:+2.2E}")
-        tdc = TriqsDLRCompression(G_w, tol=tol, nonlinear_post_optimize=False)
-        tdc_pstopt = TriqsDLRCompression(G_w, tol=tol)
-        tdc_nonlin = TriqsDLRCompression(G_w, tol=tol, nonlinear_optimize=True)
-        print(f'tdc_lstsq  error = {tdc.error:2.2E}, aaa_steps = {tdc.aaa_steps}')
-        print(f'tdc_nonlin error = {tdc_nonlin.error:2.2E}, aaa_steps = {tdc_nonlin.aaa_steps}')
-        print(f'tdc_pstopt error = {tdc_pstopt.error:2.2E}, aaa_steps = {tdc_pstopt.aaa_steps}')
-        assert( tdc.error < tol)
-        assert( tdc_nonlin.error < tol)
-        assert( tdc_pstopt.error < tol)
-
+        print(f"Testing approx_gf_dlr_tol with tol = {tol:+2.2E}")
+        _, _, err = approx_gf_dlr_tol(G_w, tol=tol)
+        _, _, err_nonlin = approx_gf_dlr_tol(G_w, tol=tol, nonlinear_optimization=True)
+        print(f'lstsq  error = {err:2.2E}')
+        print(f'nonlin error = {err_nonlin:2.2E}')
+        assert( err < tol)
+        assert( err_nonlin < tol)
 
 
 def _two_pole_gf(a, b, beta=2.1, w_max=2.0, eps=1e-12, ra=0.6, rb=0.4):
@@ -237,14 +232,27 @@ def _two_pole_gf(a, b, beta=2.1, w_max=2.0, eps=1e-12, ra=0.6, rb=0.4):
     return G_w
 
 
-def _imtime_l2_error(tdc):
+def _window(G_w):
+
+    """ The DLR window Lambda = beta*w_max of the mesh of `G_w` and its relative slack. """
+
+    from adapol.triqs import _dlr_window_slack
+    return G_w.mesh.beta * G_w.mesh.w_max, _dlr_window_slack(G_w.mesh.eps)
+
+
+def _imtime_l2_error(G_w, poles, residues):
+
+    """ Imaginary time L2 error of the sum of simple poles against the DLR expansion of `G_w`. """
 
     from adapol.sop import SumOfSimplePoles
-    sop = SumOfSimplePoles(poles=np.asarray(tdc.poles), residues=np.asarray(tdc.residues))
-    return (tdc.sop_comp.sop - sop).imtime_l2_norm(beta=tdc.beta)
+    G_c = make_gf_dlr(G_w)
+    beta = G_c.mesh.beta
+    dlr = SumOfSimplePoles(poles=np.array([float(w) for w in G_c.mesh]) / beta, residues=G_c.data.copy())
+    sop = SumOfSimplePoles(poles=np.asarray(poles), residues=np.asarray(residues))
+    return (dlr - sop).imtime_l2_norm(beta=beta)
 
 
-def test_tdc_dlr_window():
+def test_gf_dlr_tol_dlr_window():
 
     """ The compressed poles stay inside the DLR window, the reported error is the
     error of the returned poles, and the tolerance is met. The surplus pole of the
@@ -257,46 +265,61 @@ def test_tdc_dlr_window():
     for a in np.arange(-1.9, 2.0, 0.4):
         for b in np.arange(a + 0.2, 2.0, 0.4):
 
-            tdc = TriqsDLRCompression(_two_pole_gf(a, b, beta=beta, w_max=w_max), tol=tol, verbose=False)
-            bw = tdc.beta * np.asarray(tdc.poles)
+            G_w = _two_pole_gf(a, b, beta=beta, w_max=w_max)
+            Lambda, slack = _window(G_w)
+            poles, residues, err = approx_gf_dlr_tol(G_w, tol=tol)
+            raw_poles, _, _ = approx_gf_dlr_tol(G_w, tol=tol, restrict_to_dlr_window=False)
+            bw = beta * np.asarray(poles)
 
-            assert tdc.Lambda == beta * w_max
-            assert np.all(np.abs(bw) <= tdc.Lambda * (1 + tdc.window_slack)), \
+            assert Lambda == beta * w_max
+            assert np.all(np.abs(bw) <= Lambda * (1 + slack)), \
                 f'a = {a:+.1f}, b = {b:+.1f}: pole outside the DLR window, beta*omega = {bw}'
-            assert np.all(np.abs(beta * tdc.dropped_poles) > tdc.Lambda * (1 + tdc.window_slack))
-            assert len(tdc.poles) + len(tdc.dropped_poles) == len(tdc.sop_comp.poles)
-            assert len(tdc.dropped_poles) == len(tdc.dropped_residues)
-            assert tdc.error < tol, f'a = {a:+.1f}, b = {b:+.1f}: error {tdc.error:2.2E} >= tol'
-            np.testing.assert_allclose(tdc.error, _imtime_l2_error(tdc), rtol=1e-6, atol=1e-15)
+            assert len(poles) == len(residues)
+            assert err < tol, f'a = {a:+.1f}, b = {b:+.1f}: error {err:2.2E} >= tol'
+            np.testing.assert_allclose(err, _imtime_l2_error(G_w, poles, residues), rtol=1e-6, atol=1e-15)
 
-            n_dropped += len(tdc.dropped_poles)
+            n_outside = int(np.sum(np.abs(beta * np.asarray(raw_poles)) > Lambda * (1 + slack)))
+            assert len(poles) == len(raw_poles) - n_outside
+            n_dropped += n_outside
 
     assert n_dropped > 0, 'vacuous: no pole was ever outside the window, so the filter never ran'
 
 
-def test_tdc_dlr_window_opt_out():
+def test_gf_dlr_tol_dlr_window_opt_out():
 
     """ With restrict_to_dlr_window=False the result of the tolerance search is
-    returned unchanged, including a surplus pole outside the window. """
+    returned unchanged, and without out-of-window poles the restriction is a no-op. """
+
+    from adapol.sop_compr import SumOfPolesCompression
+    from adapol.triqs import _gf_dlr_to_data
+
+    n_outside = 0
 
     for a, b in [(-0.5, 0.5), (-1.4, 0.3), (-0.7, 0.8), (-0.9, 0.9)]:
 
         G_w = _two_pole_gf(a, b)
-        tdc = TriqsDLRCompression(G_w, tol=1e-9, verbose=False)
-        raw = TriqsDLRCompression(G_w, tol=1e-9, restrict_to_dlr_window=False, verbose=False)
+        Lambda, slack = _window(G_w)
+        poles, residues, err = approx_gf_dlr_tol(G_w, tol=1e-9)
+        raw_poles, raw_residues, raw_err = approx_gf_dlr_tol(G_w, tol=1e-9, restrict_to_dlr_window=False)
 
-        np.testing.assert_array_equal(raw.poles, raw.sop_comp.poles)
-        np.testing.assert_array_equal(raw.residues, raw.sop_comp.residues)
-        assert raw.error == raw.sop_comp.error == raw.error_before_window
-        assert len(raw.dropped_poles) == 0 and raw.window_residual == 0.
-        assert tdc.error_before_window == raw.error
+        p, R, beta, Z = _gf_dlr_to_data(G_w)
+        sc = SumOfPolesCompression(p, R, beta, Z=Z, tol=1e-9, verbose=False)
+        np.testing.assert_array_equal(raw_poles, sc.poles)
+        np.testing.assert_array_equal(raw_residues, sc.residues)
+        assert raw_err == sc.error
 
-        if len(tdc.dropped_poles) == 0:
-            np.testing.assert_array_equal(tdc.poles, raw.poles)
-            np.testing.assert_array_equal(tdc.residues, raw.residues)
+        outside = np.abs(beta * raw_poles) > Lambda * (1 + slack)
+        n_outside += int(np.sum(outside))
+
+        if not np.any(outside):
+            np.testing.assert_array_equal(poles, raw_poles)
+            np.testing.assert_array_equal(residues, raw_residues)
+            assert err == raw_err
+
+    assert n_outside > 0, 'vacuous: no raw fit had a pole outside the window'
 
 
-def test_tdc_dlr_window_edge_pole_survives():
+def test_gf_dlr_tol_dlr_window_edge_pole_survives():
 
     """ A physical pole sitting exactly on the window edge, omega = +-w_max, must survive.
 
@@ -307,85 +330,82 @@ def test_tdc_dlr_window_edge_pole_survives():
                              (0.3, 1.0, 1e-8), (5.0, 2.0, 1e-10)):
 
         G_w = _two_pole_gf(-w_max, w_max, beta=beta, w_max=w_max, eps=eps, ra=0.5, rb=0.5)
-        tdc = TriqsDLRCompression(G_w, tol=1e-9, verbose=False)
+        Lambda, slack = _window(G_w)
+        poles, residues, err = approx_gf_dlr_tol(G_w, tol=1e-9)
 
-        bw = beta * np.asarray(tdc.poles)
-        weight = np.abs(np.asarray(tdc.residues)).reshape(len(bw), -1).max(axis=1)
+        bw = beta * np.asarray(poles)
+        weight = np.abs(np.asarray(residues)).reshape(len(bw), -1).max(axis=1)
         dominant = weight > 0.5 * weight.max()
 
         assert np.sum(dominant) >= 2, \
             f'beta={beta}, w_max={w_max}, eps={eps:.0e}: only {np.sum(dominant)} dominant pole(s) ' \
-            f'survived, the +-w_max pair must be kept, beta*omega/Lambda = {bw / tdc.Lambda}'
-        assert np.all(np.abs(bw) <= tdc.Lambda * (1 + tdc.window_slack))
-        assert tdc.error < 1e-9
+            f'survived, the +-w_max pair must be kept, beta*omega/Lambda = {bw / Lambda}'
+        assert np.all(np.abs(bw) <= Lambda * (1 + slack))
+        assert err < 1e-9
 
 
-def test_tdc_dlr_window_harmless_drop_does_not_raise():
+def test_gf_dlr_tol_dlr_window_harmless_drop_does_not_raise():
 
     """ Dropping a surplus pole whose refit is as close to the DLR expansion as the
     unfiltered fit must not raise. Here the pointwise error of the fit is about 20x its
     L2 error, so a guard comparing the pointwise change to the L2 error misfires. """
 
     G_w = _two_pole_gf(-0.4, 0.1, beta=20., w_max=2., eps=1e-10)
+    Lambda, slack = _window(G_w)
 
     for tol in [1e-9, 1e-10]:
-        tdc = TriqsDLRCompression(G_w, tol=tol, verbose=False)
-        assert tdc.error < tol
-        assert np.all(np.abs(tdc.beta * np.asarray(tdc.poles)) <= tdc.Lambda * (1 + tdc.window_slack))
+        poles, residues, err = approx_gf_dlr_tol(G_w, tol=tol)
+        assert err < tol
+        assert np.all(np.abs(G_w.mesh.beta * np.asarray(poles)) <= Lambda * (1 + slack))
 
 
-class _TightWindowCompression(TriqsDLRCompression):
+def test_gf_dlr_tol_dlr_window_load_bearing_pole_raises():
 
-    """ Shrinks the DLR window by a factor, so that physical poles fall outside it. """
+    """ Dropping a pole that carries weight must raise rather than return a wrong fit.
+    The window is shrunk to half its size, so that a physical pole falls outside it. """
 
-    shrink = 0.5
-
-    @property
-    def window_slack(self):
-        return self.shrink - 1.
-
-
-def test_tdc_dlr_window_load_bearing_pole_raises():
-
-    """ Dropping a pole that carries weight must raise rather than return a wrong fit. """
+    import adapol.triqs
 
     G_w = _two_pole_gf(-0.5, 1.5)  # beta*omega = 3.15 for the pole at 1.5, 0.75 Lambda
 
-    with pytest.raises(RuntimeError, match='carried real weight'):
-        _TightWindowCompression(G_w, tol=1e-9, verbose=False)
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(adapol.triqs, '_dlr_window_slack', lambda eps: -0.5)
+        with pytest.raises(RuntimeError, match='carried real weight'):
+            approx_gf_dlr_tol(G_w, tol=1e-9)
 
 
-def test_tdc_dlr_window_all_poles_outside_raises():
+def test_gf_dlr_tol_dlr_window_all_poles_outside_raises():
 
     """ A window that excludes every pole cannot be repaired and must raise. """
 
-    class _NoWindowCompression(_TightWindowCompression):
-        shrink = 1e-6
+    import adapol.triqs
 
-    with pytest.raises(RuntimeError, match='every one of the'):
-        _NoWindowCompression(_two_pole_gf(-0.5, 0.5), tol=1e-9, verbose=False)
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(adapol.triqs, '_dlr_window_slack', lambda eps: 1e-6 - 1.)
+        with pytest.raises(RuntimeError, match='every one of the'):
+            approx_gf_dlr_tol(_two_pole_gf(-0.5, 0.5), tol=1e-9)
 
 
-def test_tdc_requires_dlr_mesh():
+def test_gf_dlr_tol_requires_dlr_mesh():
 
     m = MeshImFreq(beta=100.0, statistic='Fermion', n_iw=1000)
     G_iw = Gf(mesh=m, target_shape=[])
     G_iw << inverse(iOmega_n - SemiCircular(1.0))
 
     with pytest.raises(ValueError):
-        TriqsDLRCompression(G_iw, tol=1e-8, verbose=False)
+        approx_gf_dlr_tol(G_iw, tol=1e-8)
 
 
 if __name__ == "__main__":
     
-    test_tdc_tol_sweep()
-    test_tdc_dlr_window()
-    test_tdc_dlr_window_opt_out()
-    test_tdc_dlr_window_edge_pole_survives()
-    test_tdc_dlr_window_harmless_drop_does_not_raise()
-    test_tdc_dlr_window_load_bearing_pole_raises()
-    test_tdc_dlr_window_all_poles_outside_raises()
-    test_tdc_requires_dlr_mesh()
+    test_gf_dlr_tol_sweep()
+    test_gf_dlr_tol_dlr_window()
+    test_gf_dlr_tol_dlr_window_opt_out()
+    test_gf_dlr_tol_dlr_window_edge_pole_survives()
+    test_gf_dlr_tol_dlr_window_harmless_drop_does_not_raise()
+    test_gf_dlr_tol_dlr_window_load_bearing_pole_raises()
+    test_gf_dlr_tol_dlr_window_all_poles_outside_raises()
+    test_gf_dlr_tol_requires_dlr_mesh()
 
     test_gf_dlr_mesh_types()
     test_gf_dlr_requires_dlr_mesh()

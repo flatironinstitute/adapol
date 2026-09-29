@@ -12,10 +12,10 @@ AAA-BRA pole compression in the imaginary time domain.
 Finding
 -------
 
-In general we find that when the TriqsDLRCompression fails it is related 
+In general we find that when approx_gf_dlr_tol fails it is related 
 to convergence issues in the IPT self-consistency not in the AAA-BRA compression itself.
 
-Once the IPT self-consistency is stable the TriqsDLRCompression successfully 
+Once the IPT self-consistency is stable approx_gf_dlr_tol successfully 
 compresses the Green's functions generated in each self-consistent step.
 
 Side note
@@ -83,7 +83,7 @@ def solve_ipt_and_adapol(
 
         diff = np.max(np.abs(G_w_new.data - G_w.data))
 
-        # Perform pole compression using TriqsDLRCompression
+        # Perform pole compression using approx_gf_dlr_tol
 
         if run_adapol:
             try:
