@@ -390,6 +390,7 @@ def _restrict_poles_to_dlr_window(G_c, dlr_sop, poles, residues, error, tol, ver
             f'or pass restrict_to_dlr_window=False.')
 
     from triqs.gfs import make_gf_dlr_imtime
+
     from .sop import SumOfSimplePoles
 
     fit = SumOfSimplePoles(poles=poles, residues=residues)
